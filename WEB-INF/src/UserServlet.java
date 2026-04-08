@@ -140,7 +140,7 @@ public class UserServlet extends HttpServlet {
         String seqStr = req.getParameter("userSeq");
         if (seqStr != null && !seqStr.isEmpty()) {
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
-                String sql = "SELECT user_seq, user_id, user_name, role, use_yn FROM tb_user WHERE user_seq=? AND del_yn='N'";
+                String sql = "SELECT user_seq, user_id, user_name, email, role, use_yn FROM tb_user WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, Integer.parseInt(seqStr));
                     ResultSet rs = ps.executeQuery();
@@ -149,6 +149,7 @@ public class UserServlet extends HttpServlet {
                         u.userSeq  = rs.getInt("user_seq");
                         u.userId   = rs.getString("user_id");
                         u.userName = rs.getString("user_name");
+                        u.email    = rs.getString("email");
                         u.role     = rs.getString("role");
                         u.useYn    = rs.getString("use_yn");
                         req.setAttribute("user", u);
@@ -170,6 +171,7 @@ public class UserServlet extends HttpServlet {
 
         String userId   = nvl(req.getParameter("userId"), "");
         String userName = nvl(req.getParameter("userName"), "");
+        String email    = req.getParameter("email");
         String password = nvl(req.getParameter("password"), "");
         String role     = nvl(req.getParameter("role"), "USER");
         String useYn    = nvl(req.getParameter("useYn"), "Y");
@@ -194,14 +196,15 @@ public class UserServlet extends HttpServlet {
                 }
             }
 
-            String sql = "INSERT INTO tb_user (user_id, user_name, password, role, use_yn, del_yn) "
-                       + "VALUES (?, ?, HEX(SHA2(?,256)), ?, ?, 'N')";
+            String sql = "INSERT INTO tb_user (user_id, user_name, email, password, role, use_yn, del_yn) "
+                       + "VALUES (?, ?, ?, HEX(SHA2(?,256)), ?, ?, 'N')";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, userId);
                 ps.setString(2, userName);
-                ps.setString(3, password);
-                ps.setString(4, role);
-                ps.setString(5, useYn);
+                ps.setString(3, (email == null || email.trim().isEmpty()) ? null : email.trim());
+                ps.setString(4, password);
+                ps.setString(5, role);
+                ps.setString(6, useYn);
                 ps.executeUpdate();
             }
         } catch (Exception e) {
@@ -220,9 +223,11 @@ public class UserServlet extends HttpServlet {
 
         String seqStr   = req.getParameter("userSeq");
         String userName = nvl(req.getParameter("userName"), "");
+        String email    = req.getParameter("email");
         String role     = nvl(req.getParameter("role"), "USER");
         String useYn    = nvl(req.getParameter("useYn"), "Y");
         String newPw    = req.getParameter("password");
+        String emailVal = (email == null || email.trim().isEmpty()) ? null : email.trim();
 
         // 대상 계정의 user_id 조회
         String targetUserId = "";
@@ -249,23 +254,25 @@ public class UserServlet extends HttpServlet {
                 }
             } else if (newPw != null && !newPw.trim().isEmpty()) {
                 // 비밀번호 포함 업데이트
-                String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=?, password=HEX(SHA2(?,256)) WHERE user_seq=? AND del_yn='N'";
+                String sql = "UPDATE tb_user SET user_name=?, email=?, role=?, use_yn=?, password=HEX(SHA2(?,256)) WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setString(1, userName);
-                    ps.setString(2, role);
-                    ps.setString(3, useYn);
-                    ps.setString(4, newPw);
-                    ps.setInt(5, Integer.parseInt(seqStr));
+                    ps.setString(2, emailVal);
+                    ps.setString(3, role);
+                    ps.setString(4, useYn);
+                    ps.setString(5, newPw);
+                    ps.setInt(6, Integer.parseInt(seqStr));
                     ps.executeUpdate();
                 }
             } else {
                 // 비밀번호 제외 업데이트
-                String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=? WHERE user_seq=? AND del_yn='N'";
+                String sql = "UPDATE tb_user SET user_name=?, email=?, role=?, use_yn=? WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setString(1, userName);
-                    ps.setString(2, role);
-                    ps.setString(3, useYn);
-                    ps.setInt(4, Integer.parseInt(seqStr));
+                    ps.setString(2, emailVal);
+                    ps.setString(3, role);
+                    ps.setString(4, useYn);
+                    ps.setInt(5, Integer.parseInt(seqStr));
                     ps.executeUpdate();
                 }
             }
@@ -385,6 +392,6 @@ public class UserServlet extends HttpServlet {
     // ── Value Object ──────────────────────────────────────
     public static class UserVO {
         public int    userSeq;
-        public String userId, userName, role, useYn, regDt;
+        public String userId, userName, email, role, useYn, regDt;
     }
 }

@@ -169,6 +169,7 @@
                         <tr>
                             <th>아이디</th>
                             <th>이름</th>
+                            <th>이메일</th>
                             <th>권한</th>
                             <th>상태</th>
                             <th>등록일</th>
@@ -177,11 +178,12 @@
                     </thead>
                     <tbody>
                         <% if (list == null || list.isEmpty()) { %>
-                        <tr><td colspan="6" style="text-align:center;color:#3d4251;padding:32px">등록된 사용자가 없습니다.</td></tr>
+                        <tr><td colspan="7" style="text-align:center;color:#3d4251;padding:32px">등록된 사용자가 없습니다.</td></tr>
                         <% } else { for (UserVO u : list) { %>
                         <tr>
                             <td class="td-mono"><%= u.userId %></td>
                             <td><strong style="color:#e8e9eb"><%= u.userName %></strong></td>
+                            <td style="font-size:12px;color:#6b7280"><%= u.email != null ? u.email : "-" %></td>
                             <td><span class="chip <%= "ADMIN".equals(u.role) ? "chip-admin" : "chip-user" %>"><%= u.role %></span></td>
                             <td><span class="chip <%= "Y".equals(u.useYn) ? "chip-on" : "chip-off" %>"><%= "Y".equals(u.useYn) ? "활성" : "비활성" %></span></td>
                             <td style="font-size:12px;color:#4b5161"><%= u.regDt != null ? u.regDt.substring(0,10) : "-" %></td>

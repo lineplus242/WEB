@@ -114,6 +114,14 @@ public class LoginServlet extends HttpServlet {
                     u.userName = rs.getString("user_name");
                     u.role     = rs.getString("role");
                     u.useYn    = rs.getString("use_yn");
+
+                    // 마지막 로그인 시간 업데이트
+                    try (PreparedStatement upd = conn.prepareStatement(
+                            "UPDATE tb_user SET last_login = NOW() WHERE user_id = ?")) {
+                        upd.setString(1, userId);
+                        upd.executeUpdate();
+                    }
+
                     return u;
                 }
             }

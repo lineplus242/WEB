@@ -158,6 +158,11 @@
                                        placeholder="홍길동" value="<%= isEdit ? v(u.userName) : "" %>">
                             </div>
                             <div class="form-group">
+                                <label>이메일</label>
+                                <input type="email" name="email" placeholder="example@company.com"
+                                       value="<%= isEdit && u.email != null ? v(u.email) : "" %>">
+                            </div>
+                            <div class="form-group">
                                 <label><%= isEdit ? "비밀번호 재설정" : "비밀번호 *" %></label>
                                 <input type="password" name="password"
                                        <%= isEdit ? "" : "required" %>
