@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Administrator/AppData/Local//**)",
+      "Read(//c/Users/Administrator/AppData/Roaming//**)",
+      "Bash(netstat -ano)",
+      "Read(//c/Users/Administrator/**)",
+      "Bash(ls /c/eclipse*)",
+      "Bash(find /c -maxdepth 3 -name \"eclipse.exe\")",
+      "Bash(find /c -maxdepth 5 -type d -name \"tomcat*\")",
+      "Bash(find /c -maxdepth 5 -type d -name \"apache-tomcat*\")",
+      "Bash(find /c -maxdepth 5 -type f -name \"tomcat*.jar\")",
+      "Bash(java -version)",
+      "Bash(where java:*)",
+      "Read(//proc/**)"
+    ]
+  }
+}

@@ -223,7 +223,6 @@
                 <div class="meta-item"><strong>담당자</strong><%= nvl(cust.managerName) %></div>
                 <div class="meta-item"><strong>연락처</strong><%= nvl(cust.managerTel) %></div>
                 <div class="meta-item"><strong>서비스</strong><%= nvl(cust.serviceType) %></div>
-                <div class="meta-item"><strong>계약금액</strong><%= fmtAmt(cust.contractAmt) %></div>
                 <div class="meta-item">
                     <strong>상태</strong>
                     <span class="chip <%= statusChip(cust.status) %>"><%= statusLabel(cust.status) %></span>

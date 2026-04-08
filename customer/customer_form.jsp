@@ -222,21 +222,6 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>계약금액 (원)</label>
-                                <input type="number" name="contractAmt" placeholder="0" min="0"
-                                       value="<%= isEdit ? c.contractAmt : "" %>">
-                            </div>
-                            <div class="form-group">
-                                <label>계약 시작일</label>
-                                <input type="date" name="contractStart"
-                                       value="<%= isEdit ? v(c.contractStart) : "" %>">
-                            </div>
-                            <div class="form-group">
-                                <label>계약 종료일</label>
-                                <input type="date" name="contractEnd"
-                                       value="<%= isEdit ? v(c.contractEnd) : "" %>">
-                            </div>
-                            <div class="form-group">
                                 <label>상태</label>
                                 <select name="status">
                                     <option value="ACTIVE"   <%= !isEdit || "ACTIVE".equals(c.status)   ? "selected" : "" %>>활성</option>
