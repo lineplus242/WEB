@@ -340,7 +340,7 @@
             <button type="submit" class="btn">로그인</button>
         </form>
 
-        <div class="footer">© 2026 Admin System.</div>
+        <div class="footer">© 2026 Bumil Infomation Admin System.</div>
     </div>
 
     <!-- ── 오른쪽: 시스템 정보 ── -->
