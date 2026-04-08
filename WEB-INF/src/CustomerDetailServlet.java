@@ -12,13 +12,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * 고객사 상세 + 사업정보 + IT자산 관리 서블릿
+ * 고객사 상세 + 사업정보 + IT자산 + 랙 실장도 관리 서블릿
  *
  *  GET  /CustomerDetailServlet?action=detail&custSeq=N  → 상세 페이지
  *  POST /CustomerDetailServlet?action=projectSave       → 사업 저장
  *  POST /CustomerDetailServlet?action=projectDelete     → 사업 삭제
  *  POST /CustomerDetailServlet?action=assetSave         → 자산 저장
  *  POST /CustomerDetailServlet?action=assetDelete       → 자산 삭제
+ *  POST /CustomerDetailServlet?action=rackSave          → 랙 저장
+ *  POST /CustomerDetailServlet?action=rackDelete        → 랙 삭제
+ *  POST /CustomerDetailServlet?action=rackUnitSave      → 랙 유닛 저장
+ *  POST /CustomerDetailServlet?action=rackUnitDelete    → 랙 유닛 삭제
  */
 @WebServlet("/CustomerDetailServlet")
 public class CustomerDetailServlet extends HttpServlet {
@@ -55,8 +59,12 @@ public class CustomerDetailServlet extends HttpServlet {
         switch (action) {
             case "projectSave"   -> doProjectSave(req, resp);
             case "projectDelete" -> doProjectDelete(req, resp);
-            case "assetSave"     -> doAssetSave(req, resp);
-            case "assetDelete"   -> doAssetDelete(req, resp);
+            case "assetSave"       -> doAssetSave(req, resp);
+            case "assetDelete"     -> doAssetDelete(req, resp);
+            case "rackSave"        -> doRackSave(req, resp);
+            case "rackDelete"      -> doRackDelete(req, resp);
+            case "rackUnitSave"    -> doRackUnitSave(req, resp);
+            case "rackUnitDelete"  -> doRackUnitDelete(req, resp);
             default -> resp.sendRedirect("CustomerServlet?action=list");
         }
     }
@@ -145,9 +153,46 @@ public class CustomerDetailServlet extends HttpServlet {
                 }
             }
 
+            // 랙 목록
+            List<RackVO> racks = new ArrayList<>();
+            String rackSql = "SELECT rack_seq, rack_name, total_u, location, memo FROM tb_rack WHERE cust_seq=? AND del_yn='N' ORDER BY rack_seq";
+            try (PreparedStatement ps = conn.prepareStatement(rackSql)) {
+                ps.setInt(1, custSeq);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    RackVO r = new RackVO();
+                    r.rackSeq  = rs.getInt("rack_seq");
+                    r.rackName = rs.getString("rack_name");
+                    r.totalU   = rs.getInt("total_u");
+                    r.location = rs.getString("location");
+                    r.memo     = rs.getString("memo");
+                    racks.add(r);
+                }
+            }
+            String unitSql = "SELECT unit_seq, side, start_u, size_u, device_name, device_type, ip_addr, memo FROM tb_rack_unit WHERE rack_seq=? ORDER BY side, start_u";
+            for (RackVO r : racks) {
+                try (PreparedStatement ps = conn.prepareStatement(unitSql)) {
+                    ps.setInt(1, r.rackSeq);
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) {
+                        RackUnitVO u = new RackUnitVO();
+                        u.unitSeq    = rs.getInt("unit_seq");
+                        u.side       = rs.getString("side");
+                        u.startU     = rs.getInt("start_u");
+                        u.sizeU      = rs.getInt("size_u");
+                        u.deviceName = rs.getString("device_name");
+                        u.deviceType = rs.getString("device_type");
+                        u.ipAddr     = rs.getString("ip_addr");
+                        u.memo       = rs.getString("memo");
+                        r.units.add(u);
+                    }
+                }
+            }
+
             req.setAttribute("customer", customer);
             req.setAttribute("projects", projects);
             req.setAttribute("assets",   assets);
+            req.setAttribute("racks",    racks);
 
         } catch (Exception e) {
             req.setAttribute("dbError", e.getMessage());
@@ -302,10 +347,129 @@ public class CustomerDetailServlet extends HttpServlet {
         resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset");
     }
 
+    // ─────────────────────────────────────────────────────
+    // 랙 저장 (신규/수정)
+    // ─────────────────────────────────────────────────────
+    private void doRackSave(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String custSeqStr = req.getParameter("custSeq");
+        String rackSeqStr = req.getParameter("rackSeq");
+        int custSeq = Integer.parseInt(custSeqStr);
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            if (rackSeqStr == null || rackSeqStr.isEmpty()) {
+                String sql = "INSERT INTO tb_rack (cust_seq, rack_name, total_u, location, memo) VALUES (?,?,?,?,?)";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, custSeq);
+                    ps.setString(2, req.getParameter("rackName"));
+                    ps.setInt(3, parseIntDef(req.getParameter("totalU"), 42));
+                    ps.setString(4, emptyToNull(req.getParameter("location")));
+                    ps.setString(5, emptyToNull(req.getParameter("memo")));
+                    ps.executeUpdate();
+                }
+            } else {
+                String sql = "UPDATE tb_rack SET rack_name=?, total_u=?, location=?, memo=? WHERE rack_seq=?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, req.getParameter("rackName"));
+                    ps.setInt(2, parseIntDef(req.getParameter("totalU"), 42));
+                    ps.setString(3, emptyToNull(req.getParameter("location")));
+                    ps.setString(4, emptyToNull(req.getParameter("memo")));
+                    ps.setInt(5, Integer.parseInt(rackSeqStr));
+                    ps.executeUpdate();
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeq + "&tab=asset&sub=rack");
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 랙 삭제
+    // ─────────────────────────────────────────────────────
+    private void doRackDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String custSeqStr = req.getParameter("custSeq");
+        String rackSeqStr = req.getParameter("rackSeq");
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            // 랙 유닛 먼저 삭제
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_rack_unit WHERE rack_seq=?")) {
+                ps.setInt(1, Integer.parseInt(rackSeqStr));
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE tb_rack SET del_yn='Y' WHERE rack_seq=?")) {
+                ps.setInt(1, Integer.parseInt(rackSeqStr));
+                ps.executeUpdate();
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 랙 유닛 저장 (신규/수정)
+    // ─────────────────────────────────────────────────────
+    private void doRackUnitSave(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String custSeqStr = req.getParameter("custSeq");
+        String unitSeqStr = req.getParameter("unitSeq");
+        String rackSeqStr = req.getParameter("rackSeq");
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            if (unitSeqStr == null || unitSeqStr.isEmpty()) {
+                String sql = "INSERT INTO tb_rack_unit (rack_seq, side, start_u, size_u, device_name, device_type, ip_addr, memo) VALUES (?,?,?,?,?,?,?,?)";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, Integer.parseInt(rackSeqStr));
+                    ps.setString(2, nvl(req.getParameter("side"), "F"));
+                    ps.setInt(3, Integer.parseInt(req.getParameter("startU")));
+                    ps.setInt(4, parseIntDef(req.getParameter("sizeU"), 1));
+                    ps.setString(5, req.getParameter("deviceName"));
+                    ps.setString(6, nvl(req.getParameter("deviceType"), "SERVER"));
+                    ps.setString(7, emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(8, emptyToNull(req.getParameter("memo")));
+                    ps.executeUpdate();
+                }
+            } else {
+                String sql = "UPDATE tb_rack_unit SET side=?, start_u=?, size_u=?, device_name=?, device_type=?, ip_addr=?, memo=? WHERE unit_seq=?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, nvl(req.getParameter("side"), "F"));
+                    ps.setInt(2, Integer.parseInt(req.getParameter("startU")));
+                    ps.setInt(3, parseIntDef(req.getParameter("sizeU"), 1));
+                    ps.setString(4, req.getParameter("deviceName"));
+                    ps.setString(5, nvl(req.getParameter("deviceType"), "SERVER"));
+                    ps.setString(6, emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(7, emptyToNull(req.getParameter("memo")));
+                    ps.setInt(8, Integer.parseInt(unitSeqStr));
+                    ps.executeUpdate();
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 랙 유닛 삭제
+    // ─────────────────────────────────────────────────────
+    private void doRackUnitDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String custSeqStr = req.getParameter("custSeq");
+        String unitSeqStr = req.getParameter("unitSeq");
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_rack_unit WHERE unit_seq=?")) {
+            ps.setInt(1, Integer.parseInt(unitSeqStr));
+            ps.executeUpdate();
+        } catch (Exception e) { e.printStackTrace(); }
+        resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
+    }
+
     // ── 유틸 ──────────────────────────────────────────────
-    private String nvl(String s, String def) { return (s == null || s.isEmpty()) ? def : s; }
-    private String emptyToNull(String s)     { return (s == null || s.isEmpty()) ? null : s; }
-    private long   parseLong(String s)       { try { return Long.parseLong(s.replaceAll("[^0-9]", "")); } catch (Exception e) { return 0L; } }
+    private String nvl(String s, String def)     { return (s == null || s.isEmpty()) ? def : s; }
+    private String emptyToNull(String s)         { return (s == null || s.isEmpty()) ? null : s; }
+    private long   parseLong(String s)           { try { return Long.parseLong(s.replaceAll("[^0-9]", "")); } catch (Exception e) { return 0L; } }
+    private int    parseIntDef(String s, int def) { try { return Integer.parseInt(s.trim()); } catch (Exception e) { return def; } }
 
     // ── Value Objects ─────────────────────────────────────
     public static class CustomerVO {
@@ -329,5 +493,16 @@ public class CustomerDetailServlet extends HttpServlet {
         public int    assetSeq;
         public String assetType, assetName, model, ipAddr, osInfo, location;
         public String status, purchaseDt, memo;
+    }
+
+    public static class RackVO {
+        public int    rackSeq, totalU;
+        public String rackName, location, memo;
+        public List<RackUnitVO> units = new ArrayList<>();
+    }
+
+    public static class RackUnitVO {
+        public int    unitSeq, startU, sizeU;
+        public String side, deviceName, deviceType, ipAddr, memo;
     }
 }

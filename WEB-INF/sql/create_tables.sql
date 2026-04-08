@@ -20,6 +20,38 @@ CREATE TABLE IF NOT EXISTS tb_project (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =============================================
+-- 랙 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS tb_rack (
+    rack_seq    INT          NOT NULL AUTO_INCREMENT,
+    cust_seq    INT          NOT NULL,
+    rack_name   VARCHAR(100) NOT NULL,
+    total_u     INT          DEFAULT 42,
+    location    VARCHAR(200) DEFAULT NULL,
+    memo        TEXT         DEFAULT NULL,
+    del_yn      CHAR(1)      DEFAULT 'N',
+    reg_dt      DATETIME     DEFAULT NOW(),
+    PRIMARY KEY (rack_seq)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================================
+-- 랙 유닛(슬롯) 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS tb_rack_unit (
+    unit_seq    INT          NOT NULL AUTO_INCREMENT,
+    rack_seq    INT          NOT NULL,
+    side        CHAR(1)      DEFAULT 'F',   -- F=전면, B=후면
+    start_u     INT          NOT NULL,
+    size_u      INT          DEFAULT 1,
+    device_name VARCHAR(200) NOT NULL,
+    device_type VARCHAR(50)  DEFAULT 'SERVER',
+    ip_addr     TEXT         DEFAULT NULL,
+    memo        TEXT         DEFAULT NULL,
+    reg_dt      DATETIME     DEFAULT NOW(),
+    PRIMARY KEY (unit_seq)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================================
 -- IT 자산 테이블
 -- =============================================
 CREATE TABLE IF NOT EXISTS tb_asset (

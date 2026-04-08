@@ -8,10 +8,13 @@
     CustomerVO    cust     = (CustomerVO)    request.getAttribute("customer");
     List<ProjectVO> projects = (List<ProjectVO>) request.getAttribute("projects");
     List<AssetVO>   assets   = (List<AssetVO>)   request.getAttribute("assets");
+    List<RackVO>    racks    = (List<RackVO>)    request.getAttribute("racks");
     if (projects == null) projects = new java.util.ArrayList<>();
     if (assets   == null) assets   = new java.util.ArrayList<>();
+    if (racks    == null) racks    = new java.util.ArrayList<>();
 
     String activeTab = request.getParameter("tab") != null ? request.getParameter("tab") : "project";
+    String activeSub = request.getParameter("sub")  != null ? request.getParameter("sub")  : "list";
     String dbError   = (String) request.getAttribute("dbError");
 %>
 <%!
@@ -117,6 +120,59 @@
         .rack-placeholder-icon { opacity: 0.4; }
         .rack-placeholder-title { font-size: 15px; font-weight: 500; color: #4b5161; }
         .rack-placeholder-desc { font-size: 12px; color: #3d4251; }
+
+        /* 랙 카드 */
+        .rack-list { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+        .rack-card { background: #131519; border: 1px solid #1e2025; border-radius: 12px; overflow: hidden; min-width: 320px; }
+        .rack-card-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #1e2025; gap: 10px; }
+        .rack-card-name { font-size: 14px; font-weight: 500; color: #e8e9eb; }
+        .rack-card-loc { font-size: 11px; color: #4b5161; margin-top: 2px; }
+
+        /* 전면/후면 토글 */
+        .rack-side-toggle { display: flex; background: #0e0f11; border: 1px solid #1e2025; border-radius: 6px; padding: 2px; }
+        .rack-side-btn { padding: 4px 12px; font-size: 11px; font-weight: 500; border: none; background: none; color: #6b7280; cursor: pointer; border-radius: 4px; font-family: 'DM Sans', sans-serif; transition: background 0.12s, color 0.12s; }
+        .rack-side-btn.active { background: #1a1e2e; color: #6b9af5; }
+
+        /* 랙 바디 */
+        .rack-body { padding: 12px 16px 16px; }
+        .rack-view { display: none; }
+        .rack-view.active { display: block; }
+        .rack-frame { display: flex; align-items: stretch; }
+        .rack-left-rail, .rack-right-rail { width: 14px; background: #1a1c22; border: 1px solid #252830; border-radius: 3px; flex-shrink: 0; }
+        .rack-slots { flex: 1; border: 1px solid #252830; border-left: none; border-right: none; }
+
+        /* 슬롯 */
+        .rack-slot { display: flex; align-items: center; border-bottom: 1px solid #1e2025; min-height: 26px; cursor: pointer; transition: background 0.1s; position: relative; overflow: hidden; }
+        .rack-slot:last-child { border-bottom: none; }
+        .rack-slot.empty { background: #0e0f11; }
+        .rack-slot.empty:hover { background: #161820; }
+        .rack-slot-u { font-family: 'DM Mono', monospace; font-size: 9px; color: #3d4251; width: 24px; text-align: center; flex-shrink: 0; border-right: 1px solid #1e2025; align-self: stretch; display: flex; align-items: center; justify-content: center; }
+        .rack-slot-body { flex: 1; padding: 0 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+        .rack-slot-name { font-size: 12px; font-weight: 500; color: #e8e9eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rack-slot-type { font-size: 10px; font-family: 'DM Mono', monospace; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
+        .rack-slot-ip { font-size: 10px; color: #4b5161; font-family: 'DM Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; max-width: 100px; }
+        .rack-slot-add { font-size: 10px; color: #252830; width: 100%; text-align: center; }
+        .rack-slot.empty:hover .rack-slot-add { color: #3b6ef5; }
+
+        /* 장비 타입 색상 */
+        .type-server   { background: rgba(59,110,245,0.18); border-left: 3px solid #3b6ef5; }
+        .type-network  { background: rgba(34,201,122,0.15); border-left: 3px solid #22c97a; }
+        .type-security { background: rgba(212,160,23,0.15); border-left: 3px solid #d4a017; }
+        .type-storage  { background: rgba(167,139,250,0.15); border-left: 3px solid #a78bfa; }
+        .type-pdu      { background: rgba(249,115,22,0.15); border-left: 3px solid #f97316; }
+        .type-patch    { background: rgba(100,116,139,0.15); border-left: 3px solid #64748b; }
+        .type-kvm      { background: rgba(236,72,153,0.15); border-left: 3px solid #ec4899; }
+        .type-blank    { background: #0a0b0d; border-left: 3px solid #1e2025; }
+        .type-etc      { background: rgba(71,85,105,0.15); border-left: 3px solid #475569; }
+        .chip-server   { background: rgba(59,110,245,0.2);  color: #6b9af5; }
+        .chip-network  { background: rgba(34,201,122,0.2);  color: #22c97a; }
+        .chip-security { background: rgba(212,160,23,0.2);  color: #d4a017; }
+        .chip-storage  { background: rgba(167,139,250,0.2); color: #a78bfa; }
+        .chip-pdu      { background: rgba(249,115,22,0.2);  color: #f97316; }
+        .chip-patch    { background: rgba(100,116,139,0.2); color: #94a3b8; }
+        .chip-kvm      { background: rgba(236,72,153,0.2);  color: #ec4899; }
+        .chip-blank    { background: #1e2025; color: #3d4251; }
+        .chip-etc      { background: rgba(71,85,105,0.2);   color: #94a3b8; }
 
         /* 버튼 */
         .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: background 0.15s; }
@@ -314,12 +370,12 @@
 
             <!-- 서브탭 -->
             <div class="sub-tab-bar">
-                <button class="sub-tab-btn active" onclick="switchSubTab('asset-list', this)">장비 목록</button>
-                <button class="sub-tab-btn" onclick="switchSubTab('asset-rack', this)">랙 실장도</button>
+                <button class="sub-tab-btn <%= "rack".equals(activeSub) ? "" : "active" %>" onclick="switchSubTab('asset-list', this)">장비 목록</button>
+                <button class="sub-tab-btn <%= "rack".equals(activeSub) ? "active" : "" %>" onclick="switchSubTab('asset-rack', this)">랙 실장도</button>
             </div>
 
             <!-- 장비 목록 -->
-            <div id="sub-asset-list" class="sub-tab-panel active">
+            <div id="sub-asset-list" class="sub-tab-panel <%= "rack".equals(activeSub) ? "" : "active" %>">
                 <div class="panel-header">
                     <span class="panel-title">장비 목록</span>
                     <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 자산 추가</button>
@@ -376,7 +432,13 @@
             </div>
 
             <!-- 랙 실장도 -->
-            <div id="sub-asset-rack" class="sub-tab-panel">
+            <div id="sub-asset-rack" class="sub-tab-panel <%= "rack".equals(activeSub) ? "active" : "" %>">
+                <div class="panel-header">
+                    <span class="panel-title">랙 실장도</span>
+                    <button class="btn btn-primary btn-sm" onclick="openRackModal()">+ 랙 추가</button>
+                </div>
+
+                <% if (racks.isEmpty()) { %>
                 <div class="rack-placeholder">
                     <div class="rack-placeholder-icon">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3d4251" stroke-width="1.2">
@@ -384,19 +446,182 @@
                             <line x1="2" y1="7" x2="22" y2="7"/>
                             <line x1="2" y1="12" x2="22" y2="12"/>
                             <line x1="2" y1="17" x2="22" y2="17"/>
-                            <circle cx="5" cy="4.5" r="0.8" fill="#3d4251"/>
-                            <circle cx="5" cy="9.5" r="0.8" fill="#3d4251"/>
-                            <circle cx="5" cy="14.5" r="0.8" fill="#3d4251"/>
-                            <circle cx="5" cy="19.5" r="0.8" fill="#3d4251"/>
                         </svg>
                     </div>
-                    <div class="rack-placeholder-title">랙 실장도</div>
-                    <div class="rack-placeholder-desc">서버 랙 구성도 기능은 추후 제공될 예정입니다.</div>
+                    <div class="rack-placeholder-title">등록된 랙이 없습니다</div>
+                    <div class="rack-placeholder-desc">+ 랙 추가 버튼으로 서버 랙을 등록하세요.</div>
                 </div>
+                <% } else { %>
+
+                <!-- 랙 카드 목록 -->
+                <div class="rack-list" id="rackList">
+                <% for (RackVO rack : racks) { %>
+                    <div class="rack-card">
+                        <!-- 랙 헤더 -->
+                        <div class="rack-card-header">
+                            <div>
+                                <div class="rack-card-name"><%= rack.rackName %></div>
+                                <% if (rack.location != null && !rack.location.isEmpty()) { %>
+                                <div class="rack-card-loc"><%= rack.location %></div>
+                                <% } %>
+                            </div>
+                            <div style="display:flex;gap:6px;align-items:center">
+                                <div class="rack-side-toggle">
+                                    <button class="rack-side-btn active" onclick="switchRackSide(this, 'F')">전면</button>
+                                    <button class="rack-side-btn" onclick="switchRackSide(this, 'B')">후면</button>
+                                </div>
+                                <button class="btn btn-sm btn-secondary" onclick="openRackModal(<%= rack.rackSeq %>, '<%= rack.rackName.replace("'","\\'") %>', <%= rack.totalU %>, '<%= rack.location != null ? rack.location.replace("'","\\'") : "" %>', '<%= rack.memo != null ? rack.memo.replace("'","\\'") : "" %>')">수정</button>
+                                <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('랙을 삭제하면 모든 슬롯 데이터도 삭제됩니다. 계속할까요?')">
+                                    <input type="hidden" name="action" value="rackDelete">
+                                    <input type="hidden" name="custSeq" value="<%= cust.custSeq %>">
+                                    <input type="hidden" name="rackSeq" value="<%= rack.rackSeq %>">
+                                    <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- 랙 바디 (전면/후면) -->
+                        <div class="rack-body" data-rack="<%= rack.rackSeq %>" data-totalu="<%= rack.totalU %>">
+                            <!-- 전면 -->
+                            <div class="rack-view rack-front active">
+                                <div class="rack-frame">
+                                    <div class="rack-left-rail"></div>
+                                    <div class="rack-slots" id="rack-F-<%= rack.rackSeq %>">
+                                        <!-- JS로 렌더링 -->
+                                    </div>
+                                    <div class="rack-right-rail"></div>
+                                </div>
+                            </div>
+                            <!-- 후면 -->
+                            <div class="rack-view rack-back">
+                                <div class="rack-frame">
+                                    <div class="rack-left-rail"></div>
+                                    <div class="rack-slots" id="rack-B-<%= rack.rackSeq %>">
+                                        <!-- JS로 렌더링 -->
+                                    </div>
+                                    <div class="rack-right-rail"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+                </div>
+                <% } %>
             </div>
 
         </div>
         <% } %>
+    </div>
+</div>
+
+<!-- 랙 추가/수정 모달 -->
+<div class="modal-overlay" id="rackModal">
+    <div class="modal">
+        <div class="modal-title" id="rackModalTitle">랙 추가</div>
+        <form action="../CustomerDetailServlet" method="post">
+            <input type="hidden" name="action" value="rackSave">
+            <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
+            <input type="hidden" name="rackSeq" id="rackSeq" value="">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>랙 이름 *</label>
+                    <input type="text" name="rackName" id="rackName" placeholder="예: 서버랙 #1" required>
+                </div>
+                <div class="form-group">
+                    <label>총 U 수</label>
+                    <select name="totalU" id="rackTotalU">
+                        <option value="14">14U</option>
+                        <option value="22">22U</option>
+                        <option value="27">27U</option>
+                        <option value="36">36U</option>
+                        <option value="42" selected>42U</option>
+                        <option value="45">45U</option>
+                        <option value="47">47U</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>위치</label>
+                    <input type="text" name="location" id="rackLocation" placeholder="예: IDC 1F A열">
+                </div>
+                <div class="form-group full">
+                    <label>메모</label>
+                    <textarea name="memo" id="rackMemo" placeholder="비고사항"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('rackModal')">취소</button>
+                <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 랙 유닛 추가/수정 모달 -->
+<div class="modal-overlay" id="rackUnitModal">
+    <div class="modal">
+        <div class="modal-title" id="rackUnitModalTitle">장비 추가</div>
+        <form action="../CustomerDetailServlet" method="post">
+            <input type="hidden" name="action" value="rackUnitSave">
+            <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
+            <input type="hidden" name="rackSeq" id="unitRackSeq" value="">
+            <input type="hidden" name="unitSeq" id="unitSeq" value="">
+            <input type="hidden" name="side"    id="unitSide" value="F">
+            <input type="hidden" name="startU"  id="unitStartU" value="">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>장비명 *</label>
+                    <input type="text" name="deviceName" id="unitDeviceName" placeholder="예: web-server-01" required>
+                </div>
+                <div class="form-group">
+                    <label>장비 유형</label>
+                    <select name="deviceType" id="unitDeviceType">
+                        <option value="SERVER">SERVER</option>
+                        <option value="NETWORK">NETWORK</option>
+                        <option value="SECURITY">SECURITY</option>
+                        <option value="STORAGE">STORAGE</option>
+                        <option value="PDU">PDU</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="KVM">KVM</option>
+                        <option value="BLANK">BLANK</option>
+                        <option value="ETC">ETC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>시작 위치</label>
+                    <input type="text" id="unitStartUDisplay" readonly style="color:#4b5161">
+                </div>
+                <div class="form-group">
+                    <label>크기 (U)</label>
+                    <select name="sizeU" id="unitSizeU">
+                        <% for (int u = 1; u <= 10; u++) { %>
+                        <option value="<%= u %>"><%= u %>U</option>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>IP 주소</label>
+                    <input type="text" name="ipAddr" id="unitIpAddr" placeholder="예: 192.168.1.10, 192.168.1.11">
+                </div>
+                <div class="form-group full">
+                    <label>메모</label>
+                    <textarea name="memo" id="unitMemo" placeholder="비고사항"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between">
+                <div id="unitDeleteBtn" style="display:none">
+                    <form action="../CustomerDetailServlet" method="post" onsubmit="return confirm('이 장비를 삭제하시겠습니까?')" style="margin:0">
+                        <input type="hidden" name="action" value="rackUnitDelete">
+                        <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
+                        <input type="hidden" name="unitSeq" id="unitDeleteSeq" value="">
+                        <button type="submit" class="btn btn-danger">장비 삭제</button>
+                    </form>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('rackUnitModal')">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -529,6 +754,154 @@
         document.getElementById('sub-' + id).classList.add('active');
         btn.classList.add('active');
     }
+
+    // ── 랙 사이드 전환 ───────────────────────────────────
+    function switchRackSide(btn, side) {
+        const card = btn.closest('.rack-card');
+        card.querySelectorAll('.rack-side-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        card.querySelectorAll('.rack-view').forEach(v => v.classList.remove('active'));
+        card.querySelector(side === 'F' ? '.rack-front' : '.rack-back').classList.add('active');
+    }
+
+    // ── 랙 모달 ─────────────────────────────────────────
+    function openRackModal(rackSeq, name, totalU, loc, memo) {
+        document.getElementById('rackModalTitle').textContent = rackSeq ? '랙 수정' : '랙 추가';
+        document.getElementById('rackSeq').value     = rackSeq || '';
+        document.getElementById('rackName').value    = name    || '';
+        document.getElementById('rackTotalU').value  = totalU  || '42';
+        document.getElementById('rackLocation').value = loc    || '';
+        document.getElementById('rackMemo').value    = memo    || '';
+        document.getElementById('rackModal').classList.add('open');
+    }
+
+    // ── 유닛 모달 (빈 슬롯 클릭 → 추가) ─────────────────
+    function openAddUnitModal(rackSeq, side, startU) {
+        document.getElementById('rackUnitModalTitle').textContent = '장비 추가';
+        document.getElementById('unitRackSeq').value   = rackSeq;
+        document.getElementById('unitSeq').value       = '';
+        document.getElementById('unitSide').value      = side;
+        document.getElementById('unitStartU').value    = startU;
+        document.getElementById('unitStartUDisplay').value = startU + 'U (' + (side === 'F' ? '전면' : '후면') + ')';
+        document.getElementById('unitDeviceName').value = '';
+        document.getElementById('unitDeviceType').value = 'SERVER';
+        document.getElementById('unitSizeU').value     = '1';
+        document.getElementById('unitIpAddr').value    = '';
+        document.getElementById('unitMemo').value      = '';
+        document.getElementById('unitDeleteBtn').style.display = 'none';
+        document.getElementById('rackUnitModal').classList.add('open');
+    }
+
+    // ── 유닛 모달 (장비 슬롯 클릭 → 수정) ───────────────
+    function openEditUnitModal(rackSeq, side, unitSeq, startU, sizeU, name, type, ip, memo) {
+        document.getElementById('rackUnitModalTitle').textContent = '장비 수정';
+        document.getElementById('unitRackSeq').value   = rackSeq;
+        document.getElementById('unitSeq').value       = unitSeq;
+        document.getElementById('unitSide').value      = side;
+        document.getElementById('unitStartU').value    = startU;
+        document.getElementById('unitStartUDisplay').value = startU + 'U (' + (side === 'F' ? '전면' : '후면') + ')';
+        document.getElementById('unitDeviceName').value = name  || '';
+        document.getElementById('unitDeviceType').value = type  || 'SERVER';
+        document.getElementById('unitSizeU').value     = sizeU || '1';
+        document.getElementById('unitIpAddr').value    = ip    || '';
+        document.getElementById('unitMemo').value      = memo  || '';
+        document.getElementById('unitDeleteBtn').style.display = 'block';
+        document.getElementById('unitDeleteSeq').value = unitSeq;
+        document.getElementById('rackUnitModal').classList.add('open');
+    }
+
+    // ── 랙 슬롯 렌더링 ──────────────────────────────────
+    const RACK_DATA = <%
+        // 랙 데이터를 JSON으로 직렬화
+        StringBuilder rackJson = new StringBuilder("[");
+        for (int ri = 0; ri < racks.size(); ri++) {
+            com.admin.servlet.CustomerDetailServlet.RackVO r = racks.get(ri);
+            if (ri > 0) rackJson.append(",");
+            rackJson.append("{\"rackSeq\":").append(r.rackSeq)
+                    .append(",\"totalU\":").append(r.totalU)
+                    .append(",\"units\":[");
+            for (int ui = 0; ui < r.units.size(); ui++) {
+                com.admin.servlet.CustomerDetailServlet.RackUnitVO u = r.units.get(ui);
+                if (ui > 0) rackJson.append(",");
+                String safeIp   = u.ipAddr   != null ? u.ipAddr.replace("\"","\\\"").replace("\n","").replace("\r","") : "";
+                String safeMemo = u.memo      != null ? u.memo.replace("\"","\\\"").replace("\n"," ").replace("\r","") : "";
+                String safeName = u.deviceName.replace("\"","\\\"");
+                rackJson.append("{\"unitSeq\":").append(u.unitSeq)
+                        .append(",\"side\":\"").append(u.side).append("\"")
+                        .append(",\"startU\":").append(u.startU)
+                        .append(",\"sizeU\":").append(u.sizeU)
+                        .append(",\"deviceName\":\"").append(safeName).append("\"")
+                        .append(",\"deviceType\":\"").append(u.deviceType).append("\"")
+                        .append(",\"ipAddr\":\"").append(safeIp).append("\"")
+                        .append(",\"memo\":\"").append(safeMemo).append("\"")
+                        .append("}");
+            }
+            rackJson.append("]}");
+        }
+        rackJson.append("]");
+        out.print(rackJson.toString());
+    %>;
+
+    const TYPE_CSS = {
+        SERVER:'type-server',NETWORK:'type-network',SECURITY:'type-security',
+        STORAGE:'type-storage',PDU:'type-pdu',PATCH:'type-patch',
+        KVM:'type-kvm',BLANK:'type-blank',ETC:'type-etc'
+    };
+    const CHIP_CSS = {
+        SERVER:'chip-server',NETWORK:'chip-network',SECURITY:'chip-security',
+        STORAGE:'chip-storage',PDU:'chip-pdu',PATCH:'chip-patch',
+        KVM:'chip-kvm',BLANK:'chip-blank',ETC:'chip-etc'
+    };
+
+    function renderRacks() {
+        RACK_DATA.forEach(rack => {
+            ['F','B'].forEach(side => {
+                const container = document.getElementById('rack-' + side + '-' + rack.rackSeq);
+                if (!container) return;
+
+                // 점유 맵 구성
+                const occupied = {};
+                rack.units.filter(u => u.side === side).forEach(u => {
+                    for (let i = u.startU; i < u.startU + u.sizeU; i++) occupied[i] = u;
+                });
+
+                let html = '';
+                let skip = 0;
+                const U_H = 26;
+                for (let u = 1; u <= rack.totalU; u++) {
+                    if (skip > 0) { skip--; continue; }
+                    const dev = occupied[u];
+                    if (dev) {
+                        const h = dev.sizeU * U_H - 1;
+                        const tc = TYPE_CSS[dev.deviceType] || 'type-etc';
+                        const cc = CHIP_CSS[dev.deviceType] || 'chip-etc';
+                        const ip1 = dev.ipAddr ? dev.ipAddr.split(',')[0].trim() : '';
+                        html += `<div class="rack-slot ${tc}" style="height:${h}px;min-height:${h}px"
+                            onclick="openEditUnitModal(${rack.rackSeq},'${side}',${dev.unitSeq},${dev.startU},${dev.sizeU},
+                                '${dev.deviceName.replace(/'/g,"\\'")}','${dev.deviceType}',
+                                '${dev.ipAddr.replace(/'/g,"\\'")}','${dev.memo.replace(/'/g,"\\'")}')">
+                            <div class="rack-slot-u">${u}U</div>
+                            <div class="rack-slot-body">
+                                <span class="rack-slot-name">${dev.deviceName}</span>
+                                <span class="rack-slot-type ${cc}">${dev.deviceType}</span>
+                                ${ip1 ? `<span class="rack-slot-ip">${ip1}</span>` : ''}
+                            </div>
+                        </div>`;
+                        skip = dev.sizeU - 1;
+                    } else {
+                        html += `<div class="rack-slot empty" style="height:${U_H - 1}px;min-height:${U_H - 1}px"
+                            onclick="openAddUnitModal(${rack.rackSeq},'${side}',${u})">
+                            <div class="rack-slot-u">${u}U</div>
+                            <div class="rack-slot-body"><span class="rack-slot-add">+ 장비 추가</span></div>
+                        </div>`;
+                    }
+                }
+                container.innerHTML = html;
+            });
+        });
+    }
+
+    renderRacks();
 
     function openProjectModal(projSeq, projName, amt, start, end, status, manager, memo) {
         document.getElementById('projectModalTitle').textContent = projSeq ? '사업 수정' : '사업 추가';
