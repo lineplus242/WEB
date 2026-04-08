@@ -339,7 +339,8 @@
             고객사 정보
         </a>
 
-        <a href="user/list.jsp" class="sb-item">
+        <% if ("ADMIN".equals(loginRole)) { %>
+        <a href="UserServlet?action=list" class="sb-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -347,20 +348,16 @@
             </svg>
             사용자 관리
         </a>
+        <% } %>
 
-        <a href="board/list.jsp" class="sb-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-            </svg>
-            게시판 관리
-        </a>
+        <div class="sb-section">계정</div>
 
-        <a href="stats.jsp" class="sb-item">
+        <a href="UserServlet?action=changePw" class="sb-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
-            통계
+            비밀번호 변경
         </a>
 
         <div class="sb-section">시스템</div>
