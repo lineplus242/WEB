@@ -11,7 +11,7 @@
     List<UserVO> list      = (List<UserVO>) request.getAttribute("list");
     int totalCnt           = request.getAttribute("totalCnt")   != null ? (int) request.getAttribute("totalCnt")   : 0;
     int totalPages         = request.getAttribute("totalPages") != null ? (int) request.getAttribute("totalPages") : 1;
-    int page               = request.getAttribute("page")       != null ? (int) request.getAttribute("page")       : 1;
+    int curPage            = request.getAttribute("page")       != null ? (int) request.getAttribute("page")       : 1;
     String keyword         = request.getAttribute("keyword")    != null ? (String) request.getAttribute("keyword") : "";
     String errorParam      = request.getParameter("error");
 %>
@@ -206,11 +206,11 @@
 
             <% if (totalPages > 1) { %>
             <div class="pagination">
-                <% if (page > 1) { %><a href="../UserServlet?action=list&page=<%= page-1 %>&keyword=<%= keyword %>" class="pg-btn">‹</a><% } %>
+                <% if (curPage > 1) { %><a href="../UserServlet?action=list&page=<%= curPage-1 %>&keyword=<%= keyword %>" class="pg-btn">‹</a><% } %>
                 <% for (int i = 1; i <= totalPages; i++) { %>
-                <a href="../UserServlet?action=list&page=<%= i %>&keyword=<%= keyword %>" class="pg-btn <%= i == page ? "active" : "" %>"><%= i %></a>
+                <a href="../UserServlet?action=list&page=<%= i %>&keyword=<%= keyword %>" class="pg-btn <%= i == curPage ? "active" : "" %>"><%= i %></a>
                 <% } %>
-                <% if (page < totalPages) { %><a href="../UserServlet?action=list&page=<%= page+1 %>&keyword=<%= keyword %>" class="pg-btn">›</a><% } %>
+                <% if (curPage < totalPages) { %><a href="../UserServlet?action=list&page=<%= curPage+1 %>&keyword=<%= keyword %>" class="pg-btn">›</a><% } %>
             </div>
             <% } %>
 
