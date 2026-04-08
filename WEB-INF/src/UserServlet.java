@@ -152,6 +152,7 @@ public class UserServlet extends HttpServlet {
                         u.role     = rs.getString("role");
                         u.useYn    = rs.getString("use_yn");
                         req.setAttribute("user", u);
+                        req.setAttribute("isAdminAccount", "admin".equals(u.userId));
                     }
                 }
             } catch (Exception e) {
@@ -223,10 +224,31 @@ public class UserServlet extends HttpServlet {
         String role     = nvl(req.getParameter("role"), "USER");
         String useYn    = nvl(req.getParameter("useYn"), "Y");
         String newPw    = req.getParameter("password");
-        String loginUser = (String) req.getSession().getAttribute("loginUser");
+
+        // 대상 계정의 user_id 조회
+        String targetUserId = "";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT user_id FROM tb_user WHERE user_seq=?")) {
+                ps.setInt(1, Integer.parseInt(seqStr));
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) targetUserId = rs.getString("user_id");
+            }
+        } catch (Exception e) { /* 무시 */ }
+
+        boolean isAdminAccount = "admin".equals(targetUserId);
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
-            if (newPw != null && !newPw.trim().isEmpty()) {
+            if (isAdminAccount) {
+                // admin 계정: 비밀번호만 변경 가능
+                if (newPw != null && !newPw.trim().isEmpty()) {
+                    String sql = "UPDATE tb_user SET password=HEX(SHA2(?,256)) WHERE user_seq=? AND del_yn='N'";
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        ps.setString(1, newPw);
+                        ps.setInt(2, Integer.parseInt(seqStr));
+                        ps.executeUpdate();
+                    }
+                }
+            } else if (newPw != null && !newPw.trim().isEmpty()) {
                 // 비밀번호 포함 업데이트
                 String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=?, password=HEX(SHA2(?,256)) WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {

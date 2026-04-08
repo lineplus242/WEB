@@ -9,6 +9,7 @@
 
     UserVO u = (UserVO) request.getAttribute("user");
     boolean isEdit = (u != null);
+    boolean isAdminAccount = Boolean.TRUE.equals(request.getAttribute("isAdminAccount"));
     String errorMsg = (String) request.getAttribute("errorMsg");
 %>
 <%! String v(String s) { return s != null ? s.replace("\"","&quot;") : ""; } %>
@@ -152,30 +153,39 @@
                                 <% } %>
                             </div>
                             <div class="form-group">
-                                <label>이름 <span class="req">*</span></label>
-                                <input type="text" name="userName" required placeholder="홍길동"
-                                       value="<%= isEdit ? v(u.userName) : "" %>">
+                                <label>이름 <% if (!isAdminAccount) { %><span class="req">*</span><% } %></label>
+                                <input type="text" name="userName" <%= !isAdminAccount ? "required" : "readonly" %>
+                                       placeholder="홍길동" value="<%= isEdit ? v(u.userName) : "" %>">
                             </div>
                             <div class="form-group">
                                 <label><%= isEdit ? "비밀번호 재설정" : "비밀번호 *" %></label>
                                 <input type="password" name="password"
                                        <%= isEdit ? "" : "required" %>
-                                       placeholder="<%= isEdit ? "변경 시에만 입력" : "6자 이상" %>" autocomplete="new-password">
-                                <% if (isEdit) { %><span class="hint">입력하지 않으면 기존 비밀번호 유지</span><% } %>
+                                       placeholder="<%= isEdit ? (isAdminAccount ? "비밀번호 변경" : "변경 시에만 입력") : "6자 이상" %>" autocomplete="new-password">
+                                <% if (isEdit && !isAdminAccount) { %><span class="hint">입력하지 않으면 기존 비밀번호 유지</span><% } %>
+                                <% if (isAdminAccount) { %><span class="hint" style="color:#d4a017">admin 계정은 비밀번호만 변경할 수 있습니다.</span><% } %>
                             </div>
                             <div class="form-group">
-                                <label>권한 <span class="req">*</span></label>
+                                <label>권한</label>
+                                <% if (isAdminAccount) { %>
+                                <input type="text" value="ADMIN" readonly>
+                                <% } else { %>
                                 <select name="role">
                                     <option value="USER"  <%= !isEdit || "USER".equals(u.role)  ? "selected" : "" %>>USER</option>
                                     <option value="ADMIN" <%= isEdit && "ADMIN".equals(u.role)  ? "selected" : "" %>>ADMIN</option>
                                 </select>
+                                <% } %>
                             </div>
                             <div class="form-group">
                                 <label>상태</label>
+                                <% if (isAdminAccount) { %>
+                                <input type="text" value="활성 (변경 불가)" readonly>
+                                <% } else { %>
                                 <select name="useYn">
                                     <option value="Y" <%= !isEdit || "Y".equals(u.useYn) ? "selected" : "" %>>활성</option>
                                     <option value="N" <%= isEdit && "N".equals(u.useYn) ? "selected" : "" %>>비활성</option>
                                 </select>
+                                <% } %>
                             </div>
                         </div>
                     </div>
