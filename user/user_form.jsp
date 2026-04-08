@@ -64,13 +64,20 @@
         .form-group.full { grid-column: span 2; }
         label { font-size: 11px; font-weight: 500; color: #6b7280; letter-spacing: 0.06em; text-transform: uppercase; }
         label .req { color: #3b6ef5; margin-left: 2px; }
-        input[type=text], input[type=password], select {
+        input[type=text], input[type=password], input[type=email], select {
             background: #0e0f11; border: 1px solid #252830; border-radius: 8px;
             padding: 9px 12px; font-size: 13px; color: #e8e9eb;
             font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.15s; width: 100%;
         }
         input:focus, select:focus { border-color: #3b6ef5; }
         input::placeholder { color: #3d4251; }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px #0e0f11 inset;
+            -webkit-text-fill-color: #e8e9eb;
+            transition: background-color 5000s ease-in-out 0s;
+        }
         input:read-only { color: #4b5161; cursor: default; }
         select option { background: #131519; }
         .hint { font-size: 11px; color: #3d4251; margin-top: 3px; }
