@@ -228,25 +228,23 @@ public class UserServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (newPw != null && !newPw.trim().isEmpty()) {
                 // 비밀번호 포함 업데이트
-                String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=?, password=HEX(SHA2(?,256)), upd_user=? WHERE user_seq=? AND del_yn='N'";
+                String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=?, password=HEX(SHA2(?,256)) WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setString(1, userName);
                     ps.setString(2, role);
                     ps.setString(3, useYn);
                     ps.setString(4, newPw);
-                    ps.setString(5, loginUser);
-                    ps.setInt(6, Integer.parseInt(seqStr));
+                    ps.setInt(5, Integer.parseInt(seqStr));
                     ps.executeUpdate();
                 }
             } else {
                 // 비밀번호 제외 업데이트
-                String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=?, upd_user=? WHERE user_seq=? AND del_yn='N'";
+                String sql = "UPDATE tb_user SET user_name=?, role=?, use_yn=? WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setString(1, userName);
                     ps.setString(2, role);
                     ps.setString(3, useYn);
-                    ps.setString(4, loginUser);
-                    ps.setInt(5, Integer.parseInt(seqStr));
+                    ps.setInt(4, Integer.parseInt(seqStr));
                     ps.executeUpdate();
                 }
             }
@@ -280,9 +278,8 @@ public class UserServlet extends HttpServlet {
                 return;
             }
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE tb_user SET del_yn='Y', upd_user=? WHERE user_seq=?")) {
-                ps.setString(1, loginUser);
-                ps.setInt(2, Integer.parseInt(seqStr));
+                    "UPDATE tb_user SET del_yn='Y' WHERE user_seq=?")) {
+                ps.setInt(1, Integer.parseInt(seqStr));
                 ps.executeUpdate();
             }
         } catch (Exception e) {
@@ -333,10 +330,9 @@ public class UserServlet extends HttpServlet {
             }
             // 비밀번호 변경
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE tb_user SET password=HEX(SHA2(?,256)), upd_user=? WHERE user_id=? AND del_yn='N'")) {
+                    "UPDATE tb_user SET password=HEX(SHA2(?,256)) WHERE user_id=? AND del_yn='N'")) {
                 ps.setString(1, newPw);
                 ps.setString(2, loginUser);
-                ps.setString(3, loginUser);
                 ps.executeUpdate();
             }
         } catch (Exception e) {
