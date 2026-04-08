@@ -876,24 +876,22 @@
                         const tc = TYPE_CSS[dev.deviceType] || 'type-etc';
                         const cc = CHIP_CSS[dev.deviceType] || 'chip-etc';
                         const ip1 = dev.ipAddr ? dev.ipAddr.split(',')[0].trim() : '';
-                        html += `<div class="rack-slot ${tc}" style="height:${h}px;min-height:${h}px"
-                            onclick="openEditUnitModal(${rack.rackSeq},'${side}',${dev.unitSeq},${dev.startU},${dev.sizeU},
-                                '${dev.deviceName.replace(/'/g,"\\'")}','${dev.deviceType}',
-                                '${dev.ipAddr.replace(/'/g,"\\'")}','${dev.memo.replace(/'/g,"\\'")}')">
-                            <div class="rack-slot-u">${u}U</div>
-                            <div class="rack-slot-body">
-                                <span class="rack-slot-name">${dev.deviceName}</span>
-                                <span class="rack-slot-type ${cc}">${dev.deviceType}</span>
-                                ${ip1 ? `<span class="rack-slot-ip">${ip1}</span>` : ''}
-                            </div>
-                        </div>`;
+                        const esc = s => (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                        const onclk = 'openEditUnitModal(' + rack.rackSeq + ',\'' + side + '\',' + dev.unitSeq + ',' + dev.startU + ',' + dev.sizeU + ',\'' + esc(dev.deviceName) + '\',\'' + esc(dev.deviceType) + '\',\'' + esc(dev.ipAddr) + '\',\'' + esc(dev.memo) + '\')';
+                        html += '<div class="rack-slot ' + tc + '" style="height:' + h + 'px;min-height:' + h + 'px" onclick="' + onclk + '">'
+                              + '<div class="rack-slot-u">' + u + 'U</div>'
+                              + '<div class="rack-slot-body">'
+                              + '<span class="rack-slot-name">' + dev.deviceName + '</span>'
+                              + '<span class="rack-slot-type ' + cc + '">' + dev.deviceType + '</span>'
+                              + (ip1 ? '<span class="rack-slot-ip">' + ip1 + '</span>' : '')
+                              + '</div></div>';
                         skip = dev.sizeU - 1;
                     } else {
-                        html += `<div class="rack-slot empty" style="height:${U_H - 1}px;min-height:${U_H - 1}px"
-                            onclick="openAddUnitModal(${rack.rackSeq},'${side}',${u})">
-                            <div class="rack-slot-u">${u}U</div>
-                            <div class="rack-slot-body"><span class="rack-slot-add">+ 장비 추가</span></div>
-                        </div>`;
+                        html += '<div class="rack-slot empty" style="height:' + (U_H-1) + 'px;min-height:' + (U_H-1) + 'px"'
+                              + ' onclick="openAddUnitModal(' + rack.rackSeq + ',\'' + side + '\',' + u + ')">'
+                              + '<div class="rack-slot-u">' + u + 'U</div>'
+                              + '<div class="rack-slot-body"><span class="rack-slot-add">+ 장비 추가</span></div>'
+                              + '</div>';
                     }
                 }
                 container.innerHTML = html;
