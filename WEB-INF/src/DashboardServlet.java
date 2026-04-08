@@ -20,13 +20,13 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/DashboardServlet")
 public class DashboardServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mysql://localhost:3306/admin_db?useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
+    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
     private static final String DB_USER = "root";
-    private static final String DB_PASS = "your_password";
+    private static final String DB_PASS = "wkd11!#Eod";
 
     @Override
     public void init() throws ServletException {
-        try { Class.forName("com.mysql.cj.jdbc.Driver"); }
+        try { Class.forName("org.mariadb.jdbc.Driver"); }
         catch (ClassNotFoundException e) { throw new ServletException(e); }
     }
 
