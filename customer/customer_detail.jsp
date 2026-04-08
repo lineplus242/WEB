@@ -104,6 +104,20 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
+        /* 서브탭 */
+        .sub-tab-bar { display: flex; gap: 2px; margin-bottom: 20px; background: #0e0f11; border: 1px solid #1e2025; border-radius: 8px; padding: 4px; width: fit-content; }
+        .sub-tab-btn { padding: 6px 18px; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; border: none; background: none; border-radius: 6px; transition: background 0.12s, color 0.12s; font-family: 'DM Sans', sans-serif; }
+        .sub-tab-btn:hover { color: #c8cad0; }
+        .sub-tab-btn.active { background: #1a1e2e; color: #6b9af5; }
+        .sub-tab-panel { display: none; }
+        .sub-tab-panel.active { display: block; }
+
+        /* 랙 실장도 플레이스홀더 */
+        .rack-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; background: #131519; border: 1px dashed #252830; border-radius: 12px; gap: 12px; }
+        .rack-placeholder-icon { opacity: 0.4; }
+        .rack-placeholder-title { font-size: 15px; font-weight: 500; color: #4b5161; }
+        .rack-placeholder-desc { font-size: 12px; color: #3d4251; }
+
         /* 버튼 */
         .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: background 0.15s; }
         .btn-primary { background: #3b6ef5; color: #fff; }
@@ -297,59 +311,90 @@
 
         <!-- IT 자산 탭 -->
         <div id="tab-asset" class="tab-panel <%= "asset".equals(activeTab) ? "active" : "" %>">
-            <div class="panel-header">
-                <span class="panel-title">IT 자산 목록</span>
-                <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 자산 추가</button>
+
+            <!-- 서브탭 -->
+            <div class="sub-tab-bar">
+                <button class="sub-tab-btn active" onclick="switchSubTab('asset-list', this)">장비 목록</button>
+                <button class="sub-tab-btn" onclick="switchSubTab('asset-rack', this)">랙 실장도</button>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>유형</th>
-                            <th>자산명</th>
-                            <th>모델</th>
-                            <th>IP 주소</th>
-                            <th>OS</th>
-                            <th>위치</th>
-                            <th>도입일</th>
-                            <th>상태</th>
-                            <th>관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (assets.isEmpty()) { %>
-                        <tr class="empty-row"><td colspan="9">등록된 자산이 없습니다.</td></tr>
-                        <% } else { for (AssetVO a : assets) { %>
-                        <tr>
-                            <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
-                            <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
-                            <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
-                            <td class="td-mono" style="font-size:12px">
-                                <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
-                                    for (String ip : a.ipAddr.split(",")) { %>
-                                <div><%= ip.trim() %></div>
-                                <% } } else { %><span style="color:#3d4251">-</span><% } %>
-                            </td>
-                            <td style="font-size:12px;color:#6b7280"><%= nvl(a.osInfo) %></td>
-                            <td style="font-size:12px"><%= nvl(a.location) %></td>
-                            <td class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.purchaseDt) %></td>
-                            <td><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
-                            <td>
-                                <div class="td-actions">
-                                    <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= nvl(a.ipAddr).replace("\n","").replace("\r","") %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
-                                    <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
-                                        <input type="hidden" name="action" value="assetDelete">
-                                        <input type="hidden" name="custSeq" value="<%= cust.custSeq %>">
-                                        <input type="hidden" name="assetSeq" value="<%= a.assetSeq %>">
-                                        <button type="submit" class="btn btn-sm btn-danger">삭제</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        <% } } %>
-                    </tbody>
-                </table>
+
+            <!-- 장비 목록 -->
+            <div id="sub-asset-list" class="sub-tab-panel active">
+                <div class="panel-header">
+                    <span class="panel-title">장비 목록</span>
+                    <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 자산 추가</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>유형</th>
+                                <th>자산명</th>
+                                <th>모델</th>
+                                <th>IP 주소</th>
+                                <th>OS</th>
+                                <th>위치</th>
+                                <th>도입일</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (assets.isEmpty()) { %>
+                            <tr class="empty-row"><td colspan="9">등록된 자산이 없습니다.</td></tr>
+                            <% } else { for (AssetVO a : assets) { %>
+                            <tr>
+                                <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
+                                <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
+                                <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
+                                <td class="td-mono" style="font-size:12px">
+                                    <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
+                                        for (String ip : a.ipAddr.split(",")) { %>
+                                    <div><%= ip.trim() %></div>
+                                    <% } } else { %><span style="color:#3d4251">-</span><% } %>
+                                </td>
+                                <td style="font-size:12px;color:#6b7280"><%= nvl(a.osInfo) %></td>
+                                <td style="font-size:12px"><%= nvl(a.location) %></td>
+                                <td class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.purchaseDt) %></td>
+                                <td><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
+                                <td>
+                                    <div class="td-actions">
+                                        <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= nvl(a.ipAddr).replace("\n","").replace("\r","") %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
+                                        <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
+                                            <input type="hidden" name="action" value="assetDelete">
+                                            <input type="hidden" name="custSeq" value="<%= cust.custSeq %>">
+                                            <input type="hidden" name="assetSeq" value="<%= a.assetSeq %>">
+                                            <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% } } %>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- 랙 실장도 -->
+            <div id="sub-asset-rack" class="sub-tab-panel">
+                <div class="rack-placeholder">
+                    <div class="rack-placeholder-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3d4251" stroke-width="1.2">
+                            <rect x="2" y="2" width="20" height="20" rx="2"/>
+                            <line x1="2" y1="7" x2="22" y2="7"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <line x1="2" y1="17" x2="22" y2="17"/>
+                            <circle cx="5" cy="4.5" r="0.8" fill="#3d4251"/>
+                            <circle cx="5" cy="9.5" r="0.8" fill="#3d4251"/>
+                            <circle cx="5" cy="14.5" r="0.8" fill="#3d4251"/>
+                            <circle cx="5" cy="19.5" r="0.8" fill="#3d4251"/>
+                        </svg>
+                    </div>
+                    <div class="rack-placeholder-title">랙 실장도</div>
+                    <div class="rack-placeholder-desc">서버 랙 구성도 기능은 추후 제공될 예정입니다.</div>
+                </div>
+            </div>
+
         </div>
         <% } %>
     </div>
@@ -475,6 +520,14 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
         event.target.classList.add('active');
+    }
+
+    function switchSubTab(id, btn) {
+        const panel = btn.closest('.tab-panel');
+        panel.querySelectorAll('.sub-tab-panel').forEach(p => p.classList.remove('active'));
+        panel.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('sub-' + id).classList.add('active');
+        btn.classList.add('active');
     }
 
     function openProjectModal(projSeq, projName, amt, start, end, status, manager, memo) {
