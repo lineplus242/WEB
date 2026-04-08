@@ -367,7 +367,7 @@
             <div class="stat-change">MySQL 정상</div>
         </div>
 
-        <p class="right-title">Apache Tomcat<br>내부 관리 시스템</p>
+        <p class="right-title">내부 관리 시스템</p>
     </div>
 
 </body>
