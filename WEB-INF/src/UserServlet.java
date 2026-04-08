@@ -259,7 +259,7 @@ public class UserServlet extends HttpServlet {
     }
 
     // ── 삭제 (admin only) ─────────────────────────────────
-    private void doDelete(HttpServletRequest req, HttpServletResponse resp)
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         if (!isAdmin(req)) { resp.sendError(403, "권한이 없습니다."); return; }
