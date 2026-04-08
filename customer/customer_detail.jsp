@@ -609,12 +609,7 @@
             </div>
             <div class="modal-footer" style="justify-content:space-between">
                 <div id="unitDeleteBtn" style="display:none">
-                    <form action="../CustomerDetailServlet" method="post" onsubmit="return confirm('이 장비를 삭제하시겠습니까?')" style="margin:0">
-                        <input type="hidden" name="action" value="rackUnitDelete">
-                        <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
-                        <input type="hidden" name="unitSeq" id="unitDeleteSeq" value="">
-                        <button type="submit" class="btn btn-danger">장비 삭제</button>
-                    </form>
+                    <button type="button" class="btn btn-danger" onclick="submitUnitDelete()">장비 삭제</button>
                 </div>
                 <div style="display:flex;gap:8px">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('rackUnitModal')">취소</button>
@@ -624,6 +619,13 @@
         </form>
     </div>
 </div>
+
+<!-- 랙 유닛 삭제 전용 폼 (모달 밖) -->
+<form id="unitDeleteForm" action="../CustomerDetailServlet" method="post" style="display:none">
+    <input type="hidden" name="action" value="rackUnitDelete">
+    <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
+    <input type="hidden" name="unitSeq" id="unitDeleteSeq" value="">
+</form>
 
 <!-- 사업정보 모달 -->
 <div class="modal-overlay" id="projectModal">
@@ -808,6 +810,11 @@
         document.getElementById('unitDeleteBtn').style.display = 'block';
         document.getElementById('unitDeleteSeq').value = unitSeq;
         document.getElementById('rackUnitModal').classList.add('open');
+    }
+
+    function submitUnitDelete() {
+        if (!confirm('이 장비를 삭제하시겠습니까?')) return;
+        document.getElementById('unitDeleteForm').submit();
     }
 
     // ── 랙 슬롯 렌더링 ──────────────────────────────────
