@@ -312,28 +312,31 @@
                             <th>OS</th>
                             <th>위치</th>
                             <th>도입일</th>
-                            <th>만료일</th>
                             <th>상태</th>
                             <th>관리</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (assets.isEmpty()) { %>
-                        <tr class="empty-row"><td colspan="10">등록된 자산이 없습니다.</td></tr>
+                        <tr class="empty-row"><td colspan="9">등록된 자산이 없습니다.</td></tr>
                         <% } else { for (AssetVO a : assets) { %>
                         <tr>
                             <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
                             <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
                             <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
-                            <td class="td-mono" style="font-size:12px"><%= nvl(a.ipAddr) %></td>
+                            <td class="td-mono" style="font-size:12px">
+                                <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
+                                    for (String ip : a.ipAddr.split(",")) { %>
+                                <div><%= ip.trim() %></div>
+                                <% } } else { %><span style="color:#3d4251">-</span><% } %>
+                            </td>
                             <td style="font-size:12px;color:#6b7280"><%= nvl(a.osInfo) %></td>
                             <td style="font-size:12px"><%= nvl(a.location) %></td>
                             <td class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.purchaseDt) %></td>
-                            <td class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.expireDt) %></td>
                             <td><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
                             <td>
                                 <div class="td-actions">
-                                    <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= nvl(a.ipAddr) %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.expireDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= nvl(a.ipAddr).replace("\n","").replace("\r","") %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
                                     <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
                                         <input type="hidden" name="action" value="assetDelete">
                                         <input type="hidden" name="custSeq" value="<%= cust.custSeq %>">
@@ -429,9 +432,9 @@
                     <label>모델명</label>
                     <input type="text" name="model" id="assetModel" placeholder="제조사/모델">
                 </div>
-                <div class="form-group">
-                    <label>IP 주소</label>
-                    <input type="text" name="ipAddr" id="assetIp" placeholder="예: 192.168.1.10">
+                <div class="form-group full">
+                    <label>IP 주소 (여러 개일 경우 콤마로 구분)</label>
+                    <input type="text" name="ipAddr" id="assetIp" placeholder="예: 192.168.1.10, 192.168.1.11">
                 </div>
                 <div class="form-group">
                     <label>OS / 펌웨어</label>
@@ -444,10 +447,6 @@
                 <div class="form-group">
                     <label>도입일</label>
                     <input type="date" name="purchaseDt" id="assetPurchase">
-                </div>
-                <div class="form-group">
-                    <label>만료일</label>
-                    <input type="date" name="expireDt" id="assetExpire">
                 </div>
                 <div class="form-group full">
                     <label>상태</label>
@@ -491,7 +490,7 @@
         document.getElementById('projectModal').classList.add('open');
     }
 
-    function openAssetModal(assetSeq, type, name, model, ip, os, loc, status, purchase, expire, memo) {
+    function openAssetModal(assetSeq, type, name, model, ip, os, loc, status, purchase, memo) {
         document.getElementById('assetModalTitle').textContent = assetSeq ? '자산 수정' : '자산 추가';
         document.getElementById('assetSeq').value      = assetSeq  || '';
         document.getElementById('assetType').value     = type      || 'SERVER';
@@ -502,7 +501,6 @@
         document.getElementById('assetLocation').value = loc       || '';
         document.getElementById('assetStatus').value   = status    || 'ACTIVE';
         document.getElementById('assetPurchase').value = purchase  || '';
-        document.getElementById('assetExpire').value   = expire    || '';
         document.getElementById('assetMemo').value     = memo      || '';
         document.getElementById('assetModal').classList.add('open');
     }

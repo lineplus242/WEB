@@ -140,7 +140,6 @@ public class CustomerDetailServlet extends HttpServlet {
                     a.location  = rs.getString("location");
                     a.status    = rs.getString("status");
                     a.purchaseDt = rs.getString("purchase_dt");
-                    a.expireDt   = rs.getString("expire_dt");
                     a.memo       = rs.getString("memo");
                     assets.add(a);
                 }
@@ -242,38 +241,36 @@ public class CustomerDetailServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (assetSeqStr == null || assetSeqStr.isEmpty()) {
                 // 신규
-                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, model, ip_addr, os_info, location, status, purchase_dt, expire_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, model, ip_addr, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1,    custSeq);
                     ps.setString(2, nvl(req.getParameter("assetType"), "ETC"));
                     ps.setString(3, req.getParameter("assetName"));
                     ps.setString(4, req.getParameter("model"));
-                    ps.setString(5, req.getParameter("ipAddr"));
+                    ps.setString(5, emptyToNull(req.getParameter("ipAddr")));
                     ps.setString(6, req.getParameter("osInfo"));
                     ps.setString(7, req.getParameter("location"));
                     ps.setString(8, nvl(req.getParameter("status"), "ACTIVE"));
                     ps.setString(9, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(10, emptyToNull(req.getParameter("expireDt")));
-                    ps.setString(11, req.getParameter("memo"));
-                    ps.setString(12, loginUser);
+                    ps.setString(10, req.getParameter("memo"));
+                    ps.setString(11, loginUser);
                     ps.executeUpdate();
                 }
             } else {
                 // 수정
-                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, model=?, ip_addr=?, os_info=?, location=?, status=?, purchase_dt=?, expire_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
+                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, model=?, ip_addr=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setString(1, nvl(req.getParameter("assetType"), "ETC"));
                     ps.setString(2, req.getParameter("assetName"));
                     ps.setString(3, req.getParameter("model"));
-                    ps.setString(4, req.getParameter("ipAddr"));
+                    ps.setString(4, emptyToNull(req.getParameter("ipAddr")));
                     ps.setString(5, req.getParameter("osInfo"));
                     ps.setString(6, req.getParameter("location"));
                     ps.setString(7, nvl(req.getParameter("status"), "ACTIVE"));
                     ps.setString(8, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(9, emptyToNull(req.getParameter("expireDt")));
-                    ps.setString(10, req.getParameter("memo"));
-                    ps.setString(11, loginUser);
-                    ps.setInt(12,   Integer.parseInt(assetSeqStr));
+                    ps.setString(9, req.getParameter("memo"));
+                    ps.setString(10, loginUser);
+                    ps.setInt(11,   Integer.parseInt(assetSeqStr));
                     ps.executeUpdate();
                 }
             }
@@ -331,6 +328,6 @@ public class CustomerDetailServlet extends HttpServlet {
     public static class AssetVO {
         public int    assetSeq;
         public String assetType, assetName, model, ipAddr, osInfo, location;
-        public String status, purchaseDt, expireDt, memo;
+        public String status, purchaseDt, memo;
     }
 }
