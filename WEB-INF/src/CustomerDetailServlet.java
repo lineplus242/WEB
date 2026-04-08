@@ -149,6 +149,8 @@ public class CustomerDetailServlet extends HttpServlet {
                     a.status    = rs.getString("status");
                     a.purchaseDt = rs.getString("purchase_dt");
                     a.memo       = rs.getString("memo");
+                    int su = rs.getInt("size_u");
+                    a.sizeU = rs.wasNull() ? null : su;
                     assets.add(a);
                 }
             }
@@ -286,12 +288,34 @@ public class CustomerDetailServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (assetSeqStr == null || assetSeqStr.isEmpty()) {
                 // 신규
-                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, model, ip_addr, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, model, size_u, ip_addr, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1,    custSeq);
                     ps.setString(2, nvl(req.getParameter("assetType"), "ETC"));
                     ps.setString(3, req.getParameter("assetName"));
                     ps.setString(4, req.getParameter("model"));
+                    String suStr = req.getParameter("sizeU");
+                    if (suStr == null || suStr.isEmpty()) ps.setNull(5, java.sql.Types.INTEGER);
+                    else ps.setInt(5, Integer.parseInt(suStr));
+                    ps.setString(6, emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(7, req.getParameter("osInfo"));
+                    ps.setString(8, req.getParameter("location"));
+                    ps.setString(9, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(10, emptyToNull(req.getParameter("purchaseDt")));
+                    ps.setString(11, req.getParameter("memo"));
+                    ps.setString(12, loginUser);
+                    ps.executeUpdate();
+                }
+            } else {
+                // 수정
+                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, model=?, size_u=?, ip_addr=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, nvl(req.getParameter("assetType"), "ETC"));
+                    ps.setString(2, req.getParameter("assetName"));
+                    ps.setString(3, req.getParameter("model"));
+                    String suStr2 = req.getParameter("sizeU");
+                    if (suStr2 == null || suStr2.isEmpty()) ps.setNull(4, java.sql.Types.INTEGER);
+                    else ps.setInt(4, Integer.parseInt(suStr2));
                     ps.setString(5, emptyToNull(req.getParameter("ipAddr")));
                     ps.setString(6, req.getParameter("osInfo"));
                     ps.setString(7, req.getParameter("location"));
@@ -299,23 +323,7 @@ public class CustomerDetailServlet extends HttpServlet {
                     ps.setString(9, emptyToNull(req.getParameter("purchaseDt")));
                     ps.setString(10, req.getParameter("memo"));
                     ps.setString(11, loginUser);
-                    ps.executeUpdate();
-                }
-            } else {
-                // 수정
-                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, model=?, ip_addr=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
-                try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, nvl(req.getParameter("assetType"), "ETC"));
-                    ps.setString(2, req.getParameter("assetName"));
-                    ps.setString(3, req.getParameter("model"));
-                    ps.setString(4, emptyToNull(req.getParameter("ipAddr")));
-                    ps.setString(5, req.getParameter("osInfo"));
-                    ps.setString(6, req.getParameter("location"));
-                    ps.setString(7, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(8, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(9, req.getParameter("memo"));
-                    ps.setString(10, loginUser);
-                    ps.setInt(11,   Integer.parseInt(assetSeqStr));
+                    ps.setInt(12,   Integer.parseInt(assetSeqStr));
                     ps.executeUpdate();
                 }
             }
@@ -493,6 +501,7 @@ public class CustomerDetailServlet extends HttpServlet {
         public int    assetSeq;
         public String assetType, assetName, model, ipAddr, osInfo, location;
         public String status, purchaseDt, memo;
+        public Integer sizeU;  // 랙 크기 (U), null=미설정
     }
 
     public static class RackVO {

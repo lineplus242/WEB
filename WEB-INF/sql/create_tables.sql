@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS tb_asset (
     asset_type    VARCHAR(50)  NOT NULL,   -- SERVER / NETWORK / SECURITY / ETC
     asset_name    VARCHAR(200) NOT NULL,
     model         VARCHAR(200) DEFAULT NULL,
+    size_u        INT          DEFAULT NULL,  -- 랙 장착 크기 (1U, 2U 등), NULL=미적용
     ip_addr       VARCHAR(50)  DEFAULT NULL,
     os_info       VARCHAR(100) DEFAULT NULL,
     location      VARCHAR(200) DEFAULT NULL,

@@ -387,6 +387,7 @@
                                 <th>유형</th>
                                 <th>자산명</th>
                                 <th>모델</th>
+                                <th>크기</th>
                                 <th>IP 주소</th>
                                 <th>OS</th>
                                 <th>위치</th>
@@ -397,12 +398,13 @@
                         </thead>
                         <tbody>
                             <% if (assets.isEmpty()) { %>
-                            <tr class="empty-row"><td colspan="9">등록된 자산이 없습니다.</td></tr>
+                            <tr class="empty-row"><td colspan="10">등록된 자산이 없습니다.</td></tr>
                             <% } else { for (AssetVO a : assets) { %>
                             <tr>
                                 <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
                                 <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
                                 <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
+                                <td class="td-mono" style="font-size:12px;text-align:center"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
                                 <td class="td-mono" style="font-size:12px">
                                     <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
                                         for (String ip : a.ipAddr.split(",")) { %>
@@ -415,7 +417,7 @@
                                 <td><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
                                 <td>
                                     <div class="td-actions">
-                                        <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= nvl(a.ipAddr).replace("\n","").replace("\r","") %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= a.sizeU != null ? a.sizeU : "" %>', '<%= nvl(a.ipAddr).replace("\n","").replace("\r","") %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
                                         <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
                                             <input type="hidden" name="action" value="assetDelete">
                                             <input type="hidden" name="custSeq" value="<%= cust.custSeq %>">
@@ -558,7 +560,7 @@
 
 <!-- 랙 유닛 추가/수정 모달 -->
 <div class="modal-overlay" id="rackUnitModal">
-    <div class="modal">
+    <div class="modal" style="width:580px">
         <div class="modal-title" id="rackUnitModalTitle">장비 추가</div>
         <form action="../CustomerDetailServlet" method="post">
             <input type="hidden" name="action" value="rackUnitSave">
@@ -567,6 +569,16 @@
             <input type="hidden" name="unitSeq" id="unitSeq" value="">
             <input type="hidden" name="side"    id="unitSide" value="F">
             <input type="hidden" name="startU"  id="unitStartU" value="">
+
+            <!-- 장비목록 선택 섹션 -->
+            <div style="background:#0e0f11;border:1px solid #1e2025;border-radius:8px;padding:12px;margin-bottom:16px">
+                <div style="font-size:12px;color:#6b7280;margin-bottom:8px;font-weight:500">장비목록에서 선택 (선택 시 자동 입력)</div>
+                <div style="display:flex;gap:8px;margin-bottom:8px">
+                    <input type="text" id="assetSearch" placeholder="자산명 또는 모델명 검색..." style="flex:1;padding:6px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit" oninput="filterAssets()">
+                </div>
+                <div id="assetPickList" style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+
             <div class="form-grid">
                 <div class="form-group">
                     <label>장비명 *</label>
@@ -704,6 +716,15 @@
                     <label>모델명</label>
                     <input type="text" name="model" id="assetModel" placeholder="제조사/모델">
                 </div>
+                <div class="form-group">
+                    <label>랙 크기 (U)</label>
+                    <select name="sizeU" id="assetSizeU">
+                        <option value="">미적용</option>
+                        <% for (int u = 1; u <= 14; u++) { %>
+                        <option value="<%= u %>"><%= u %>U</option>
+                        <% } %>
+                    </select>
+                </div>
                 <div class="form-group full">
                     <label>IP 주소 (여러 개일 경우 콤마로 구분)</label>
                     <input type="text" name="ipAddr" id="assetIp" placeholder="예: 192.168.1.10, 192.168.1.11">
@@ -791,6 +812,9 @@
         document.getElementById('unitIpAddr').value    = '';
         document.getElementById('unitMemo').value      = '';
         document.getElementById('unitDeleteBtn').style.display = 'none';
+        document.getElementById('assetSearch').value   = '';
+        document.getElementById('assetPickList').innerHTML = '';
+        filterAssets();
         document.getElementById('rackUnitModal').classList.add('open');
     }
 
@@ -809,6 +833,9 @@
         document.getElementById('unitMemo').value      = memo  || '';
         document.getElementById('unitDeleteBtn').style.display = 'block';
         document.getElementById('unitDeleteSeq').value = unitSeq;
+        document.getElementById('assetSearch').value   = '';
+        document.getElementById('assetPickList').innerHTML = '';
+        filterAssets();
         document.getElementById('rackUnitModal').classList.add('open');
     }
 
@@ -816,6 +843,73 @@
         if (!confirm('이 장비를 삭제하시겠습니까?')) return;
         document.getElementById('unitDeleteForm').submit();
     }
+
+    // ── 장비목록 선택 ────────────────────────────────────
+    function filterAssets() {
+        const q = document.getElementById('assetSearch').value.toLowerCase();
+        const list = document.getElementById('assetPickList');
+        list.innerHTML = '';
+        const filtered = ASSET_DATA.filter(a =>
+            a.assetName.toLowerCase().includes(q) || a.model.toLowerCase().includes(q)
+        ).slice(0, 20);
+        if (filtered.length === 0) {
+            list.innerHTML = '<div style="font-size:12px;color:#3d4251;padding:6px 8px">일치하는 장비가 없습니다.</div>';
+            return;
+        }
+        filtered.forEach(a => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#131519;border:1px solid #1e2025;border-radius:6px;cursor:pointer;gap:8px;';
+            row.onmouseover = () => row.style.borderColor = '#3b6ef5';
+            row.onmouseout  = () => row.style.borderColor = '#1e2025';
+            const left = document.createElement('div');
+            left.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:0';
+            left.innerHTML = '<span style="font-size:12px;font-weight:500;color:#e8e9eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + a.assetName + '</span>'
+                           + '<span style="font-size:11px;color:#4b5161">' + a.assetType + (a.model ? ' · ' + a.model : '') + '</span>';
+            const right = document.createElement('div');
+            right.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0';
+            if (a.sizeU) right.innerHTML += '<span style="font-size:11px;font-family:monospace;color:#6b9af5;background:#1a1e2e;padding:2px 6px;border-radius:4px">' + a.sizeU + 'U</span>';
+            if (a.ipAddr) right.innerHTML += '<span style="font-size:11px;color:#4b5161;font-family:monospace">' + a.ipAddr.split(',')[0].trim() + '</span>';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = '선택';
+            btn.style.cssText = 'padding:3px 10px;font-size:11px;background:#3b6ef5;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit';
+            btn.onclick = () => pickAsset(a);
+            row.appendChild(left);
+            row.appendChild(right);
+            row.appendChild(btn);
+            list.appendChild(row);
+        });
+    }
+
+    function pickAsset(a) {
+        document.getElementById('unitDeviceName').value = a.assetName;
+        document.getElementById('unitDeviceType').value = a.assetType;
+        if (a.sizeU) document.getElementById('unitSizeU').value = a.sizeU;
+        if (a.ipAddr) document.getElementById('unitIpAddr').value = a.ipAddr;
+        document.getElementById('assetSearch').value = '';
+        document.getElementById('assetPickList').innerHTML = '';
+    }
+
+    // ── 장비목록 데이터 ─────────────────────────────────
+    const ASSET_DATA = <%
+        StringBuilder assetJson = new StringBuilder("[");
+        for (int ai = 0; ai < assets.size(); ai++) {
+            com.admin.servlet.CustomerDetailServlet.AssetVO a = assets.get(ai);
+            if (ai > 0) assetJson.append(",");
+            String safeAN  = a.assetName.replace("\"","\\\"");
+            String safeMod = a.model  != null ? a.model.replace("\"","\\\"")  : "";
+            String safeIP  = a.ipAddr != null ? a.ipAddr.replace("\"","\\\"").replace("\n","").replace("\r","") : "";
+            assetJson.append("{\"assetSeq\":").append(a.assetSeq)
+                     .append(",\"assetType\":\"").append(a.assetType).append("\"")
+                     .append(",\"assetName\":\"").append(safeAN).append("\"")
+                     .append(",\"model\":\"").append(safeMod).append("\"")
+                     .append(",\"sizeU\":").append(a.sizeU != null ? a.sizeU : "null")
+                     .append(",\"ipAddr\":\"").append(safeIP).append("\"")
+                     .append("}");
+        }
+        assetJson.append("]");
+        out.print(assetJson.toString());
+    %>;
 
     // ── 랙 슬롯 렌더링 ──────────────────────────────────
     const RACK_DATA = <%
@@ -921,12 +1015,13 @@
         document.getElementById('projectModal').classList.add('open');
     }
 
-    function openAssetModal(assetSeq, type, name, model, ip, os, loc, status, purchase, memo) {
+    function openAssetModal(assetSeq, type, name, model, sizeU, ip, os, loc, status, purchase, memo) {
         document.getElementById('assetModalTitle').textContent = assetSeq ? '자산 수정' : '자산 추가';
         document.getElementById('assetSeq').value      = assetSeq  || '';
         document.getElementById('assetType').value     = type      || 'SERVER';
         document.getElementById('assetName').value     = name      || '';
         document.getElementById('assetModel').value    = model     || '';
+        document.getElementById('assetSizeU').value    = sizeU     || '';
         document.getElementById('assetIp').value       = ip        || '';
         document.getElementById('assetOs').value       = os        || '';
         document.getElementById('assetLocation').value = loc       || '';
