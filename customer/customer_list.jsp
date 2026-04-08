@@ -181,7 +181,7 @@
 
             <!-- 테이블 -->
             <div class="table-wrap">
-                <div class="table-info">전체 <strong><%= totalCnt %></strong>건</div>
+                <div class="table-info">전체 <strong><%= totalCnt %></strong>건 &nbsp;·&nbsp; <span style="color:#3d4251">행을 더블클릭하면 상세 페이지로 이동합니다</span></div>
                 <table>
                     <thead>
                         <tr>
@@ -201,7 +201,7 @@
                         <% if (list.isEmpty()) { %>
                         <tr class="empty-row"><td colspan="10">등록된 고객사가 없습니다.</td></tr>
                         <% } else { for (CustomerVO c : list) { %>
-                        <tr>
+                        <tr style="cursor:pointer" ondblclick="location.href='../CustomerDetailServlet?action=detail&custSeq=<%= c.custSeq %>'">
                             <td class="td-code"><%= c.custCode %></td>
                             <td><strong style="color:#e8e9eb"><%= c.custName %></strong></td>
                             <td><%= nvl2(c.industry, "-") %></td>
