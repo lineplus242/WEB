@@ -194,15 +194,14 @@ public class UserServlet extends HttpServlet {
                 }
             }
 
-            String sql = "INSERT INTO tb_user (user_id, user_name, password, role, use_yn, del_yn, reg_user) "
-                       + "VALUES (?, ?, HEX(SHA2(?,256)), ?, ?, 'N', ?)";
+            String sql = "INSERT INTO tb_user (user_id, user_name, password, role, use_yn, del_yn) "
+                       + "VALUES (?, ?, HEX(SHA2(?,256)), ?, ?, 'N')";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, userId);
                 ps.setString(2, userName);
                 ps.setString(3, password);
                 ps.setString(4, role);
                 ps.setString(5, useYn);
-                ps.setString(6, loginUser);
                 ps.executeUpdate();
             }
         } catch (Exception e) {
