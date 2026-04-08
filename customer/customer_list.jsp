@@ -9,7 +9,7 @@
     List<CustomerVO> list  = (List<CustomerVO>) request.getAttribute("list");
     int    totalCnt   = (Integer)  nvl(request.getAttribute("totalCnt"),   0);
     int    totalPages = (Integer)  nvl(request.getAttribute("totalPages"), 1);
-    int    page       = (Integer)  nvl(request.getAttribute("page"),       1);
+    int    pageNum    = (Integer)  nvl(request.getAttribute("page"),       1);
     String keyword    = nvl2((String) request.getAttribute("keyword"), "");
     String status     = nvl2((String) request.getAttribute("status"),  "");
     if (list == null) list = new java.util.ArrayList<>();
@@ -19,20 +19,16 @@
     String nvl2(String s, String def)  { return (s != null && !s.isEmpty()) ? s : def; }
     String statusLabel(String s) {
         if (s == null) return "-";
-        return switch (s) {
-            case "ACTIVE"   -> "활성";
-            case "INACTIVE" -> "비활성";
-            case "PENDING"  -> "대기";
-            default -> s;
-        };
+        if ("ACTIVE".equals(s))   return "활성";
+        if ("INACTIVE".equals(s)) return "비활성";
+        if ("PENDING".equals(s))  return "대기";
+        return s;
     }
     String statusChip(String s) {
         if (s == null) return "chip-y";
-        return switch (s) {
-            case "ACTIVE"   -> "chip-g";
-            case "INACTIVE" -> "chip-r";
-            default -> "chip-y";
-        };
+        if ("ACTIVE".equals(s))   return "chip-g";
+        if ("INACTIVE".equals(s)) return "chip-r";
+        return "chip-y";
     }
     String fmtAmt(long amt) {
         if (amt == 0) return "-";
@@ -238,14 +234,14 @@
             <!-- 페이지네이션 -->
             <% if (totalPages > 1) { %>
             <div class="pagination">
-                <a href="../CustomerServlet?action=list&page=<%= page-1 %>&keyword=<%= keyword %>&status=<%= status %>"
-                   class="page-btn <%= page <= 1 ? "disabled" : "" %>">◀</a>
+                <a href="../CustomerServlet?action=list&page=<%= pageNum-1 %>&keyword=<%= keyword %>&status=<%= status %>"
+                   class="page-btn <%= pageNum <= 1 ? "disabled" : "" %>">◀</a>
                 <% for (int i = 1; i <= totalPages; i++) { %>
                 <a href="../CustomerServlet?action=list&page=<%= i %>&keyword=<%= keyword %>&status=<%= status %>"
-                   class="page-btn <%= i == page ? "active" : "" %>"><%= i %></a>
+                   class="page-btn <%= i == pageNum? "active" : "" %>"><%= i %></a>
                 <% } %>
-                <a href="../CustomerServlet?action=list&page=<%= page+1 %>&keyword=<%= keyword %>&status=<%= status %>"
-                   class="page-btn <%= page >= totalPages ? "disabled" : "" %>">▶</a>
+                <a href="../CustomerServlet?action=list&page=<%= pageNum+1 %>&keyword=<%= keyword %>&status=<%= status %>"
+                   class="page-btn <%= pageNum >= totalPages ? "disabled" : "" %>">▶</a>
             </div>
             <% } %>
 
