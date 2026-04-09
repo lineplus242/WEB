@@ -486,7 +486,7 @@
                                 <td data-col="type"><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
                                 <td data-col="name" class="cell-name">
                                     <div style="display:flex;align-items:center;gap:0">
-                                        <% if (!isChild && isHypervisor) { %>
+                                        <% if (!isChild && a.childCount > 0) { %>
                                         <span class="expand-btn" onclick="toggleChildren(<%= a.assetSeq %>)" id="expand-<%= a.assetSeq %>">▶</span>
                                         <% } else if (isChild) { %>
                                         <span class="vm-indent">└</span>
