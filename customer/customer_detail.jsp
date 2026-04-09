@@ -422,7 +422,7 @@
                             <% if (assets.isEmpty()) { %>
                             <tr class="empty-row"><td colspan="10">등록된 자산이 없습니다.</td></tr>
                             <% } else { for (AssetVO a : assets) { %>
-                            <tr data-type="<%= nvl(a.assetType,"") %>" data-status="<%= nvl(a.status,"") %>" data-name="<%= a.assetName.toLowerCase().replace("\"","") %>" data-purchase="<%= nvl(a.purchaseDt,"") %>">
+                            <tr data-type="<%= nvl(a.assetType) %>" data-status="<%= nvl(a.status) %>" data-name="<%= a.assetName.toLowerCase() %>" data-purchase="<%= nvl(a.purchaseDt) %>">
                                 <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
                                 <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
                                 <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
