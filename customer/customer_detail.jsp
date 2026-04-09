@@ -1363,23 +1363,32 @@
         });
     }
 
+    let _colWasDragged = false;   // 드래그 후 click 무시용
+
     function initColDrag() {
         const table = document.getElementById('assetTable');
         if (!table) return;
-        table.querySelectorAll('thead th').forEach((th, idx) => {
-            if (th.getAttribute('data-col') === 'actions') return; // 관리 컬럼 고정
+        table.querySelectorAll('thead th').forEach(th => {
+            if (th.getAttribute('data-col') === 'actions') return;
+            th.draggable = true;   // ← 핵심: draggable 속성 설정
+
             th.addEventListener('dragstart', e => {
-                _dragColIdx = Array.from(table.querySelectorAll('thead th')).indexOf(th);
+                _dragColIdx   = Array.from(table.querySelectorAll('thead th')).indexOf(th);
+                _colWasDragged = false;
                 e.dataTransfer.effectAllowed = 'move';
-                th.classList.add('col-dragging');
+                e.dataTransfer.setData('text/plain', _dragColIdx);
+                setTimeout(() => th.classList.add('col-dragging'), 0);
             });
             th.addEventListener('dragend', () => {
                 th.classList.remove('col-dragging');
                 table.querySelectorAll('thead th').forEach(t => t.classList.remove('col-drag-over'));
+                setTimeout(() => { _colWasDragged = false; }, 100);
                 _dragColIdx = null;
             });
+            // 드롭 대상에도 dragover/drop 필요
             th.addEventListener('dragover', e => {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
                 const curIdx = Array.from(table.querySelectorAll('thead th')).indexOf(th);
                 if (_dragColIdx === null || _dragColIdx === curIdx) return;
                 table.querySelectorAll('thead th').forEach(t => t.classList.remove('col-drag-over'));
@@ -1393,9 +1402,14 @@
                 if (_dragColIdx !== toIdx) {
                     moveTableColumn(_dragColIdx, toIdx);
                     saveColOrder();
+                    _colWasDragged = true;
                 }
                 _dragColIdx = null;
             });
+            // 드래그 직후 click(정렬) 무시
+            th.addEventListener('click', e => {
+                if (_colWasDragged) { e.stopImmediatePropagation(); _colWasDragged = false; }
+            }, true);
         });
     }
 
