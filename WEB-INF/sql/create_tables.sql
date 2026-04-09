@@ -60,9 +60,14 @@ CREATE TABLE IF NOT EXISTS tb_asset (
     cust_seq      INT          NOT NULL,
     asset_type    VARCHAR(50)  NOT NULL,   -- SERVER / NETWORK / SECURITY / ETC
     asset_name    VARCHAR(200) NOT NULL,
+    maker         VARCHAR(100) DEFAULT NULL,  -- 제조사
     model         VARCHAR(200) DEFAULT NULL,
     size_u        INT          DEFAULT NULL,  -- 랙 장착 크기 (1U, 2U 등), NULL=미적용
-    ip_addr       VARCHAR(50)  DEFAULT NULL,
+    hostname      VARCHAR(100) DEFAULT NULL,
+    ip_addr       TEXT         DEFAULT NULL,
+    disk          VARCHAR(200) DEFAULT NULL,
+    cpu           VARCHAR(200) DEFAULT NULL,
+    memory        VARCHAR(100) DEFAULT NULL,
     os_info       VARCHAR(100) DEFAULT NULL,
     location      VARCHAR(200) DEFAULT NULL,
     status        VARCHAR(20)  DEFAULT 'ACTIVE',

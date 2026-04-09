@@ -382,7 +382,19 @@
             <div id="sub-asset-list" class="sub-tab-panel <%= "rack".equals(activeSub) ? "" : "active" %>">
                 <div class="panel-header">
                     <span class="panel-title">장비 목록</span>
-                    <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 자산 추가</button>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <div style="position:relative">
+                            <button class="btn btn-sm btn-secondary" onclick="toggleColPanel()" id="colToggleBtn">컬럼 설정 ▾</button>
+                            <div id="colPanel" style="display:none;position:absolute;right:0;top:32px;background:#1a1c22;border:1px solid #252830;border-radius:10px;padding:14px 16px;z-index:100;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.5)">
+                                <div style="font-size:11px;color:#4b5161;margin-bottom:10px;font-weight:500;letter-spacing:.5px">표시할 컬럼 선택</div>
+                                <div id="colCheckboxes" style="display:flex;flex-direction:column;gap:7px"></div>
+                                <div style="margin-top:12px;padding-top:10px;border-top:1px solid #252830;display:flex;gap:8px">
+                                    <button class="btn btn-sm btn-secondary" onclick="resetColVisibility()" style="flex:1;font-size:11px">기본값</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 서버 추가</button>
+                    </div>
                 </div>
                 <!-- 필터 & 정렬 바 -->
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
@@ -403,43 +415,53 @@
                     <button class="btn btn-sm btn-secondary" onclick="resetAssetFilter()" style="margin-left:auto">필터초기화</button>
                 </div>
                 <div class="table-wrap">
-                    <table>
+                    <table id="assetTable">
                         <thead>
                             <tr>
-                                <th>유형</th>
-                                <th class="sort-th" onclick="sortAsset('name')" style="cursor:pointer;user-select:none;white-space:nowrap">자산명 <span id="sort-name" style="color:#3b6ef5">↕</span></th>
-                                <th>모델</th>
-                                <th>크기</th>
-                                <th>IP 주소</th>
-                                <th>OS</th>
-                                <th>위치</th>
-                                <th class="sort-th" onclick="sortAsset('purchase')" style="cursor:pointer;user-select:none;white-space:nowrap">도입일 <span id="sort-purchase" style="color:#3d4251">↕</span></th>
-                                <th>상태</th>
-                                <th>관리</th>
+                                <th data-col="type">유형</th>
+                                <th data-col="name" class="sort-th" onclick="sortAsset('name')" style="cursor:pointer;user-select:none;white-space:nowrap">서버명 <span id="sort-name" style="color:#3b6ef5">↕</span></th>
+                                <th data-col="maker">제조사</th>
+                                <th data-col="model">모델</th>
+                                <th data-col="size">크기</th>
+                                <th data-col="hostname">HostName</th>
+                                <th data-col="ip">IP 주소</th>
+                                <th data-col="disk">Disk</th>
+                                <th data-col="cpu">CPU</th>
+                                <th data-col="memory">Memory</th>
+                                <th data-col="location">위치</th>
+                                <th data-col="os">OS</th>
+                                <th data-col="purchase" class="sort-th" onclick="sortAsset('purchase')" style="cursor:pointer;user-select:none;white-space:nowrap">도입일 <span id="sort-purchase" style="color:#3d4251">↕</span></th>
+                                <th data-col="status">상태</th>
+                                <th data-col="actions">관리</th>
                             </tr>
                         </thead>
                         <tbody id="assetTbody">
                             <% if (assets.isEmpty()) { %>
-                            <tr class="empty-row"><td colspan="10">등록된 자산이 없습니다.</td></tr>
+                            <tr class="empty-row"><td colspan="15">등록된 서버/장비가 없습니다.</td></tr>
                             <% } else { for (AssetVO a : assets) { %>
                             <tr data-type="<%= nvl(a.assetType) %>" data-status="<%= nvl(a.status) %>" data-name="<%= a.assetName.toLowerCase() %>" data-purchase="<%= nvl(a.purchaseDt) %>">
-                                <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
-                                <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
-                                <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
-                                <td class="td-mono" style="font-size:12px;text-align:center"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
-                                <td class="td-mono" style="font-size:12px">
+                                <td data-col="type"><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
+                                <td data-col="name"><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
+                                <td data-col="maker" style="font-size:12px"><%= nvl(a.maker) %></td>
+                                <td data-col="model" class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
+                                <td data-col="size" class="td-mono" style="font-size:12px;text-align:center"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
+                                <td data-col="hostname" class="td-mono" style="font-size:12px"><%= nvl(a.hostname) %></td>
+                                <td data-col="ip" class="td-mono" style="font-size:12px">
                                     <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
                                         for (String ip : a.ipAddr.split(",")) { %>
                                     <div><%= ip.trim() %></div>
                                     <% } } else { %><span style="color:#3d4251">-</span><% } %>
                                 </td>
-                                <td style="font-size:12px;color:#6b7280"><%= nvl(a.osInfo) %></td>
-                                <td style="font-size:12px"><%= nvl(a.location) %></td>
-                                <td class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.purchaseDt) %></td>
-                                <td><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
-                                <td>
+                                <td data-col="disk" style="font-size:12px;color:#6b7280"><%= nvl(a.disk) %></td>
+                                <td data-col="cpu" style="font-size:12px;color:#6b7280"><%= nvl(a.cpu) %></td>
+                                <td data-col="memory" style="font-size:12px;color:#6b7280"><%= nvl(a.memory) %></td>
+                                <td data-col="location" style="font-size:12px"><%= nvl(a.location) %></td>
+                                <td data-col="os" style="font-size:12px;color:#6b7280"><%= nvl(a.osInfo) %></td>
+                                <td data-col="purchase" class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.purchaseDt) %></td>
+                                <td data-col="status"><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
+                                <td data-col="actions">
                                     <div class="td-actions">
-                                        <button class="btn btn-sm btn-secondary" onclick="openAssetModal(<%= a.assetSeq %>, '<%= nvl(a.assetType) %>', '<%= a.assetName.replace("'", "\\'") %>', '<%= nvl(a.model).replace("'", "\\'") %>', '<%= a.sizeU != null ? a.sizeU : "" %>', '<%= nvl(a.ipAddr).replace("\n","").replace("\r","") %>', '<%= nvl(a.osInfo).replace("'", "\\'") %>', '<%= nvl(a.location).replace("'", "\\'") %>', '<%= nvl(a.status) %>', '<%= nvl(a.purchaseDt) %>', '<%= nvl(a.memo).replace("'", "\\'") %>')">수정</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="openAssetModalBySeq(<%= a.assetSeq %>)">수정</button>
                                         <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
                                             <input type="hidden" name="action" value="assetDelete">
                                             <input type="hidden" name="custSeq" value="<%= cust.custSeq %>">
@@ -731,15 +753,15 @@
 
 <!-- IT 자산 모달 -->
 <div class="modal-overlay" id="assetModal">
-    <div class="modal">
-        <div class="modal-title" id="assetModalTitle">자산 추가</div>
+    <div class="modal" style="width:640px">
+        <div class="modal-title" id="assetModalTitle">서버 추가</div>
         <form action="../CustomerDetailServlet" method="post">
             <input type="hidden" name="action" value="assetSave">
             <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
             <input type="hidden" name="assetSeq" id="assetSeq" value="">
             <div class="form-grid">
                 <div class="form-group">
-                    <label>장비 유형 *</label>
+                    <label>유형 *</label>
                     <select name="assetType" id="assetType">
                         <option value="SERVER">서버</option>
                         <option value="NETWORK">네트워크</option>
@@ -748,12 +770,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>자산명 *</label>
-                    <input type="text" name="assetName" id="assetName" placeholder="자산명" required>
+                    <label>서버명 *</label>
+                    <input type="text" name="assetName" id="assetName" placeholder="예: web-server-01" required>
                 </div>
                 <div class="form-group">
-                    <label>모델명</label>
-                    <input type="text" name="model" id="assetModel" placeholder="제조사/모델">
+                    <label>제조사</label>
+                    <input type="text" name="maker" id="assetMaker" placeholder="예: Dell, HPE, Cisco">
+                </div>
+                <div class="form-group">
+                    <label>모델</label>
+                    <input type="text" name="model" id="assetModel" placeholder="예: PowerEdge R750">
                 </div>
                 <div class="form-group">
                     <label>랙 크기 (U)</label>
@@ -764,13 +790,29 @@
                         <% } %>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>HostName</label>
+                    <input type="text" name="hostname" id="assetHostname" placeholder="예: web01.example.com">
+                </div>
                 <div class="form-group full">
                     <label>IP 주소 (여러 개일 경우 콤마로 구분)</label>
                     <input type="text" name="ipAddr" id="assetIp" placeholder="예: 192.168.1.10, 192.168.1.11">
                 </div>
                 <div class="form-group">
+                    <label>CPU</label>
+                    <input type="text" name="cpu" id="assetCpu" placeholder="예: Intel Xeon Gold 6342 x2">
+                </div>
+                <div class="form-group">
+                    <label>Memory</label>
+                    <input type="text" name="memory" id="assetMemory" placeholder="예: 256GB DDR4">
+                </div>
+                <div class="form-group full">
+                    <label>Disk</label>
+                    <input type="text" name="disk" id="assetDisk" placeholder="예: SSD 960GB x4 RAID5">
+                </div>
+                <div class="form-group">
                     <label>OS / 펌웨어</label>
-                    <input type="text" name="osInfo" id="assetOs" placeholder="예: Ubuntu 22.04">
+                    <input type="text" name="osInfo" id="assetOs" placeholder="예: Ubuntu 22.04 LTS">
                 </div>
                 <div class="form-group">
                     <label>위치</label>
@@ -780,7 +822,7 @@
                     <label>도입일</label>
                     <input type="date" name="purchaseDt" id="assetPurchase">
                 </div>
-                <div class="form-group full">
+                <div class="form-group">
                     <label>상태</label>
                     <select name="status" id="assetStatus">
                         <option value="ACTIVE">운영중</option>
@@ -935,16 +977,26 @@
         for (int ai = 0; ai < assets.size(); ai++) {
             com.admin.servlet.CustomerDetailServlet.AssetVO a = assets.get(ai);
             if (ai > 0) assetJson.append(",");
-            String safeAN  = a.assetName.replace("\"","\\\"");
-            String safeMod = a.model  != null ? a.model.replace("\"","\\\"")  : "";
-            String safeIP  = a.ipAddr != null ? a.ipAddr.replace("\"","\\\"").replace("\n","").replace("\r","") : "";
-            assetJson.append("{\"assetSeq\":").append(a.assetSeq)
-                     .append(",\"assetType\":\"").append(a.assetType).append("\"")
-                     .append(",\"assetName\":\"").append(safeAN).append("\"")
-                     .append(",\"model\":\"").append(safeMod).append("\"")
-                     .append(",\"sizeU\":").append(a.sizeU != null ? a.sizeU : "null")
-                     .append(",\"ipAddr\":\"").append(safeIP).append("\"")
-                     .append("}");
+            java.util.function.Function<String,String> jesc = s ->
+                s != null ? s.replace("\\","\\\\").replace("\"","\\\"").replace("\n"," ").replace("\r","") : "";
+            assetJson.append("{")
+                .append("\"assetSeq\":").append(a.assetSeq)
+                .append(",\"assetType\":\"").append(jesc.apply(a.assetType)).append("\"")
+                .append(",\"assetName\":\"").append(jesc.apply(a.assetName)).append("\"")
+                .append(",\"maker\":\"").append(jesc.apply(a.maker)).append("\"")
+                .append(",\"model\":\"").append(jesc.apply(a.model)).append("\"")
+                .append(",\"sizeU\":").append(a.sizeU != null ? a.sizeU : "null")
+                .append(",\"hostname\":\"").append(jesc.apply(a.hostname)).append("\"")
+                .append(",\"ipAddr\":\"").append(jesc.apply(a.ipAddr)).append("\"")
+                .append(",\"disk\":\"").append(jesc.apply(a.disk)).append("\"")
+                .append(",\"cpu\":\"").append(jesc.apply(a.cpu)).append("\"")
+                .append(",\"memory\":\"").append(jesc.apply(a.memory)).append("\"")
+                .append(",\"osInfo\":\"").append(jesc.apply(a.osInfo)).append("\"")
+                .append(",\"location\":\"").append(jesc.apply(a.location)).append("\"")
+                .append(",\"status\":\"").append(jesc.apply(a.status)).append("\"")
+                .append(",\"purchaseDt\":\"").append(jesc.apply(a.purchaseDt)).append("\"")
+                .append(",\"memo\":\"").append(jesc.apply(a.memo)).append("\"")
+                .append("}");
         }
         assetJson.append("]");
         out.print(assetJson.toString());
@@ -1152,21 +1204,127 @@
         document.getElementById('projectModal').classList.add('open');
     }
 
-    function openAssetModal(assetSeq, type, name, model, sizeU, ip, os, loc, status, purchase, memo) {
-        document.getElementById('assetModalTitle').textContent = assetSeq ? '자산 수정' : '자산 추가';
-        document.getElementById('assetSeq').value      = assetSeq  || '';
-        document.getElementById('assetType').value     = type      || 'SERVER';
-        document.getElementById('assetName').value     = name      || '';
-        document.getElementById('assetModel').value    = model     || '';
-        document.getElementById('assetSizeU').value    = sizeU     || '';
-        document.getElementById('assetIp').value       = ip        || '';
-        document.getElementById('assetOs').value       = os        || '';
-        document.getElementById('assetLocation').value = loc       || '';
-        document.getElementById('assetStatus').value   = status    || 'ACTIVE';
-        document.getElementById('assetPurchase').value = purchase  || '';
-        document.getElementById('assetMemo').value     = memo      || '';
+    function openAssetModal() {
+        // 신규 추가: 모든 필드 초기화
+        document.getElementById('assetModalTitle').textContent = '서버 추가';
+        ['assetSeq','assetName','assetMaker','assetModel','assetHostname',
+         'assetIp','assetDisk','assetCpu','assetMemory','assetOs','assetLocation','assetMemo'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.value = '';
+        });
+        document.getElementById('assetType').value   = 'SERVER';
+        document.getElementById('assetSizeU').value  = '';
+        document.getElementById('assetStatus').value = 'ACTIVE';
+        document.getElementById('assetPurchase').value = '';
         document.getElementById('assetModal').classList.add('open');
     }
+
+    function openAssetModalBySeq(seq) {
+        const a = ASSET_DATA.find(x => x.assetSeq === seq);
+        if (!a) return;
+        document.getElementById('assetModalTitle').textContent = '서버 수정';
+        document.getElementById('assetSeq').value       = a.assetSeq;
+        document.getElementById('assetType').value      = a.assetType  || 'SERVER';
+        document.getElementById('assetName').value      = a.assetName  || '';
+        document.getElementById('assetMaker').value     = a.maker      || '';
+        document.getElementById('assetModel').value     = a.model      || '';
+        document.getElementById('assetSizeU').value     = a.sizeU      || '';
+        document.getElementById('assetHostname').value  = a.hostname   || '';
+        document.getElementById('assetIp').value        = a.ipAddr     || '';
+        document.getElementById('assetDisk').value      = a.disk       || '';
+        document.getElementById('assetCpu').value       = a.cpu        || '';
+        document.getElementById('assetMemory').value    = a.memory     || '';
+        document.getElementById('assetOs').value        = a.osInfo     || '';
+        document.getElementById('assetLocation').value  = a.location   || '';
+        document.getElementById('assetStatus').value    = a.status     || 'ACTIVE';
+        document.getElementById('assetPurchase').value  = a.purchaseDt || '';
+        document.getElementById('assetMemo').value      = a.memo       || '';
+        document.getElementById('assetModal').classList.add('open');
+    }
+
+    // ── 컬럼 가시성 관리 ─────────────────────────────────
+    const COL_DEFS = [
+        { key:'type',     label:'유형',     fixed:true },
+        { key:'name',     label:'서버명',    fixed:true },
+        { key:'maker',    label:'제조사' },
+        { key:'model',    label:'모델' },
+        { key:'size',     label:'크기 (U)' },
+        { key:'hostname', label:'HostName' },
+        { key:'ip',       label:'IP 주소' },
+        { key:'disk',     label:'Disk' },
+        { key:'cpu',      label:'CPU' },
+        { key:'memory',   label:'Memory' },
+        { key:'location', label:'위치' },
+        { key:'os',       label:'OS' },
+        { key:'purchase', label:'도입일' },
+        { key:'status',   label:'상태',     fixed:true },
+        { key:'actions',  label:'관리',     fixed:true },
+    ];
+    const COL_DEFAULT = { type:true, name:true, maker:true, model:true, size:false, hostname:false, ip:false, disk:false, cpu:true, memory:true, location:false, os:false, purchase:true, status:true, actions:true };
+    const COL_LS_KEY  = 'assetColVis_v1';
+
+    function loadColVisibility() {
+        try { return Object.assign({}, COL_DEFAULT, JSON.parse(localStorage.getItem(COL_LS_KEY) || '{}')); }
+        catch(e) { return Object.assign({}, COL_DEFAULT); }
+    }
+
+    function applyColVisibility(vis) {
+        COL_DEFS.forEach(c => {
+            const show = c.fixed || vis[c.key] !== false;
+            document.querySelectorAll('[data-col="' + c.key + '"]').forEach(el => {
+                el.style.display = show ? '' : 'none';
+            });
+        });
+    }
+
+    function buildColPanel(vis) {
+        const box = document.getElementById('colCheckboxes');
+        if (!box) return;
+        box.innerHTML = '';
+        COL_DEFS.forEach(c => {
+            if (c.fixed) return;
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#b0b4bf';
+            const cb = document.createElement('input');
+            cb.type    = 'checkbox';
+            cb.checked = vis[c.key] !== false;
+            cb.style.cssText = 'width:14px;height:14px;accent-color:#3b6ef5;cursor:pointer';
+            cb.onchange = () => {
+                vis[c.key] = cb.checked;
+                localStorage.setItem(COL_LS_KEY, JSON.stringify(vis));
+                applyColVisibility(vis);
+            };
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(c.label));
+            box.appendChild(label);
+        });
+    }
+
+    function toggleColPanel() {
+        const p = document.getElementById('colPanel');
+        p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function resetColVisibility() {
+        localStorage.removeItem(COL_LS_KEY);
+        const vis = Object.assign({}, COL_DEFAULT);
+        buildColPanel(vis);
+        applyColVisibility(vis);
+    }
+
+    // 초기화
+    (function() {
+        const vis = loadColVisibility();
+        buildColPanel(vis);
+        applyColVisibility(vis);
+        // 패널 외부 클릭 시 닫기
+        document.addEventListener('click', e => {
+            const btn   = document.getElementById('colToggleBtn');
+            const panel = document.getElementById('colPanel');
+            if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.style.display = 'none';
+            }
+        });
+    })();
 
     function closeModal(id) {
         document.getElementById(id).classList.remove('open');

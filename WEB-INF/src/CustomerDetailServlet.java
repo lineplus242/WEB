@@ -140,14 +140,19 @@ public class CustomerDetailServlet extends HttpServlet {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     AssetVO a = new AssetVO();
-                    a.assetSeq  = rs.getInt("asset_seq");
-                    a.assetType = rs.getString("asset_type");
-                    a.assetName = rs.getString("asset_name");
-                    a.model     = rs.getString("model");
-                    a.ipAddr    = rs.getString("ip_addr");
-                    a.osInfo    = rs.getString("os_info");
-                    a.location  = rs.getString("location");
-                    a.status    = rs.getString("status");
+                    a.assetSeq   = rs.getInt("asset_seq");
+                    a.assetType  = rs.getString("asset_type");
+                    a.assetName  = rs.getString("asset_name");
+                    a.maker      = rs.getString("maker");
+                    a.model      = rs.getString("model");
+                    a.hostname   = rs.getString("hostname");
+                    a.ipAddr     = rs.getString("ip_addr");
+                    a.disk       = rs.getString("disk");
+                    a.cpu        = rs.getString("cpu");
+                    a.memory     = rs.getString("memory");
+                    a.osInfo     = rs.getString("os_info");
+                    a.location   = rs.getString("location");
+                    a.status     = rs.getString("status");
                     a.purchaseDt = rs.getString("purchase_dt");
                     a.memo       = rs.getString("memo");
                     int su = rs.getInt("size_u");
@@ -290,42 +295,52 @@ public class CustomerDetailServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (assetSeqStr == null || assetSeqStr.isEmpty()) {
                 // 신규
-                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, model, size_u, ip_addr, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, maker, model, size_u, hostname, ip_addr, disk, cpu, memory, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setInt(1,    custSeq);
-                    ps.setString(2, nvl(req.getParameter("assetType"), "ETC"));
-                    ps.setString(3, req.getParameter("assetName"));
-                    ps.setString(4, req.getParameter("model"));
+                    ps.setInt(1,     custSeq);
+                    ps.setString(2,  nvl(req.getParameter("assetType"), "ETC"));
+                    ps.setString(3,  req.getParameter("assetName"));
+                    ps.setString(4,  emptyToNull(req.getParameter("maker")));
+                    ps.setString(5,  emptyToNull(req.getParameter("model")));
                     String suStr = req.getParameter("sizeU");
-                    if (suStr == null || suStr.isEmpty()) ps.setNull(5, java.sql.Types.INTEGER);
-                    else ps.setInt(5, Integer.parseInt(suStr));
-                    ps.setString(6, emptyToNull(req.getParameter("ipAddr")));
-                    ps.setString(7, req.getParameter("osInfo"));
-                    ps.setString(8, req.getParameter("location"));
-                    ps.setString(9, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(10, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(11, req.getParameter("memo"));
-                    ps.setString(12, loginUser);
+                    if (suStr == null || suStr.isEmpty()) ps.setNull(6, java.sql.Types.INTEGER);
+                    else ps.setInt(6, Integer.parseInt(suStr));
+                    ps.setString(7,  emptyToNull(req.getParameter("hostname")));
+                    ps.setString(8,  emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(9,  emptyToNull(req.getParameter("disk")));
+                    ps.setString(10, emptyToNull(req.getParameter("cpu")));
+                    ps.setString(11, emptyToNull(req.getParameter("memory")));
+                    ps.setString(12, emptyToNull(req.getParameter("osInfo")));
+                    ps.setString(13, emptyToNull(req.getParameter("location")));
+                    ps.setString(14, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(15, emptyToNull(req.getParameter("purchaseDt")));
+                    ps.setString(16, emptyToNull(req.getParameter("memo")));
+                    ps.setString(17, loginUser);
                     ps.executeUpdate();
                 }
             } else {
                 // 수정
-                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, model=?, size_u=?, ip_addr=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
+                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, maker=?, model=?, size_u=?, hostname=?, ip_addr=?, disk=?, cpu=?, memory=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1, nvl(req.getParameter("assetType"), "ETC"));
-                    ps.setString(2, req.getParameter("assetName"));
-                    ps.setString(3, req.getParameter("model"));
+                    ps.setString(1,  nvl(req.getParameter("assetType"), "ETC"));
+                    ps.setString(2,  req.getParameter("assetName"));
+                    ps.setString(3,  emptyToNull(req.getParameter("maker")));
+                    ps.setString(4,  emptyToNull(req.getParameter("model")));
                     String suStr2 = req.getParameter("sizeU");
-                    if (suStr2 == null || suStr2.isEmpty()) ps.setNull(4, java.sql.Types.INTEGER);
-                    else ps.setInt(4, Integer.parseInt(suStr2));
-                    ps.setString(5, emptyToNull(req.getParameter("ipAddr")));
-                    ps.setString(6, req.getParameter("osInfo"));
-                    ps.setString(7, req.getParameter("location"));
-                    ps.setString(8, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(9, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(10, req.getParameter("memo"));
-                    ps.setString(11, loginUser);
-                    ps.setInt(12,   Integer.parseInt(assetSeqStr));
+                    if (suStr2 == null || suStr2.isEmpty()) ps.setNull(5, java.sql.Types.INTEGER);
+                    else ps.setInt(5, Integer.parseInt(suStr2));
+                    ps.setString(6,  emptyToNull(req.getParameter("hostname")));
+                    ps.setString(7,  emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(8,  emptyToNull(req.getParameter("disk")));
+                    ps.setString(9,  emptyToNull(req.getParameter("cpu")));
+                    ps.setString(10, emptyToNull(req.getParameter("memory")));
+                    ps.setString(11, emptyToNull(req.getParameter("osInfo")));
+                    ps.setString(12, emptyToNull(req.getParameter("location")));
+                    ps.setString(13, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(14, emptyToNull(req.getParameter("purchaseDt")));
+                    ps.setString(15, emptyToNull(req.getParameter("memo")));
+                    ps.setString(16, loginUser);
+                    ps.setInt(17,    Integer.parseInt(assetSeqStr));
                     ps.executeUpdate();
                 }
             }
@@ -539,7 +554,8 @@ public class CustomerDetailServlet extends HttpServlet {
 
     public static class AssetVO {
         public int    assetSeq;
-        public String assetType, assetName, model, ipAddr, osInfo, location;
+        public String assetType, assetName, maker, model, hostname, ipAddr;
+        public String disk, cpu, memory, osInfo, location;
         public String status, purchaseDt, memo;
         public Integer sizeU;  // 랙 크기 (U), null=미설정
     }
