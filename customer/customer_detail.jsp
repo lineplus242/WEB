@@ -193,6 +193,19 @@
         .toolbar-sep { width: 1px; height: 18px; background: #252830; flex-shrink: 0; }
         .filter-sel { padding: 5px 8px; background: #0e0f11; border: 1px solid #1e2025; border-radius: 6px; color: #b0b4bf; font-size: 12px; font-family: inherit; cursor: pointer; height: 30px; }
         #assetTable th, #assetTable td { padding: 10px 14px; font-size: 12px; vertical-align: middle; text-align: left; box-sizing: border-box; }
+        .asset-child td { background: #0f1113 !important; border-left: 2px solid #1e2025; }
+        .asset-child:hover td { background: #141618 !important; }
+        .asset-child .cell-name { padding-left: 28px; }
+        .vm-indent { color: #3d4251; margin-right: 6px; font-size: 11px; }
+        .chip-role { display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-weight:500;flex-shrink:0; }
+        .chip-hypervisor { background:#1a2e1a;color:#4caf50; }
+        .chip-vm         { background:#1a1e2e;color:#6b9af5; }
+        .chip-ldom       { background:#2a1e10;color:#f5a623; }
+        .chip-zone       { background:#1e1a2e;color:#a78bfa; }
+        .chip-container  { background:#1a2a2e;color:#22d3ee; }
+        .expand-btn { display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid #252830;border-radius:4px;background:#0e0f11;color:#6b7280;cursor:pointer;font-size:10px;flex-shrink:0;transition:background .1s,color .1s;margin-right:6px; }
+        .expand-btn:hover { background:#1a1e2e;color:#6b9af5; }
+        .vm-count-badge { display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#4b5161;background:#131519;border:1px solid #1e2025;border-radius:4px;padding:1px 5px;margin-left:6px; }
         #assetTable th { background: #0f1013; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; border-bottom: 1px solid #1e2025; cursor: grab; user-select: none; position: relative; }
         #assetTable th:active { cursor: grabbing; }
         #assetTable th.col-drag-over { background: #1a1e2e; box-shadow: inset 2px 0 0 #3b6ef5; }
@@ -447,10 +460,46 @@
                         <tbody id="assetTbody">
                             <% if (assets.isEmpty()) { %>
                             <tr class="empty-row"><td colspan="15">등록된 서버/장비가 없습니다.</td></tr>
-                            <% } else { for (AssetVO a : assets) { %>
-                            <tr data-type="<%= nvl(a.assetType) %>" data-status="<%= nvl(a.status) %>" data-name="<%= a.assetName.toLowerCase() %>" data-purchase="<%= nvl(a.purchaseDt) %>">
+                            <% } else { for (AssetVO a : assets) {
+                                boolean isChild = a.parentSeq != 0;
+                                boolean isHypervisor = "HYPERVISOR".equals(a.assetRole);
+                                String rowClass = isChild ? "asset-child" : "asset-parent";
+                                String roleChipClass = "HYPERVISOR".equals(a.assetRole) ? "chip-hypervisor"
+                                    : "VM".equals(a.assetRole) ? "chip-vm"
+                                    : "LDOM".equals(a.assetRole) ? "chip-ldom"
+                                    : "ZONE".equals(a.assetRole) ? "chip-zone"
+                                    : "CONTAINER".equals(a.assetRole) ? "chip-container" : "";
+                                String roleLabel = "HYPERVISOR".equals(a.assetRole) ? (a.virtType != null ? a.virtType : "HYPERVISOR")
+                                    : "VM".equals(a.assetRole) ? "VM"
+                                    : "LDOM".equals(a.assetRole) ? "LDOM"
+                                    : "ZONE".equals(a.assetRole) ? "ZONE"
+                                    : "CONTAINER".equals(a.assetRole) ? "CNTR" : "";
+                            %>
+                            <tr class="<%= rowClass %>"
+                                data-asset-id="<%= a.assetSeq %>"
+                                data-parent-id="<%= a.parentSeq %>"
+                                data-type="<%= nvl(a.assetType) %>"
+                                data-status="<%= nvl(a.status) %>"
+                                data-name="<%= a.assetName.toLowerCase() %>"
+                                data-purchase="<%= nvl(a.purchaseDt) %>"
+                                <%= isChild ? "style=\"display:none\"" : "" %>>
                                 <td data-col="type"><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
-                                <td data-col="name"><strong style="color:#e8e9eb;font-size:13px"><%= nvl(a.assetName) %></strong></td>
+                                <td data-col="name" class="cell-name">
+                                    <div style="display:flex;align-items:center;gap:0">
+                                        <% if (!isChild && isHypervisor) { %>
+                                        <span class="expand-btn" onclick="toggleChildren(<%= a.assetSeq %>)" id="expand-<%= a.assetSeq %>">▶</span>
+                                        <% } else if (isChild) { %>
+                                        <span class="vm-indent">└</span>
+                                        <% } %>
+                                        <strong style="color:#e8e9eb;font-size:13px"><%= nvl(a.assetName) %></strong>
+                                        <% if (!roleChipClass.isEmpty()) { %>
+                                        <span class="chip-role <%= roleChipClass %>" style="margin-left:6px"><%= roleLabel %></span>
+                                        <% } %>
+                                        <% if (!isChild && a.childCount > 0) { %>
+                                        <span class="vm-count-badge"><%= a.childCount %>개</span>
+                                        <% } %>
+                                    </div>
+                                </td>
                                 <td data-col="maker"><%= nvl(a.maker) %></td>
                                 <td data-col="model" class="td-mono"><%= nvl(a.model) %></td>
                                 <td data-col="size" class="td-mono" style="text-align:center"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
@@ -779,6 +828,38 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>역할</label>
+                    <select name="assetRole" id="assetRole" onchange="onRoleChange()">
+                        <option value="PHYSICAL">물리 서버 (독립)</option>
+                        <option value="HYPERVISOR">하이퍼바이저 (VM 호스트)</option>
+                        <option value="VM">VM (가상 머신)</option>
+                        <option value="LDOM">LDOM (Oracle Logical Domain)</option>
+                        <option value="ZONE">Zone (Solaris Zone)</option>
+                        <option value="CONTAINER">Container (Docker/LXC)</option>
+                    </select>
+                </div>
+                <!-- 하이퍼바이저 선택 시: 가상화 종류 -->
+                <div class="form-group" id="virtTypeRow" style="display:none">
+                    <label>가상화 종류</label>
+                    <select name="virtType" id="virtType">
+                        <option value="VMWARE">VMware ESXi / vSphere</option>
+                        <option value="KVM">KVM / QEMU</option>
+                        <option value="LDOM">Oracle LDOM</option>
+                        <option value="HYPERV">Microsoft Hyper-V</option>
+                        <option value="PROXMOX">Proxmox VE</option>
+                        <option value="XEN">Xen</option>
+                        <option value="CONTAINER">Container (Docker/LXC)</option>
+                        <option value="OTHER">기타</option>
+                    </select>
+                </div>
+                <!-- VM/LDOM/Zone/Container 선택 시: 부모 서버 -->
+                <div class="form-group" id="parentSeqRow" style="display:none">
+                    <label>호스트 서버 (부모)</label>
+                    <select name="parentSeq" id="parentSeq">
+                        <option value="">선택 안 함</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>서버명 *</label>
                     <input type="text" name="assetName" id="assetName" placeholder="예: web-server-01" required>
                 </div>
@@ -990,6 +1071,9 @@
                 s != null ? s.replace("\\","\\\\").replace("\"","\\\"").replace("\n"," ").replace("\r","") : "";
             assetJson.append("{")
                 .append("\"assetSeq\":").append(a.assetSeq)
+                .append(",\"parentSeq\":").append(a.parentSeq)
+                .append(",\"assetRole\":\"").append(jesc.apply(a.assetRole)).append("\"")
+                .append(",\"virtType\":\"").append(jesc.apply(a.virtType)).append("\"")
                 .append(",\"assetType\":\"").append(jesc.apply(a.assetType)).append("\"")
                 .append(",\"assetName\":\"").append(jesc.apply(a.assetName)).append("\"")
                 .append(",\"maker\":\"").append(jesc.apply(a.maker)).append("\"")
@@ -1112,11 +1196,31 @@
         const t = filterType.value;
         const s = filterStatus.value;
         let visible = 0;
-        document.querySelectorAll('#assetTbody tr').forEach(row => {
+        // 부모 행 먼저 처리
+        const parentRows = [...document.querySelectorAll('#assetTbody tr.asset-parent')];
+        parentRows.forEach(row => {
             if (row.classList.contains('empty-row')) return;
             const show = (!t || row.dataset.type === t) && (!s || row.dataset.status === s);
             row.style.display = show ? '' : 'none';
             if (show) visible++;
+            // 부모가 숨겨지면 자식도 숨김 (부모가 보여도 collapsed면 자식은 숨김 유지)
+            const pid = row.dataset.assetId;
+            if (pid) {
+                document.querySelectorAll('#assetTbody tr.asset-child[data-parent-id="' + pid + '"]').forEach(child => {
+                    if (!show) child.style.display = 'none';
+                    // show인 경우는 expand 상태에 따라 결정 → toggleChildren 로직이 관리
+                });
+            }
+        });
+        // 부모 없는 자식 행 처리 (orphan)
+        document.querySelectorAll('#assetTbody tr.asset-child').forEach(row => {
+            const pid = row.dataset.parentId;
+            const parentRow = pid ? document.querySelector('#assetTbody tr.asset-parent[data-asset-id="' + pid + '"]') : null;
+            if (!parentRow) {
+                const show = (!t || row.dataset.type === t) && (!s || row.dataset.status === s);
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            }
         });
         const cnt = document.getElementById('assetCount');
         if (cnt) cnt.textContent = (t || s) ? visible + '건' : '';
@@ -1139,13 +1243,65 @@
         });
         const tbody = document.getElementById('assetTbody');
         if (!tbody) return;
-        const rows = [...tbody.querySelectorAll('tr:not(.empty-row)')];
-        rows.sort((a, b) => {
+        // 부모 행만 정렬 (자식은 각 부모 뒤에 유지)
+        const parentRows = [...tbody.querySelectorAll('tr.asset-parent:not(.empty-row)')];
+        parentRows.sort((a, b) => {
             const va = (a.dataset[col] || '').toLowerCase();
             const vb = (b.dataset[col] || '').toLowerCase();
             return va < vb ? -assetSortDir : va > vb ? assetSortDir : 0;
         });
-        rows.forEach(r => tbody.appendChild(r));
+        parentRows.forEach(parent => {
+            tbody.appendChild(parent);
+            const pid = parent.dataset.assetId;
+            if (pid) {
+                tbody.querySelectorAll('tr.asset-child[data-parent-id="' + pid + '"]').forEach(child => {
+                    tbody.appendChild(child);
+                });
+            }
+        });
+        // orphan children
+        tbody.querySelectorAll('tr.asset-child').forEach(child => {
+            const pid = child.dataset.parentId;
+            if (!pid || !tbody.querySelector('tr.asset-parent[data-asset-id="' + pid + '"]')) {
+                tbody.appendChild(child);
+            }
+        });
+    }
+
+    // ── 가상화 역할 변경 ─────────────────────────────────
+    function onRoleChange() {
+        const role = document.getElementById('assetRole').value;
+        const virtRow   = document.getElementById('virtTypeRow');
+        const parentRow = document.getElementById('parentSeqRow');
+        const parentSel = document.getElementById('parentSeq');
+
+        virtRow.style.display   = (role === 'HYPERVISOR') ? '' : 'none';
+        parentRow.style.display = (role === 'VM' || role === 'LDOM' || role === 'ZONE' || role === 'CONTAINER') ? '' : 'none';
+
+        if (parentRow.style.display !== 'none') {
+            // 하이퍼바이저/LDOM 호스트 목록 채우기
+            const curVal = parentSel.value;
+            parentSel.innerHTML = '<option value="">선택 안 함</option>';
+            ASSET_DATA.filter(a => a.assetRole === 'HYPERVISOR' || a.assetRole === 'PHYSICAL')
+                .forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.assetSeq;
+                    opt.textContent = a.assetName + (a.assetRole === 'HYPERVISOR' ? ' [하이퍼바이저]' : ' [물리]');
+                    if (String(a.assetSeq) === String(curVal)) opt.selected = true;
+                    parentSel.appendChild(opt);
+                });
+        }
+    }
+
+    // ── 자식 행 접기/펼치기 ───────────────────────────────
+    function toggleChildren(parentSeq) {
+        const btn = document.getElementById('expand-' + parentSeq);
+        const children = document.querySelectorAll('#assetTbody tr.asset-child[data-parent-id="' + parentSeq + '"]');
+        const isExpanded = btn && btn.textContent === '▼';
+        children.forEach(row => {
+            row.style.display = isExpanded ? 'none' : '';
+        });
+        if (btn) btn.textContent = isExpanded ? '▶' : '▼';
     }
 
     // ── 랙 드래그앤드롭 순서 변경 ───────────────────────────
@@ -1220,10 +1376,15 @@
          'assetIp','assetDisk','assetCpu','assetMemory','assetOs','assetLocation','assetMemo'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
-        document.getElementById('assetType').value   = 'SERVER';
-        document.getElementById('assetSizeU').value  = '';
-        document.getElementById('assetStatus').value = 'ACTIVE';
+        document.getElementById('assetType').value    = 'SERVER';
+        document.getElementById('assetSizeU').value   = '';
+        document.getElementById('assetStatus').value  = 'ACTIVE';
         document.getElementById('assetPurchase').value = '';
+        document.getElementById('assetRole').value    = 'PHYSICAL';
+        document.getElementById('virtType').value     = 'VMWARE';
+        document.getElementById('parentSeq').innerHTML = '<option value="">선택 안 함</option>';
+        document.getElementById('virtTypeRow').style.display   = 'none';
+        document.getElementById('parentSeqRow').style.display  = 'none';
         document.getElementById('assetModal').classList.add('open');
     }
 
@@ -1233,6 +1394,8 @@
         document.getElementById('assetModalTitle').textContent = '서버 수정';
         document.getElementById('assetSeq').value       = a.assetSeq;
         document.getElementById('assetType').value      = a.assetType  || 'SERVER';
+        document.getElementById('assetRole').value      = a.assetRole  || 'PHYSICAL';
+        document.getElementById('virtType').value       = a.virtType   || 'VMWARE';
         document.getElementById('assetName').value      = a.assetName  || '';
         document.getElementById('assetMaker').value     = a.maker      || '';
         document.getElementById('assetModel').value     = a.model      || '';
@@ -1247,6 +1410,11 @@
         document.getElementById('assetStatus').value    = a.status     || 'ACTIVE';
         document.getElementById('assetPurchase').value  = a.purchaseDt || '';
         document.getElementById('assetMemo').value      = a.memo       || '';
+        // parentSeq는 onRoleChange() 내에서 목록 채운 뒤 값 설정
+        const parentSel = document.getElementById('parentSeq');
+        parentSel.innerHTML = '<option value="">선택 안 함</option>';
+        onRoleChange();
+        if (a.parentSeq) parentSel.value = a.parentSeq;
         document.getElementById('assetModal').classList.add('open');
     }
 
