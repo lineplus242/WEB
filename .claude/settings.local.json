@@ -12,7 +12,9 @@
       "Bash(find /c -maxdepth 5 -type f -name \"tomcat*.jar\")",
       "Bash(java -version)",
       "Bash(where java:*)",
-      "Read(//proc/**)"
+      "Read(//proc/**)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
     ]
   }
 }

@@ -400,7 +400,7 @@
                         <option value="PENDING">대기</option>
                     </select>
                     <span id="assetCount" style="font-size:12px;color:#4b5161;margin-left:4px"></span>
-                    <button class="btn btn-sm btn-secondary" onclick="resetAssetFilter()" style="margin-left:auto">초기화</button>
+                    <button class="btn btn-sm btn-secondary" onclick="resetAssetFilter()" style="margin-left:auto">필터초기화</button>
                 </div>
                 <div class="table-wrap">
                     <table>
