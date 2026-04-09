@@ -65,6 +65,7 @@ public class CustomerDetailServlet extends HttpServlet {
             case "rackDelete"      -> doRackDelete(req, resp);
             case "rackUnitSave"    -> doRackUnitSave(req, resp);
             case "rackUnitDelete"  -> doRackUnitDelete(req, resp);
+            case "rackReorder"     -> doRackReorder(req, resp);
             default -> resp.sendRedirect("CustomerServlet?action=list");
         }
     }
@@ -157,17 +158,18 @@ public class CustomerDetailServlet extends HttpServlet {
 
             // 랙 목록
             List<RackVO> racks = new ArrayList<>();
-            String rackSql = "SELECT rack_seq, rack_name, total_u, location, memo FROM tb_rack WHERE cust_seq=? AND del_yn='N' ORDER BY rack_seq";
+            String rackSql = "SELECT rack_seq, rack_name, total_u, location, memo, sort_order FROM tb_rack WHERE cust_seq=? AND del_yn='N' ORDER BY sort_order, rack_seq";
             try (PreparedStatement ps = conn.prepareStatement(rackSql)) {
                 ps.setInt(1, custSeq);
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     RackVO r = new RackVO();
-                    r.rackSeq  = rs.getInt("rack_seq");
-                    r.rackName = rs.getString("rack_name");
-                    r.totalU   = rs.getInt("total_u");
-                    r.location = rs.getString("location");
-                    r.memo     = rs.getString("memo");
+                    r.rackSeq   = rs.getInt("rack_seq");
+                    r.rackName  = rs.getString("rack_name");
+                    r.totalU    = rs.getInt("total_u");
+                    r.location  = rs.getString("location");
+                    r.memo      = rs.getString("memo");
+                    r.sortOrder = rs.getInt("sort_order");
                     racks.add(r);
                 }
             }
@@ -367,13 +369,22 @@ public class CustomerDetailServlet extends HttpServlet {
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (rackSeqStr == null || rackSeqStr.isEmpty()) {
-                String sql = "INSERT INTO tb_rack (cust_seq, rack_name, total_u, location, memo) VALUES (?,?,?,?,?)";
+                // sort_order = 현재 고객사의 최대값 + 1
+                int nextOrder = 0;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT COALESCE(MAX(sort_order),0)+1 FROM tb_rack WHERE cust_seq=? AND del_yn='N'")) {
+                    ps.setInt(1, custSeq);
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) nextOrder = rs.getInt(1);
+                }
+                String sql = "INSERT INTO tb_rack (cust_seq, rack_name, total_u, location, memo, sort_order) VALUES (?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, custSeq);
                     ps.setString(2, req.getParameter("rackName"));
                     ps.setInt(3, parseIntDef(req.getParameter("totalU"), 42));
                     ps.setString(4, emptyToNull(req.getParameter("location")));
                     ps.setString(5, emptyToNull(req.getParameter("memo")));
+                    ps.setInt(6, nextOrder);
                     ps.executeUpdate();
                 }
             } else {
@@ -473,6 +484,35 @@ public class CustomerDetailServlet extends HttpServlet {
         resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
     }
 
+    // ─────────────────────────────────────────────────────
+    // 랙 순서 변경
+    // ─────────────────────────────────────────────────────
+    private void doRackReorder(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String custSeqStr = req.getParameter("custSeq");
+        String order      = req.getParameter("order"); // "rackSeq1,rackSeq2,..."
+        if (order == null || order.isEmpty()) {
+            resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
+            return;
+        }
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            String[] seqs = order.split(",");
+            for (int i = 0; i < seqs.length; i++) {
+                String s = seqs[i].trim();
+                if (s.isEmpty()) continue;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE tb_rack SET sort_order=? WHERE rack_seq=? AND cust_seq=?")) {
+                    ps.setInt(1, i);
+                    ps.setInt(2, Integer.parseInt(s));
+                    ps.setInt(3, Integer.parseInt(custSeqStr));
+                    ps.executeUpdate();
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
+    }
+
     // ── 유틸 ──────────────────────────────────────────────
     private String nvl(String s, String def)     { return (s == null || s.isEmpty()) ? def : s; }
     private String emptyToNull(String s)         { return (s == null || s.isEmpty()) ? null : s; }
@@ -505,7 +545,7 @@ public class CustomerDetailServlet extends HttpServlet {
     }
 
     public static class RackVO {
-        public int    rackSeq, totalU;
+        public int    rackSeq, totalU, sortOrder;
         public String rackName, location, memo;
         public List<RackUnitVO> units = new ArrayList<>();
     }

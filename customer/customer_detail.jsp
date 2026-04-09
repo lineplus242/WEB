@@ -123,8 +123,12 @@
 
         /* 랙 카드 */
         .rack-list { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
-        .rack-card { background: #131519; border: 1px solid #1e2025; border-radius: 12px; overflow: hidden; min-width: 320px; }
+        .rack-card { background: #131519; border: 1px solid #1e2025; border-radius: 12px; overflow: hidden; min-width: 320px; transition: box-shadow 0.15s, opacity 0.15s; }
+        .rack-card.drag-over { box-shadow: 0 0 0 2px #3b6ef5; }
+        .rack-card.dragging  { opacity: 0.45; }
         .rack-card-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #1e2025; gap: 10px; }
+        .rack-drag-handle { cursor: grab; padding: 2px 2px 0; opacity: 0.5; flex-shrink: 0; margin-top: 2px; }
+        .rack-drag-handle:hover { opacity: 1; }
         .rack-card-name { font-size: 14px; font-weight: 500; color: #e8e9eb; }
         .rack-card-loc { font-size: 11px; color: #4b5161; margin-top: 2px; }
 
@@ -380,27 +384,45 @@
                     <span class="panel-title">장비 목록</span>
                     <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 자산 추가</button>
                 </div>
+                <!-- 필터 & 정렬 바 -->
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+                    <select id="filterType" onchange="applyAssetFilter()" style="padding:6px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#b0b4bf;font-size:12px;font-family:inherit;cursor:pointer">
+                        <option value="">전체 유형</option>
+                        <option value="SERVER">서버</option>
+                        <option value="NETWORK">네트워크</option>
+                        <option value="SECURITY">보안</option>
+                        <option value="ETC">기타</option>
+                    </select>
+                    <select id="filterStatus" onchange="applyAssetFilter()" style="padding:6px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#b0b4bf;font-size:12px;font-family:inherit;cursor:pointer">
+                        <option value="">전체 상태</option>
+                        <option value="ACTIVE">운영중</option>
+                        <option value="INACTIVE">중지</option>
+                        <option value="PENDING">대기</option>
+                    </select>
+                    <span id="assetCount" style="font-size:12px;color:#4b5161;margin-left:4px"></span>
+                    <button class="btn btn-sm btn-secondary" onclick="resetAssetFilter()" style="margin-left:auto">초기화</button>
+                </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
                                 <th>유형</th>
-                                <th>자산명</th>
+                                <th class="sort-th" onclick="sortAsset('name')" style="cursor:pointer;user-select:none;white-space:nowrap">자산명 <span id="sort-name" style="color:#3b6ef5">↕</span></th>
                                 <th>모델</th>
                                 <th>크기</th>
                                 <th>IP 주소</th>
                                 <th>OS</th>
                                 <th>위치</th>
-                                <th>도입일</th>
+                                <th class="sort-th" onclick="sortAsset('purchase')" style="cursor:pointer;user-select:none;white-space:nowrap">도입일 <span id="sort-purchase" style="color:#3d4251">↕</span></th>
                                 <th>상태</th>
                                 <th>관리</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="assetTbody">
                             <% if (assets.isEmpty()) { %>
                             <tr class="empty-row"><td colspan="10">등록된 자산이 없습니다.</td></tr>
                             <% } else { for (AssetVO a : assets) { %>
-                            <tr>
+                            <tr data-type="<%= nvl(a.assetType,"") %>" data-status="<%= nvl(a.status,"") %>" data-name="<%= a.assetName.toLowerCase().replace("\"","") %>" data-purchase="<%= nvl(a.purchaseDt,"") %>">
                                 <td><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
                                 <td><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
                                 <td class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
@@ -458,14 +480,23 @@
                 <!-- 랙 카드 목록 -->
                 <div class="rack-list" id="rackList">
                 <% for (RackVO rack : racks) { %>
-                    <div class="rack-card">
+                    <div class="rack-card" data-rack-seq="<%= rack.rackSeq %>" draggable="true">
                         <!-- 랙 헤더 -->
                         <div class="rack-card-header">
-                            <div>
-                                <div class="rack-card-name"><%= rack.rackName %></div>
-                                <% if (rack.location != null && !rack.location.isEmpty()) { %>
-                                <div class="rack-card-loc"><%= rack.location %></div>
-                                <% } %>
+                            <div style="display:flex;align-items:flex-start;gap:8px">
+                                <div class="rack-drag-handle" title="드래그하여 순서 변경">
+                                    <svg width="12" height="16" viewBox="0 0 12 16" fill="#3d4251">
+                                        <circle cx="4" cy="3" r="1.5"/><circle cx="8" cy="3" r="1.5"/>
+                                        <circle cx="4" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/>
+                                        <circle cx="4" cy="13" r="1.5"/><circle cx="8" cy="13" r="1.5"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="rack-card-name"><%= rack.rackName %></div>
+                                    <% if (rack.location != null && !rack.location.isEmpty()) { %>
+                                    <div class="rack-card-loc"><%= rack.location %></div>
+                                    <% } %>
+                                </div>
                             </div>
                             <div style="display:flex;gap:6px;align-items:center">
                                 <div class="rack-side-toggle">
@@ -508,6 +539,14 @@
                     </div>
                 <% } %>
                 </div>
+                <!-- 랙 순서 저장 폼 -->
+                <form id="rackOrderForm" action="../CustomerDetailServlet" method="post" style="display:none">
+                    <input type="hidden" name="action" value="rackReorder">
+                    <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
+                    <input type="hidden" name="tab" value="asset">
+                    <input type="hidden" name="sub" value="rack">
+                    <input type="hidden" name="order" id="rackOrderInput" value="">
+                </form>
                 <% } %>
             </div>
 
@@ -1001,6 +1040,104 @@
     }
 
     renderRacks();
+
+    // ── 장비목록 필터 & 정렬 ────────────────────────────────
+    let assetSortCol = null, assetSortDir = 1;
+
+    function applyAssetFilter() {
+        const filterType   = document.getElementById('filterType');
+        const filterStatus = document.getElementById('filterStatus');
+        if (!filterType) return;
+        const t = filterType.value;
+        const s = filterStatus.value;
+        let visible = 0;
+        document.querySelectorAll('#assetTbody tr').forEach(row => {
+            if (row.classList.contains('empty-row')) return;
+            const show = (!t || row.dataset.type === t) && (!s || row.dataset.status === s);
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        const cnt = document.getElementById('assetCount');
+        if (cnt) cnt.textContent = (t || s) ? visible + '건' : '';
+    }
+
+    function resetAssetFilter() {
+        document.getElementById('filterType').value   = '';
+        document.getElementById('filterStatus').value = '';
+        applyAssetFilter();
+    }
+
+    function sortAsset(col) {
+        if (assetSortCol === col) assetSortDir *= -1;
+        else { assetSortCol = col; assetSortDir = 1; }
+        ['name','purchase'].forEach(c => {
+            const el = document.getElementById('sort-' + c);
+            if (!el) return;
+            el.textContent = c === col ? (assetSortDir === 1 ? '↑' : '↓') : '↕';
+            el.style.color  = c === col ? '#3b6ef5' : '#3d4251';
+        });
+        const tbody = document.getElementById('assetTbody');
+        if (!tbody) return;
+        const rows = [...tbody.querySelectorAll('tr:not(.empty-row)')];
+        rows.sort((a, b) => {
+            const va = (a.dataset[col] || '').toLowerCase();
+            const vb = (b.dataset[col] || '').toLowerCase();
+            return va < vb ? -assetSortDir : va > vb ? assetSortDir : 0;
+        });
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
+    // ── 랙 드래그앤드롭 순서 변경 ───────────────────────────
+    (function initRackDrag() {
+        const list = document.getElementById('rackList');
+        if (!list) return;
+        let dragSrc = null, dragOver = null;
+
+        list.querySelectorAll('.rack-card').forEach(card => {
+            card.addEventListener('dragstart', e => {
+                dragSrc = card;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', card.dataset.rackSeq);
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                list.querySelectorAll('.rack-card').forEach(c => c.classList.remove('drag-over'));
+                dragSrc = null; dragOver = null;
+            });
+            card.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (card === dragSrc) return;
+                if (card !== dragOver) {
+                    list.querySelectorAll('.rack-card').forEach(c => c.classList.remove('drag-over'));
+                    card.classList.add('drag-over');
+                    dragOver = card;
+                }
+                // 드래그 위치(좌/우)에 따라 앞/뒤 삽입
+                const rect = card.getBoundingClientRect();
+                if (e.clientX < rect.left + rect.width / 2) {
+                    list.insertBefore(dragSrc, card);
+                } else {
+                    list.insertBefore(dragSrc, card.nextSibling);
+                }
+            });
+            card.addEventListener('drop', e => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                submitRackOrder();
+            });
+        });
+    })();
+
+    function submitRackOrder() {
+        const cards = document.querySelectorAll('#rackList .rack-card');
+        const order = [...cards].map(c => c.dataset.rackSeq).join(',');
+        const input = document.getElementById('rackOrderInput');
+        const form  = document.getElementById('rackOrderForm');
+        if (!input || !form) return;
+        input.value = order;
+        form.submit();
+    }
 
     function openProjectModal(projSeq, projName, amt, start, end, status, manager, memo) {
         document.getElementById('projectModalTitle').textContent = projSeq ? '사업 수정' : '사업 추가';

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS tb_rack (
     location    VARCHAR(200) DEFAULT NULL,
     memo        TEXT         DEFAULT NULL,
     del_yn      CHAR(1)      DEFAULT 'N',
+    sort_order  INT          DEFAULT 0,
     reg_dt      DATETIME     DEFAULT NOW(),
     PRIMARY KEY (rack_seq)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
