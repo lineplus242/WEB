@@ -14,7 +14,9 @@
       "Bash(where java:*)",
       "Read(//proc/**)",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(find /usr /opt /var /home -name \"CustomerDetailServlet.class\")",
+      "Bash(find /usr /opt /var /home -name \"*.java\")"
     ]
   }
 }

@@ -58,7 +58,10 @@ CREATE TABLE IF NOT EXISTS tb_rack_unit (
 CREATE TABLE IF NOT EXISTS tb_asset (
     asset_seq     INT          NOT NULL AUTO_INCREMENT,
     cust_seq      INT          NOT NULL,
+    parent_seq    INT          DEFAULT NULL,  -- 부모 서버 seq (NULL=최상위)
     asset_type    VARCHAR(50)  NOT NULL,   -- SERVER / NETWORK / SECURITY / ETC
+    asset_role    VARCHAR(20)  DEFAULT 'PHYSICAL', -- PHYSICAL/HYPERVISOR/VM/LDOM/ZONE/CONTAINER
+    virt_type     VARCHAR(20)  DEFAULT NULL, -- VMWARE/KVM/LDOM/HYPERV/PROXMOX/XEN/CONTAINER
     asset_name    VARCHAR(200) NOT NULL,
     maker         VARCHAR(100) DEFAULT NULL,  -- 제조사
     model         VARCHAR(200) DEFAULT NULL,

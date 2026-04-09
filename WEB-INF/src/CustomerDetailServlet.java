@@ -133,15 +133,20 @@ public class CustomerDetailServlet extends HttpServlet {
             }
 
             // IT 자산 목록
-            List<AssetVO> assets = new ArrayList<>();
-            String assetSql = "SELECT * FROM tb_asset WHERE cust_seq=? AND del_yn='N' ORDER BY asset_type, asset_seq DESC";
+            // 자산 전체 로드 후 부모-자식 순서로 정렬
+            List<AssetVO> allAssets = new ArrayList<>();
+            String assetSql = "SELECT * FROM tb_asset WHERE cust_seq=? AND del_yn='N' ORDER BY parent_seq IS NOT NULL, parent_seq, asset_seq";
             try (PreparedStatement ps = conn.prepareStatement(assetSql)) {
                 ps.setInt(1, custSeq);
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     AssetVO a = new AssetVO();
                     a.assetSeq   = rs.getInt("asset_seq");
+                    int ps2      = rs.getInt("parent_seq");
+                    a.parentSeq  = rs.wasNull() ? 0 : ps2;
                     a.assetType  = rs.getString("asset_type");
+                    a.assetRole  = nvl(rs.getString("asset_role"), "PHYSICAL");
+                    a.virtType   = rs.getString("virt_type");
                     a.assetName  = rs.getString("asset_name");
                     a.maker      = rs.getString("maker");
                     a.model      = rs.getString("model");
@@ -157,9 +162,28 @@ public class CustomerDetailServlet extends HttpServlet {
                     a.memo       = rs.getString("memo");
                     int su = rs.getInt("size_u");
                     a.sizeU = rs.wasNull() ? null : su;
-                    assets.add(a);
+                    allAssets.add(a);
                 }
             }
+            // 부모-자식 순서 정렬: 최상위 → 각 부모 바로 아래 자식들
+            java.util.Map<Integer, List<AssetVO>> childMap = new java.util.LinkedHashMap<>();
+            List<AssetVO> topLevel = new ArrayList<>();
+            for (AssetVO a : allAssets) {
+                if (a.parentSeq == 0) topLevel.add(a);
+                else childMap.computeIfAbsent(a.parentSeq, k -> new ArrayList<>()).add(a);
+            }
+            List<AssetVO> assets = new ArrayList<>();
+            for (AssetVO parent : topLevel) {
+                List<AssetVO> children = childMap.getOrDefault(parent.assetSeq, new ArrayList<>());
+                parent.childCount = children.size();
+                assets.add(parent);
+                assets.addAll(children);
+            }
+            // 부모가 삭제된 고아 자식도 포함
+            childMap.forEach((pSeq, children) -> {
+                boolean parentExists = topLevel.stream().anyMatch(a -> a.assetSeq == pSeq);
+                if (!parentExists) assets.addAll(children);
+            });
 
             // 랙 목록
             List<RackVO> racks = new ArrayList<>();
@@ -295,52 +319,62 @@ public class CustomerDetailServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (assetSeqStr == null || assetSeqStr.isEmpty()) {
                 // 신규
-                String sql = "INSERT INTO tb_asset (cust_seq, asset_type, asset_name, maker, model, size_u, hostname, ip_addr, disk, cpu, memory, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String sql = "INSERT INTO tb_asset (cust_seq, parent_seq, asset_type, asset_role, virt_type, asset_name, maker, model, size_u, hostname, ip_addr, disk, cpu, memory, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1,     custSeq);
-                    ps.setString(2,  nvl(req.getParameter("assetType"), "ETC"));
-                    ps.setString(3,  req.getParameter("assetName"));
-                    ps.setString(4,  emptyToNull(req.getParameter("maker")));
-                    ps.setString(5,  emptyToNull(req.getParameter("model")));
+                    String pSeqStr = req.getParameter("parentSeq");
+                    if (pSeqStr == null || pSeqStr.isEmpty()) ps.setNull(2, java.sql.Types.INTEGER);
+                    else ps.setInt(2, Integer.parseInt(pSeqStr));
+                    ps.setString(3,  nvl(req.getParameter("assetType"), "SERVER"));
+                    ps.setString(4,  nvl(req.getParameter("assetRole"), "PHYSICAL"));
+                    ps.setString(5,  emptyToNull(req.getParameter("virtType")));
+                    ps.setString(6,  req.getParameter("assetName"));
+                    ps.setString(7,  emptyToNull(req.getParameter("maker")));
+                    ps.setString(8,  emptyToNull(req.getParameter("model")));
                     String suStr = req.getParameter("sizeU");
-                    if (suStr == null || suStr.isEmpty()) ps.setNull(6, java.sql.Types.INTEGER);
-                    else ps.setInt(6, Integer.parseInt(suStr));
-                    ps.setString(7,  emptyToNull(req.getParameter("hostname")));
-                    ps.setString(8,  emptyToNull(req.getParameter("ipAddr")));
-                    ps.setString(9,  emptyToNull(req.getParameter("disk")));
-                    ps.setString(10, emptyToNull(req.getParameter("cpu")));
-                    ps.setString(11, emptyToNull(req.getParameter("memory")));
-                    ps.setString(12, emptyToNull(req.getParameter("osInfo")));
-                    ps.setString(13, emptyToNull(req.getParameter("location")));
-                    ps.setString(14, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(15, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(16, emptyToNull(req.getParameter("memo")));
-                    ps.setString(17, loginUser);
+                    if (suStr == null || suStr.isEmpty()) ps.setNull(9, java.sql.Types.INTEGER);
+                    else ps.setInt(9, Integer.parseInt(suStr));
+                    ps.setString(10, emptyToNull(req.getParameter("hostname")));
+                    ps.setString(11, emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(12, emptyToNull(req.getParameter("disk")));
+                    ps.setString(13, emptyToNull(req.getParameter("cpu")));
+                    ps.setString(14, emptyToNull(req.getParameter("memory")));
+                    ps.setString(15, emptyToNull(req.getParameter("osInfo")));
+                    ps.setString(16, emptyToNull(req.getParameter("location")));
+                    ps.setString(17, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(18, emptyToNull(req.getParameter("purchaseDt")));
+                    ps.setString(19, emptyToNull(req.getParameter("memo")));
+                    ps.setString(20, loginUser);
                     ps.executeUpdate();
                 }
             } else {
                 // 수정
-                String sql = "UPDATE tb_asset SET asset_type=?, asset_name=?, maker=?, model=?, size_u=?, hostname=?, ip_addr=?, disk=?, cpu=?, memory=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
+                String sql = "UPDATE tb_asset SET parent_seq=?, asset_type=?, asset_role=?, virt_type=?, asset_name=?, maker=?, model=?, size_u=?, hostname=?, ip_addr=?, disk=?, cpu=?, memory=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1,  nvl(req.getParameter("assetType"), "ETC"));
-                    ps.setString(2,  req.getParameter("assetName"));
-                    ps.setString(3,  emptyToNull(req.getParameter("maker")));
-                    ps.setString(4,  emptyToNull(req.getParameter("model")));
+                    String pSeqStr2 = req.getParameter("parentSeq");
+                    if (pSeqStr2 == null || pSeqStr2.isEmpty()) ps.setNull(1, java.sql.Types.INTEGER);
+                    else ps.setInt(1, Integer.parseInt(pSeqStr2));
+                    ps.setString(2,  nvl(req.getParameter("assetType"), "SERVER"));
+                    ps.setString(3,  nvl(req.getParameter("assetRole"), "PHYSICAL"));
+                    ps.setString(4,  emptyToNull(req.getParameter("virtType")));
+                    ps.setString(5,  req.getParameter("assetName"));
+                    ps.setString(6,  emptyToNull(req.getParameter("maker")));
+                    ps.setString(7,  emptyToNull(req.getParameter("model")));
                     String suStr2 = req.getParameter("sizeU");
-                    if (suStr2 == null || suStr2.isEmpty()) ps.setNull(5, java.sql.Types.INTEGER);
-                    else ps.setInt(5, Integer.parseInt(suStr2));
-                    ps.setString(6,  emptyToNull(req.getParameter("hostname")));
-                    ps.setString(7,  emptyToNull(req.getParameter("ipAddr")));
-                    ps.setString(8,  emptyToNull(req.getParameter("disk")));
-                    ps.setString(9,  emptyToNull(req.getParameter("cpu")));
-                    ps.setString(10, emptyToNull(req.getParameter("memory")));
-                    ps.setString(11, emptyToNull(req.getParameter("osInfo")));
-                    ps.setString(12, emptyToNull(req.getParameter("location")));
-                    ps.setString(13, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(14, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(15, emptyToNull(req.getParameter("memo")));
-                    ps.setString(16, loginUser);
-                    ps.setInt(17,    Integer.parseInt(assetSeqStr));
+                    if (suStr2 == null || suStr2.isEmpty()) ps.setNull(8, java.sql.Types.INTEGER);
+                    else ps.setInt(8, Integer.parseInt(suStr2));
+                    ps.setString(9,  emptyToNull(req.getParameter("hostname")));
+                    ps.setString(10, emptyToNull(req.getParameter("ipAddr")));
+                    ps.setString(11, emptyToNull(req.getParameter("disk")));
+                    ps.setString(12, emptyToNull(req.getParameter("cpu")));
+                    ps.setString(13, emptyToNull(req.getParameter("memory")));
+                    ps.setString(14, emptyToNull(req.getParameter("osInfo")));
+                    ps.setString(15, emptyToNull(req.getParameter("location")));
+                    ps.setString(16, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(17, emptyToNull(req.getParameter("purchaseDt")));
+                    ps.setString(18, emptyToNull(req.getParameter("memo")));
+                    ps.setString(19, loginUser);
+                    ps.setInt(20,    Integer.parseInt(assetSeqStr));
                     ps.executeUpdate();
                 }
             }
@@ -553,11 +587,13 @@ public class CustomerDetailServlet extends HttpServlet {
     }
 
     public static class AssetVO {
-        public int    assetSeq;
-        public String assetType, assetName, maker, model, hostname, ipAddr;
+        public int    assetSeq, parentSeq;   // parentSeq=0 이면 최상위
+        public String assetType, assetRole, virtType;
+        public String assetName, maker, model, hostname, ipAddr;
         public String disk, cpu, memory, osInfo, location;
         public String status, purchaseDt, memo;
-        public Integer sizeU;  // 랙 크기 (U), null=미설정
+        public Integer sizeU;
+        public int childCount;  // DB 저장 안 함, 로드 시 계산
     }
 
     public static class RackVO {
