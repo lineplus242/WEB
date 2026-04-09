@@ -189,7 +189,17 @@
         .btn-danger:hover { background: #3d1212; }
 
         /* 테이블 */
-        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 8px; flex-wrap: nowrap; }
+        .toolbar-sep { width: 1px; height: 18px; background: #252830; flex-shrink: 0; }
+        .filter-sel { padding: 5px 8px; background: #0e0f11; border: 1px solid #1e2025; border-radius: 6px; color: #b0b4bf; font-size: 12px; font-family: inherit; cursor: pointer; height: 30px; }
+        #assetTable th, #assetTable td { padding: 10px 14px; font-size: 12px; vertical-align: middle; text-align: left; box-sizing: border-box; }
+        #assetTable th { background: #0f1013; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; border-bottom: 1px solid #1e2025; cursor: grab; user-select: none; position: relative; }
+        #assetTable th:active { cursor: grabbing; }
+        #assetTable th.col-drag-over { background: #1a1e2e; box-shadow: inset 2px 0 0 #3b6ef5; }
+        #assetTable th.col-dragging { opacity: 0.4; }
+        #assetTable td { color: #c8cad0; border-bottom: 1px solid #161820; }
+        #assetTable tr:last-child td { border-bottom: none; }
+        #assetTable tr:hover td { background: #161820; }
         .panel-title { font-size: 13px; font-weight: 500; color: #9ca3af; }
         .table-wrap { background: #131519; border: 1px solid #1e2025; border-radius: 12px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
@@ -381,45 +391,44 @@
             <!-- 장비 목록 -->
             <div id="sub-asset-list" class="sub-tab-panel <%= "rack".equals(activeSub) ? "" : "active" %>">
                 <div class="panel-header">
-                    <span class="panel-title">장비 목록</span>
-                    <div style="display:flex;gap:8px;align-items:center">
+                    <span class="panel-title" style="flex-shrink:0">장비 목록</span>
+                    <!-- 필터 + 버튼 한 줄 -->
+                    <div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;min-width:0">
+                        <select id="filterType" class="filter-sel" onchange="applyAssetFilter()">
+                            <option value="">전체 유형</option>
+                            <option value="SERVER">서버</option>
+                            <option value="NETWORK">네트워크</option>
+                            <option value="SECURITY">보안</option>
+                            <option value="ETC">기타</option>
+                        </select>
+                        <select id="filterStatus" class="filter-sel" onchange="applyAssetFilter()">
+                            <option value="">전체 상태</option>
+                            <option value="ACTIVE">운영중</option>
+                            <option value="INACTIVE">중지</option>
+                            <option value="PENDING">대기</option>
+                        </select>
+                        <span id="assetCount" style="font-size:12px;color:#4b5161;white-space:nowrap"></span>
+                        <div class="toolbar-sep"></div>
+                        <button class="btn btn-sm btn-secondary" onclick="resetAssetFilter()">필터초기화</button>
                         <div style="position:relative">
                             <button class="btn btn-sm btn-secondary" onclick="toggleColPanel()" id="colToggleBtn">컬럼 설정 ▾</button>
-                            <div id="colPanel" style="display:none;position:absolute;right:0;top:32px;background:#1a1c22;border:1px solid #252830;border-radius:10px;padding:14px 16px;z-index:100;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.5)">
+                            <div id="colPanel" style="display:none;position:absolute;right:0;top:34px;background:#1a1c22;border:1px solid #252830;border-radius:10px;padding:14px 16px;z-index:200;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.5)">
                                 <div style="font-size:11px;color:#4b5161;margin-bottom:10px;font-weight:500;letter-spacing:.5px">표시할 컬럼 선택</div>
                                 <div id="colCheckboxes" style="display:flex;flex-direction:column;gap:7px"></div>
-                                <div style="margin-top:12px;padding-top:10px;border-top:1px solid #252830;display:flex;gap:8px">
-                                    <button class="btn btn-sm btn-secondary" onclick="resetColVisibility()" style="flex:1;font-size:11px">기본값</button>
+                                <div style="margin-top:12px;padding-top:10px;border-top:1px solid #252830">
+                                    <button class="btn btn-sm btn-secondary" onclick="resetColVisibility()" style="width:100%;font-size:11px">기본값으로</button>
                                 </div>
                             </div>
                         </div>
                         <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 서버 추가</button>
                     </div>
                 </div>
-                <!-- 필터 & 정렬 바 -->
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-                    <select id="filterType" onchange="applyAssetFilter()" style="padding:6px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#b0b4bf;font-size:12px;font-family:inherit;cursor:pointer">
-                        <option value="">전체 유형</option>
-                        <option value="SERVER">서버</option>
-                        <option value="NETWORK">네트워크</option>
-                        <option value="SECURITY">보안</option>
-                        <option value="ETC">기타</option>
-                    </select>
-                    <select id="filterStatus" onchange="applyAssetFilter()" style="padding:6px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#b0b4bf;font-size:12px;font-family:inherit;cursor:pointer">
-                        <option value="">전체 상태</option>
-                        <option value="ACTIVE">운영중</option>
-                        <option value="INACTIVE">중지</option>
-                        <option value="PENDING">대기</option>
-                    </select>
-                    <span id="assetCount" style="font-size:12px;color:#4b5161;margin-left:4px"></span>
-                    <button class="btn btn-sm btn-secondary" onclick="resetAssetFilter()" style="margin-left:auto">필터초기화</button>
-                </div>
                 <div class="table-wrap">
                     <table id="assetTable">
                         <thead>
                             <tr>
                                 <th data-col="type">유형</th>
-                                <th data-col="name" class="sort-th" onclick="sortAsset('name')" style="cursor:pointer;user-select:none;white-space:nowrap">서버명 <span id="sort-name" style="color:#3b6ef5">↕</span></th>
+                                <th data-col="name" onclick="sortAsset('name')">서버명 <span id="sort-name" style="color:#3b6ef5;font-weight:400">↕</span></th>
                                 <th data-col="maker">제조사</th>
                                 <th data-col="model">모델</th>
                                 <th data-col="size">크기</th>
@@ -430,9 +439,9 @@
                                 <th data-col="memory">Memory</th>
                                 <th data-col="location">위치</th>
                                 <th data-col="os">OS</th>
-                                <th data-col="purchase" class="sort-th" onclick="sortAsset('purchase')" style="cursor:pointer;user-select:none;white-space:nowrap">도입일 <span id="sort-purchase" style="color:#3d4251">↕</span></th>
+                                <th data-col="purchase" onclick="sortAsset('purchase')">도입일 <span id="sort-purchase" style="color:#3d4251;font-weight:400">↕</span></th>
                                 <th data-col="status">상태</th>
-                                <th data-col="actions">관리</th>
+                                <th data-col="actions" style="cursor:default">관리</th>
                             </tr>
                         </thead>
                         <tbody id="assetTbody">
@@ -441,23 +450,23 @@
                             <% } else { for (AssetVO a : assets) { %>
                             <tr data-type="<%= nvl(a.assetType) %>" data-status="<%= nvl(a.status) %>" data-name="<%= a.assetName.toLowerCase() %>" data-purchase="<%= nvl(a.purchaseDt) %>">
                                 <td data-col="type"><span class="chip <%= assetTypeChip(a.assetType) %>"><%= assetTypeLabel(a.assetType) %></span></td>
-                                <td data-col="name"><strong style="color:#e8e9eb"><%= nvl(a.assetName) %></strong></td>
-                                <td data-col="maker" style="font-size:12px"><%= nvl(a.maker) %></td>
-                                <td data-col="model" class="td-mono" style="font-size:12px"><%= nvl(a.model) %></td>
-                                <td data-col="size" class="td-mono" style="font-size:12px;text-align:center"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
-                                <td data-col="hostname" class="td-mono" style="font-size:12px"><%= nvl(a.hostname) %></td>
-                                <td data-col="ip" class="td-mono" style="font-size:12px">
+                                <td data-col="name"><strong style="color:#e8e9eb;font-size:13px"><%= nvl(a.assetName) %></strong></td>
+                                <td data-col="maker"><%= nvl(a.maker) %></td>
+                                <td data-col="model" class="td-mono"><%= nvl(a.model) %></td>
+                                <td data-col="size" class="td-mono" style="text-align:center"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
+                                <td data-col="hostname" class="td-mono"><%= nvl(a.hostname) %></td>
+                                <td data-col="ip" class="td-mono">
                                     <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
                                         for (String ip : a.ipAddr.split(",")) { %>
                                     <div><%= ip.trim() %></div>
                                     <% } } else { %><span style="color:#3d4251">-</span><% } %>
                                 </td>
-                                <td data-col="disk" style="font-size:12px;color:#6b7280"><%= nvl(a.disk) %></td>
-                                <td data-col="cpu" style="font-size:12px;color:#6b7280"><%= nvl(a.cpu) %></td>
-                                <td data-col="memory" style="font-size:12px;color:#6b7280"><%= nvl(a.memory) %></td>
-                                <td data-col="location" style="font-size:12px"><%= nvl(a.location) %></td>
-                                <td data-col="os" style="font-size:12px;color:#6b7280"><%= nvl(a.osInfo) %></td>
-                                <td data-col="purchase" class="td-mono" style="font-size:12px;color:#6b7280"><%= nvl(a.purchaseDt) %></td>
+                                <td data-col="disk" style="color:#6b7280"><%= nvl(a.disk) %></td>
+                                <td data-col="cpu" style="color:#6b7280"><%= nvl(a.cpu) %></td>
+                                <td data-col="memory" style="color:#6b7280"><%= nvl(a.memory) %></td>
+                                <td data-col="location"><%= nvl(a.location) %></td>
+                                <td data-col="os" style="color:#6b7280"><%= nvl(a.osInfo) %></td>
+                                <td data-col="purchase" class="td-mono" style="color:#6b7280"><%= nvl(a.purchaseDt) %></td>
                                 <td data-col="status"><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
                                 <td data-col="actions">
                                     <div class="td-actions">
@@ -1305,17 +1314,98 @@
     }
 
     function resetColVisibility() {
-        localStorage.removeItem(COL_LS_KEY);
+        const stored = JSON.parse(localStorage.getItem(COL_LS_KEY) || '{}');
+        const newStored = { _order: stored._order };   // 순서는 유지, 가시성만 초기화
+        localStorage.setItem(COL_LS_KEY, JSON.stringify(newStored));
         const vis = Object.assign({}, COL_DEFAULT);
         buildColPanel(vis);
         applyColVisibility(vis);
     }
 
+    // ── 컬럼 드래그앤드롭 순서 변경 ─────────────────────────
+    let _dragColIdx = null;
+
+    function moveTableColumn(fromIdx, toIdx) {
+        const table = document.getElementById('assetTable');
+        if (!table) return;
+        Array.from(table.rows).forEach(row => {
+            const cells = Array.from(row.cells);
+            if (fromIdx >= cells.length || toIdx >= cells.length) return;
+            const cell = cells[fromIdx];
+            if (fromIdx < toIdx) {
+                const ref = cells[toIdx];
+                row.insertBefore(cell, ref.nextSibling || null);
+            } else {
+                row.insertBefore(cell, cells[toIdx]);
+            }
+        });
+    }
+
+    function saveColOrder() {
+        const table = document.getElementById('assetTable');
+        if (!table) return;
+        const order = Array.from(table.querySelectorAll('thead th')).map(th => th.getAttribute('data-col'));
+        const stored = JSON.parse(localStorage.getItem(COL_LS_KEY) || '{}');
+        stored._order = order;
+        localStorage.setItem(COL_LS_KEY, JSON.stringify(stored));
+    }
+
+    function restoreColOrder() {
+        const stored = JSON.parse(localStorage.getItem(COL_LS_KEY) || '{}');
+        if (!stored._order) return;
+        stored._order.forEach((colKey, toIdx) => {
+            const table = document.getElementById('assetTable');
+            if (!table) return;
+            const ths = Array.from(table.querySelectorAll('thead th'));
+            const fromIdx = ths.findIndex(th => th.getAttribute('data-col') === colKey);
+            if (fromIdx === -1 || fromIdx === toIdx) return;
+            moveTableColumn(fromIdx, toIdx);
+        });
+    }
+
+    function initColDrag() {
+        const table = document.getElementById('assetTable');
+        if (!table) return;
+        table.querySelectorAll('thead th').forEach((th, idx) => {
+            if (th.getAttribute('data-col') === 'actions') return; // 관리 컬럼 고정
+            th.addEventListener('dragstart', e => {
+                _dragColIdx = Array.from(table.querySelectorAll('thead th')).indexOf(th);
+                e.dataTransfer.effectAllowed = 'move';
+                th.classList.add('col-dragging');
+            });
+            th.addEventListener('dragend', () => {
+                th.classList.remove('col-dragging');
+                table.querySelectorAll('thead th').forEach(t => t.classList.remove('col-drag-over'));
+                _dragColIdx = null;
+            });
+            th.addEventListener('dragover', e => {
+                e.preventDefault();
+                const curIdx = Array.from(table.querySelectorAll('thead th')).indexOf(th);
+                if (_dragColIdx === null || _dragColIdx === curIdx) return;
+                table.querySelectorAll('thead th').forEach(t => t.classList.remove('col-drag-over'));
+                th.classList.add('col-drag-over');
+            });
+            th.addEventListener('drop', e => {
+                e.preventDefault();
+                th.classList.remove('col-drag-over');
+                if (_dragColIdx === null) return;
+                const toIdx = Array.from(table.querySelectorAll('thead th')).indexOf(th);
+                if (_dragColIdx !== toIdx) {
+                    moveTableColumn(_dragColIdx, toIdx);
+                    saveColOrder();
+                }
+                _dragColIdx = null;
+            });
+        });
+    }
+
     // 초기화
     (function() {
         const vis = loadColVisibility();
+        restoreColOrder();          // 저장된 순서 먼저 복원
         buildColPanel(vis);
         applyColVisibility(vis);
+        initColDrag();              // 드래그 이벤트 등록
         // 패널 외부 클릭 시 닫기
         document.addEventListener('click', e => {
             const btn   = document.getElementById('colToggleBtn');
