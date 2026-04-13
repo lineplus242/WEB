@@ -23,6 +23,8 @@
     <title>대시보드 - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/light.css">
+    <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -108,12 +110,16 @@
             padding: 12px;
         }
 
-        .user-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 8px;
-        }
+        .user-row { display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:background .12s; }
+        .user-row:hover,.user-row.open { background:#161820; }
+        .user-chevron { width:12px;height:12px;margin-left:auto;flex-shrink:0;color:#3d4251;transition:transform .2s; }
+        .user-row.open .user-chevron { transform:rotate(180deg); }
+        .user-menu { display:none;background:#1a1c22;border:1px solid #252830;border-radius:10px;padding:5px;margin-bottom:4px; }
+        .user-menu.open { display:block; }
+        .user-menu-item { display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:12px;color:#c8cad0;text-decoration:none;transition:background .12s;width:100%;border:none;background:none;cursor:pointer;font-family:inherit; }
+        .user-menu-item:hover { background:#252830; }
+        .user-menu-item.danger { color:#e05656; }
+        .user-menu-item.danger:hover { background:#2a1015; }
 
         .avatar {
             width: 30px; height: 30px;
@@ -129,22 +135,6 @@
         .user-info p  { font-size: 12px; font-weight: 500; color: #c8cad0; }
         .user-info span { font-size: 11px; color: #3d4251; }
 
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 10px;
-            border-radius: 7px;
-            font-size: 12px;
-            color: #6b7280;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.12s, color 0.12s;
-            width: 100%;
-        }
-
-        .logout-btn:hover { background: #1a1015; color: #e05656; }
-        .logout-btn svg { width: 14px; height: 14px; }
 
         /* ── 메인 콘텐츠 ── */
         .main {
@@ -371,21 +361,25 @@
         </a>
 
         <div class="sb-bottom">
-            <div class="user-row">
+            <div id="userMenu" class="user-menu">
+                <a href="mypage.jsp" class="user-menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    마이페이지
+                </a>
+                <div style="height:1px;background:#252830;margin:4px 2px"></div>
+                <a href="LogoutServlet" class="user-menu-item danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    로그아웃
+                </a>
+            </div>
+            <div class="user-row" onclick="toggleUserMenu(this)">
                 <div class="avatar"><%= loginName != null ? String.valueOf(loginName.charAt(0)) : "관" %></div>
                 <div class="user-info">
                     <p><%= loginName != null ? loginName : loginUser %></p>
                     <span><%= loginRole != null ? loginRole : "USER" %></span>
                 </div>
+                <svg class="user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
             </div>
-            <a href="LogoutServlet" class="logout-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-                로그아웃
-            </a>
         </div>
     </nav>
 
@@ -502,6 +496,20 @@
             .catch(() => {
                 document.getElementById('dbMs').textContent = '연결 오류';
             });
+    function toggleUserMenu(row) {
+        const menu = document.getElementById('userMenu');
+        if (!menu) return;
+        const open = menu.classList.toggle('open');
+        row.classList.toggle('open', open);
+    }
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('userMenu');
+        const row  = document.querySelector('.user-row');
+        if (menu && row && !row.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.remove('open');
+            row.classList.remove('open');
+        }
+    });
     </script>
 </body>
 </html>
