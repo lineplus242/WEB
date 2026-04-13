@@ -59,6 +59,7 @@
 [data-theme="light"] .empty-row td { color:#64748b; }
 [data-theme="light"] .td-mono { color:#1e293b; }
 
+/* 일반 선택자 (우선순위 낮음, 기본 커버) */
 [data-theme="light"] input,
 [data-theme="light"] select,
 [data-theme="light"] textarea { background:#ffffff; border-color:#cbd5e1; color:#1e293b; }
@@ -71,6 +72,51 @@
 [data-theme="light"] input:-webkit-autofill { -webkit-box-shadow:0 0 0 30px #ffffff inset !important; -webkit-text-fill-color:#1e293b !important; }
 [data-theme="light"] input:read-only { color:#64748b; }
 [data-theme="light"] .hint { color:#64748b; }
+
+/* 구체화 선택자 — JSP 인라인 <style> 보다 나중에 로드되어 이김 (방안 B 이중 안전망) */
+[data-theme="light"] .form-group input,
+[data-theme="light"] .form-group select,
+[data-theme="light"] .form-group textarea { background:#ffffff !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+[data-theme="light"] .form-group input:focus,
+[data-theme="light"] .form-group select:focus,
+[data-theme="light"] .form-group textarea:focus { border-color:#3b6ef5 !important; }
+[data-theme="light"] .form-group select option { background:#ffffff; color:#1e293b; }
+[data-theme="light"] .form-group input::placeholder,
+[data-theme="light"] .form-group textarea::placeholder { color:#94a3b8 !important; }
+[data-theme="light"] .form-group input:-webkit-autofill { -webkit-box-shadow:0 0 0 30px #ffffff inset !important; -webkit-text-fill-color:#1e293b !important; }
+[data-theme="light"] .form-group input:read-only { color:#64748b !important; background:#f8fafc !important; }
+[data-theme="light"] .form-group label { color:#475569 !important; }
+
+/* 검색바 */
+[data-theme="light"] .search-bar input,
+[data-theme="light"] .search-bar select { background:#ffffff !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+
+/* 필터 셀렉트 */
+[data-theme="light"] .filter-sel { background:#ffffff !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+
+/* 모달 내부 */
+[data-theme="light"] .modal { background:#ffffff !important; border-color:#cbd5e1 !important; }
+[data-theme="light"] .modal-title { color:#1e293b !important; }
+[data-theme="light"] .modal input,
+[data-theme="light"] .modal select,
+[data-theme="light"] .modal textarea { background:#ffffff !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+[data-theme="light"] .modal input:focus,
+[data-theme="light"] .modal select:focus,
+[data-theme="light"] .modal textarea:focus { border-color:#3b6ef5 !important; }
+[data-theme="light"] .modal select option { background:#ffffff; color:#1e293b; }
+[data-theme="light"] .modal input::placeholder,
+[data-theme="light"] .modal textarea::placeholder { color:#94a3b8 !important; }
+[data-theme="light"] .modal-footer { border-color:#e2e8f0 !important; }
+
+/* form-card (user_form, customer_form) */
+[data-theme="light"] .form-card { background:#ffffff !important; border-color:#cbd5e1 !important; }
+[data-theme="light"] .form-card-title { color:#475569 !important; border-color:#e2e8f0 !important; }
+[data-theme="light"] .form-card input,
+[data-theme="light"] .form-card select,
+[data-theme="light"] .form-card textarea { background:#ffffff !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+[data-theme="light"] .form-card input::placeholder { color:#94a3b8 !important; }
+[data-theme="light"] .form-card input:read-only { color:#64748b !important; background:#f8fafc !important; }
+[data-theme="light"] .form-card select option { background:#ffffff; color:#1e293b; }
 
 [data-theme="light"] .modal { background:#ffffff; border-color:#cbd5e1; }
 [data-theme="light"] .modal-overlay { background:rgba(0,0,0,.35); }

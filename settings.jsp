@@ -28,7 +28,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>설정 - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -115,6 +114,7 @@
         .db-refresh { margin-left: 8px; padding: 4px 10px; border-radius: 6px; font-size: 11px; background: #1a1c22; border: 1px solid #252830; color: #6b7280; cursor: pointer; font-family: inherit; transition: background .12s; text-decoration: none; }
         .db-refresh:hover { background: #252830; color: #c8cad0; }
     </style>
+    <link rel="stylesheet" href="style/light.css">
 </head>
 <body>
     <nav class="sidebar">

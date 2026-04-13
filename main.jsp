@@ -23,7 +23,6 @@
     <title>대시보드 - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -299,6 +298,7 @@
         .chip-r { background: #2a0d0d; color: #e05656; border: 1px solid #3d0f0f; }
         .chip-y { background: #2a200d; color: #d4a017; border: 1px solid #3d2e0f; }
     </style>
+    <link rel="stylesheet" href="style/light.css">
 </head>
 <body>
 

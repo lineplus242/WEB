@@ -12,7 +12,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마이페이지 - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -70,6 +69,7 @@
         .btn-secondary { background: #1a1e2e; color: #6b9af5; border: 1px solid #252d44; }
         .btn-secondary:hover { background: #202540; }
     </style>
+    <link rel="stylesheet" href="style/light.css">
 </head>
 <body>
     <nav class="sidebar">

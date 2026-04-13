@@ -56,7 +56,6 @@
     <title><%= cust != null ? cust.custName : "고객사 상세" %> - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -265,6 +264,7 @@
         .form-group textarea { resize: vertical; min-height: 72px; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
     </style>
+    <link rel="stylesheet" href="../style/light.css">
 </head>
 <body>
 <!-- 사이드바 -->

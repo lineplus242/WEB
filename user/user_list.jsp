@@ -22,7 +22,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사용자 관리 - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="../style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -104,6 +103,7 @@
         .alert { padding: 10px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
         .alert-err  { background: rgba(224,86,86,0.1); border: 1px solid rgba(224,86,86,0.3); color: #e05656; }
     </style>
+    <link rel="stylesheet" href="../style/light.css">
 </head>
 <body>
     <nav class="sidebar">
