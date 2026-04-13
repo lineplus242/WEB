@@ -343,7 +343,7 @@
                 <div class="cust-avatar"><%= String.valueOf(cust.custName.charAt(0)) %></div>
                 <div>
                     <div class="cust-name"><%= cust.custName %></div>
-                    <div class="cust-code"><%= nvl(cust.custCode) %> · <%= nvl(cust.industry) %></div>
+                    <div class="cust-code"><%= nvl(cust.custCode) %></div>
                 </div>
             </div>
             <div class="cust-meta">
