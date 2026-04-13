@@ -475,7 +475,6 @@
                                 String roleChipClass = "HYPERVISOR".equals(a.assetRole) ? "chip-hypervisor"
                                     : "VM".equals(a.assetRole) ? "chip-vm"
                                     : "LDOM".equals(a.assetRole) ? "chip-ldom"
-                                    : "ZONE".equals(a.assetRole) ? "chip-zone"
                                     : "CONTAINER".equals(a.assetRole) ? "chip-container" : "";
                                 String virtLabel = "";
                                 if (a.virtType != null) {
@@ -486,7 +485,6 @@
                                         case "PROXMOX":   virtLabel = "Proxmox";   break;
                                         case "XEN":       virtLabel = "Xen";       break;
                                         case "ORACLE_VM": virtLabel = "ORACLE VM"; break;
-                                        case "SOLARIS":   virtLabel = "Solaris";   break;
                                         case "DOCKER":    virtLabel = "Docker";    break;
                                         default:          virtLabel = "HV";        break;
                                     }
@@ -494,7 +492,6 @@
                                 String roleLabel = "HYPERVISOR".equals(a.assetRole) ? (virtLabel.isEmpty() ? "HV" : virtLabel)
                                     : "VM".equals(a.assetRole) ? "VM"
                                     : "LDOM".equals(a.assetRole) ? "LDOM"
-                                    : "ZONE".equals(a.assetRole) ? "ZONE"
                                     : "CONTAINER".equals(a.assetRole) ? "CNTR" : "";
                             %>
                             <tr class="<%= rowClass %>"
@@ -858,7 +855,6 @@
                         <option value="HYPERVISOR">하이퍼바이저 (VM 호스트)</option>
                         <option value="VM">VM (가상 머신)</option>
                         <option value="LDOM">LDOM (Oracle Logical Domain)</option>
-                        <option value="ZONE">Zone (Solaris Zone)</option>
                         <option value="CONTAINER">Container (Docker/LXC)</option>
                     </select>
                 </div>
@@ -872,7 +868,6 @@
                         <option value="PROXMOX">Proxmox VE</option>
                         <option value="XEN">Xen</option>
                         <option value="ORACLE_VM">Oracle VM Server for SPARC (LDOM 호스트)</option>
-                        <option value="SOLARIS">Solaris (Zone 호스트)</option>
                         <option value="DOCKER">Docker / LXC (컨테이너 호스트)</option>
                         <option value="OTHER">기타</option>
                     </select>
@@ -1343,17 +1338,26 @@
         const parentSel = document.getElementById('parentSeq');
 
         virtRow.style.display   = (role === 'HYPERVISOR') ? '' : 'none';
-        parentRow.style.display = (role === 'VM' || role === 'LDOM' || role === 'ZONE' || role === 'CONTAINER') ? '' : 'none';
+        parentRow.style.display = (role === 'VM' || role === 'LDOM' || role === 'CONTAINER') ? '' : 'none';
 
         if (parentRow.style.display !== 'none') {
-            // 하이퍼바이저/LDOM 호스트 목록 채우기
+            // 역할별 허용 virt_type 필터
+            const X86_HV = ['VMWARE','KVM','HYPERV','PROXMOX','XEN'];
+            const allowedVirt = role === 'LDOM'      ? ['ORACLE_VM']
+                              : role === 'CONTAINER' ? ['DOCKER']
+                              : X86_HV; // VM
+
             const curVal = parentSel.value;
             parentSel.innerHTML = '<option value="">선택 안 함</option>';
-            ASSET_DATA.filter(a => a.assetRole === 'HYPERVISOR' || a.assetRole === 'PHYSICAL')
+            ASSET_DATA
+                .filter(a => a.assetRole === 'HYPERVISOR' && allowedVirt.includes(a.virtType))
                 .forEach(a => {
                     const opt = document.createElement('option');
                     opt.value = a.assetSeq;
-                    opt.textContent = a.assetName + (a.assetRole === 'HYPERVISOR' ? ' [하이퍼바이저]' : ' [물리]');
+                    const tag = a.virtType === 'ORACLE_VM' ? 'ORACLE VM'
+                              : a.virtType === 'DOCKER'    ? 'Docker'
+                              : a.virtType || 'HV';
+                    opt.textContent = a.assetName + ' [' + tag + ']';
                     if (String(a.assetSeq) === String(curVal)) opt.selected = true;
                     parentSel.appendChild(opt);
                 });
