@@ -37,12 +37,14 @@
         if ("SERVER".equals(t))   return "서버";
         if ("NETWORK".equals(t))  return "네트워크";
         if ("SECURITY".equals(t)) return "보안";
+        if ("STORAGE".equals(t))  return "스토리지";
         return "기타";
     }
     String assetTypeChip(String t) {
         if ("SERVER".equals(t))   return "chip-blue";
         if ("NETWORK".equals(t))  return "chip-purple";
         if ("SECURITY".equals(t)) return "chip-r";
+        if ("STORAGE".equals(t))  return "chip-teal";
         return "chip-y";
     }
 %>
@@ -235,6 +237,7 @@
         .chip-y      { background: #2a200d; color: #d4a017; border: 1px solid #3d2e0f; }
         .chip-blue   { background: #0d1a2e; color: #5a9af5; border: 1px solid #0f2544; }
         .chip-purple { background: #1a0d2e; color: #9b6af5; border: 1px solid #280f44; }
+        .chip-teal   { background: #0d2229; color: #3dd6c8; border: 1px solid #0f3540; }
 
         /* 모달 */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
@@ -416,6 +419,7 @@
                             <option value="SERVER">서버</option>
                             <option value="NETWORK">네트워크</option>
                             <option value="SECURITY">보안</option>
+                            <option value="STORAGE">스토리지</option>
                             <option value="ETC">기타</option>
                         </select>
                         <select id="filterStatus" class="filter-sel" onchange="applyAssetFilter()">
@@ -824,14 +828,16 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>유형 *</label>
-                    <select name="assetType" id="assetType">
+                    <select name="assetType" id="assetType" onchange="onTypeChange()">
                         <option value="SERVER">서버</option>
                         <option value="NETWORK">네트워크</option>
                         <option value="SECURITY">보안</option>
+                        <option value="STORAGE">스토리지</option>
                         <option value="ETC">기타</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <!-- 서버 전용: 역할 -->
+                <div class="form-group" id="roleRow">
                     <label>역할</label>
                     <select name="assetRole" id="assetRole" onchange="onRoleChange()">
                         <option value="PHYSICAL">물리 서버 (독립)</option>
@@ -864,7 +870,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>서버명 *</label>
+                    <label id="labelAssetName">서버명 *</label>
                     <input type="text" name="assetName" id="assetName" placeholder="예: web-server-01" required>
                 </div>
                 <div class="form-group">
@@ -892,20 +898,23 @@
                     <label>IP 주소 (여러 개일 경우 콤마로 구분)</label>
                     <input type="text" name="ipAddr" id="assetIp" placeholder="예: 192.168.1.10, 192.168.1.11">
                 </div>
-                <div class="form-group">
+                <!-- 서버 전용: CPU / Memory -->
+                <div class="form-group" id="cpuRow">
                     <label>CPU</label>
                     <input type="text" name="cpu" id="assetCpu" placeholder="예: Intel Xeon Gold 6342 x2">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="memoryRow">
                     <label>Memory</label>
                     <input type="text" name="memory" id="assetMemory" placeholder="예: 256GB DDR4">
                 </div>
-                <div class="form-group full">
-                    <label>Disk</label>
+                <!-- 서버·스토리지: Disk -->
+                <div class="form-group full" id="diskRow">
+                    <label id="labelDisk">Disk</label>
                     <input type="text" name="disk" id="assetDisk" placeholder="예: SSD 960GB x4 RAID5">
                 </div>
-                <div class="form-group">
-                    <label>OS / 펌웨어</label>
+                <!-- 서버·네트워크·보안·스토리지: OS/펌웨어 -->
+                <div class="form-group" id="osRow">
+                    <label id="labelOs">OS / 펌웨어</label>
                     <input type="text" name="osInfo" id="assetOs" placeholder="예: Ubuntu 22.04 LTS">
                 </div>
                 <div class="form-group">
@@ -1272,6 +1281,45 @@
         });
     }
 
+    // ── 유형별 필드 표시/숨김 ─────────────────────────────
+    function onTypeChange() {
+        const type = document.getElementById('assetType').value;
+        const isServer  = type === 'SERVER';
+        const isStorage = type === 'STORAGE';
+        const isNetwork = type === 'NETWORK';
+        const isSecurity = type === 'SECURITY';
+        const hasOs = isServer || isNetwork || isSecurity || isStorage;
+
+        // 역할 (서버 전용)
+        document.getElementById('roleRow').style.display = isServer ? '' : 'none';
+        if (!isServer) {
+            document.getElementById('virtTypeRow').style.display  = 'none';
+            document.getElementById('parentSeqRow').style.display = 'none';
+        }
+
+        // CPU / Memory (서버 전용)
+        document.getElementById('cpuRow').style.display    = isServer ? '' : 'none';
+        document.getElementById('memoryRow').style.display = isServer ? '' : 'none';
+
+        // Disk (서버·스토리지)
+        document.getElementById('diskRow').style.display = (isServer || isStorage) ? '' : 'none';
+        document.getElementById('labelDisk').textContent  = isStorage ? '스토리지 용량·구성' : 'Disk';
+
+        // OS/펌웨어 (서버·네트워크·보안·스토리지)
+        document.getElementById('osRow').style.display   = hasOs ? '' : 'none';
+        document.getElementById('labelOs').textContent   = isServer ? 'OS / 펌웨어' : '펌웨어';
+
+        // 장비명 레이블
+        document.getElementById('labelAssetName').textContent = isServer ? '서버명 *' : '장비명 *';
+
+        // 모달 타이틀
+        const titleEl = document.getElementById('assetModalTitle');
+        if (titleEl && !titleEl.dataset.editing) {
+            const labels = { SERVER:'서버', NETWORK:'네트워크', SECURITY:'보안', STORAGE:'스토리지', ETC:'기타' };
+            titleEl.textContent = (labels[type] || '장비') + ' 추가';
+        }
+    }
+
     // ── 가상화 역할 변경 ─────────────────────────────────
     function onRoleChange() {
         const role = document.getElementById('assetRole').value;
@@ -1389,13 +1437,16 @@
         document.getElementById('parentSeq').innerHTML = '<option value="">선택 안 함</option>';
         document.getElementById('virtTypeRow').style.display   = 'none';
         document.getElementById('parentSeqRow').style.display  = 'none';
+        delete document.getElementById('assetModalTitle').dataset.editing;
+        onTypeChange();
         document.getElementById('assetModal').classList.add('open');
     }
 
     function openAssetModalBySeq(seq) {
         const a = ASSET_DATA.find(x => x.assetSeq === seq);
         if (!a) return;
-        document.getElementById('assetModalTitle').textContent = '서버 수정';
+        document.getElementById('assetModalTitle').textContent = '수정';
+        document.getElementById('assetModalTitle').dataset.editing = '1';
         document.getElementById('assetSeq').value       = a.assetSeq;
         document.getElementById('assetType').value      = a.assetType  || 'SERVER';
         document.getElementById('assetRole').value      = a.assetRole  || 'PHYSICAL';
@@ -1414,6 +1465,10 @@
         document.getElementById('assetStatus').value    = a.status     || 'ACTIVE';
         document.getElementById('assetPurchase').value  = a.purchaseDt || '';
         document.getElementById('assetMemo').value      = a.memo       || '';
+        // 유형에 따라 필드 표시 후 역할 처리
+        onTypeChange();
+        const labels = { SERVER:'서버', NETWORK:'네트워크', SECURITY:'보안', STORAGE:'스토리지', ETC:'기타' };
+        document.getElementById('assetModalTitle').textContent = (labels[a.assetType] || '장비') + ' 수정';
         // parentSeq는 onRoleChange() 내에서 목록 채운 뒤 값 설정
         const parentSel = document.getElementById('parentSeq');
         parentSel.innerHTML = '<option value="">선택 안 함</option>';
