@@ -101,6 +101,60 @@
 [data-theme="light"] .btn-secondary { background:#f3f4f6; border-color:#cbd5e1; color:#1e293b; }
 [data-theme="light"] .btn-secondary:hover { background:#e2e8f0; }
 
+/* ── customer_list 전용 ── */
+[data-theme="light"] .table-info { color: #475569; }
+[data-theme="light"] .table-info strong { color: #1e293b; }
+[data-theme="light"] .search-bar input,
+[data-theme="light"] .search-bar select { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+[data-theme="light"] .td-code { color: #3b6ef5; }
+[data-theme="light"] .page-btn { background: #ffffff; border-color: #cbd5e1; color: #475569; }
+[data-theme="light"] .page-btn:hover { background: #f3f4f6; color: #1e293b; }
+[data-theme="light"] .page-btn.active { background: #eff2ff; color: #3b6ef5; border-color: #c7d4fb; }
+[data-theme="light"] td strong,
+[data-theme="light"] td b { color: #1e293b !important; }
+
+/* ── customer_detail — 자산 테이블 ── */
+[data-theme="light"] #assetTable th { background: #f8fafc !important; color: #64748b !important; border-color: #cbd5e1 !important; }
+[data-theme="light"] #assetTable td { color: #1e293b !important; border-color: #e2e8f0 !important; }
+[data-theme="light"] #assetTable tr:hover td { background: #f5f7fa !important; }
+[data-theme="light"] #assetTable th.col-drag-over { background: #eff2ff !important; }
+[data-theme="light"] .asset-child td { background: #f8fafc !important; border-left-color: #cbd5e1 !important; }
+[data-theme="light"] .asset-child:hover td { background: #f5f7fa !important; }
+[data-theme="light"] .vm-indent { color: #94a3b8; }
+[data-theme="light"] .expand-btn { border-color: #cbd5e1; background: #ffffff; color: #475569; }
+[data-theme="light"] .expand-btn:hover { background: #eff2ff; color: #3b6ef5; }
+[data-theme="light"] .vm-count-badge { color: #64748b; background: #f8fafc; border-color: #e2e8f0; }
+
+/* ── customer_detail — 서브탭 ── */
+[data-theme="light"] .sub-tab-bar { background: #f3f4f6; border-color: #cbd5e1; }
+[data-theme="light"] .sub-tab-btn { color: #475569; }
+[data-theme="light"] .sub-tab-btn.active { background: #ffffff; color: #3b6ef5; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+[data-theme="light"] .sub-tab-btn:hover { color: #1e293b; }
+
+/* ── customer_detail — 랙 실장도 ── */
+[data-theme="light"] .rack-placeholder { background: #f8fafc; border-color: #cbd5e1; }
+[data-theme="light"] .rack-placeholder-title { color: #64748b; }
+[data-theme="light"] .rack-placeholder-desc { color: #94a3b8; }
+[data-theme="light"] .rack-card { background: #ffffff; border-color: #cbd5e1; }
+[data-theme="light"] .rack-card-header { border-color: #e2e8f0; }
+[data-theme="light"] .rack-card-name { color: #1e293b; }
+[data-theme="light"] .rack-card-loc { color: #64748b; }
+[data-theme="light"] .rack-drag-handle { opacity: 0.4; }
+[data-theme="light"] .rack-side-toggle { background: #f3f4f6; border-color: #cbd5e1; }
+[data-theme="light"] .rack-side-btn { color: #475569; }
+[data-theme="light"] .rack-side-btn.active { background: #ffffff; color: #3b6ef5; }
+[data-theme="light"] .rack-left-rail,
+[data-theme="light"] .rack-right-rail { background: #e2e8f0; border-color: #cbd5e1; }
+[data-theme="light"] .rack-slots { border-color: #cbd5e1; }
+[data-theme="light"] .rack-slot { border-color: #e2e8f0; }
+[data-theme="light"] .rack-slot.empty { background: #f8fafc; }
+[data-theme="light"] .rack-slot.empty:hover { background: #f1f5f9; }
+[data-theme="light"] .rack-slot-u { color: #94a3b8; border-color: #e2e8f0; }
+[data-theme="light"] .rack-slot-name { color: #1e293b; }
+[data-theme="light"] .rack-slot-ip { color: #64748b; }
+[data-theme="light"] .rack-slot-add { color: #cbd5e1; }
+[data-theme="light"] .rack-slot.empty:hover .rack-slot-add { color: #3b6ef5; }
+
 /* settings 페이지 */
 [data-theme="light"] .theme-card { border-color:#cbd5e1; }
 [data-theme="light"] .theme-card:hover { border-color:#3b6ef5; }
