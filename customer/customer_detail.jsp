@@ -477,7 +477,21 @@
                                     : "LDOM".equals(a.assetRole) ? "chip-ldom"
                                     : "ZONE".equals(a.assetRole) ? "chip-zone"
                                     : "CONTAINER".equals(a.assetRole) ? "chip-container" : "";
-                                String roleLabel = "HYPERVISOR".equals(a.assetRole) ? (a.virtType != null ? a.virtType : "HYPERVISOR")
+                                String virtLabel = "";
+                                if (a.virtType != null) {
+                                    switch (a.virtType) {
+                                        case "VMWARE":    virtLabel = "VMware";    break;
+                                        case "KVM":       virtLabel = "KVM";       break;
+                                        case "HYPERV":    virtLabel = "Hyper-V";   break;
+                                        case "PROXMOX":   virtLabel = "Proxmox";   break;
+                                        case "XEN":       virtLabel = "Xen";       break;
+                                        case "ORACLE_VM": virtLabel = "ORACLE VM"; break;
+                                        case "SOLARIS":   virtLabel = "Solaris";   break;
+                                        case "DOCKER":    virtLabel = "Docker";    break;
+                                        default:          virtLabel = "HV";        break;
+                                    }
+                                }
+                                String roleLabel = "HYPERVISOR".equals(a.assetRole) ? (virtLabel.isEmpty() ? "HV" : virtLabel)
                                     : "VM".equals(a.assetRole) ? "VM"
                                     : "LDOM".equals(a.assetRole) ? "LDOM"
                                     : "ZONE".equals(a.assetRole) ? "ZONE"
@@ -854,11 +868,12 @@
                     <select name="virtType" id="virtType">
                         <option value="VMWARE">VMware ESXi / vSphere</option>
                         <option value="KVM">KVM / QEMU</option>
-                        <option value="LDOM">Oracle LDOM</option>
                         <option value="HYPERV">Microsoft Hyper-V</option>
                         <option value="PROXMOX">Proxmox VE</option>
                         <option value="XEN">Xen</option>
-                        <option value="CONTAINER">Container (Docker/LXC)</option>
+                        <option value="ORACLE_VM">Oracle VM Server for SPARC (LDOM 호스트)</option>
+                        <option value="SOLARIS">Solaris (Zone 호스트)</option>
+                        <option value="DOCKER">Docker / LXC (컨테이너 호스트)</option>
                         <option value="OTHER">기타</option>
                     </select>
                 </div>
