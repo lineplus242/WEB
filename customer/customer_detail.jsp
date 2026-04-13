@@ -875,7 +875,7 @@
                 <!-- VM/LDOM/Zone/Container 선택 시: 부모 서버 -->
                 <div class="form-group" id="parentSeqRow" style="display:none">
                     <label>호스트 서버 (부모)</label>
-                    <select name="parentSeq" id="parentSeq">
+                    <select name="parentSeq" id="parentSeq" onchange="onParentChange()">
                         <option value="">선택 안 함</option>
                     </select>
                 </div>
@@ -891,7 +891,7 @@
                     <label>모델</label>
                     <input type="text" name="model" id="assetModel" placeholder="예: PowerEdge R750">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="sizeURow">
                     <label>랙 크기 (U)</label>
                     <select name="sizeU" id="assetSizeU">
                         <option value="">미적용</option>
@@ -927,7 +927,7 @@
                     <label id="labelOs">OS / 펌웨어</label>
                     <input type="text" name="osInfo" id="assetOs" placeholder="예: Ubuntu 22.04 LTS">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="locationRow">
                     <label>위치</label>
                     <input type="text" name="location" id="assetLocation" placeholder="예: IDC 1F 랙 A-3">
                 </div>
@@ -1336,11 +1336,16 @@
         const virtRow   = document.getElementById('virtTypeRow');
         const parentRow = document.getElementById('parentSeqRow');
         const parentSel = document.getElementById('parentSeq');
+        const isGuest   = role === 'VM' || role === 'LDOM' || role === 'CONTAINER';
 
         virtRow.style.display   = (role === 'HYPERVISOR') ? '' : 'none';
-        parentRow.style.display = (role === 'VM' || role === 'LDOM' || role === 'CONTAINER') ? '' : 'none';
+        parentRow.style.display = isGuest ? '' : 'none';
 
-        if (parentRow.style.display !== 'none') {
+        // 랙 크기: 게스트는 물리 슬롯 없음 → 숨김
+        document.getElementById('sizeURow').style.display = isGuest ? 'none' : '';
+        if (isGuest) document.getElementById('assetSizeU').value = '';
+
+        if (isGuest) {
             // 역할별 허용 virt_type 필터
             const X86_HV = ['VMWARE','KVM','HYPERV','PROXMOX','XEN'];
             const allowedVirt = role === 'LDOM'      ? ['ORACLE_VM']
@@ -1361,7 +1366,25 @@
                     if (String(a.assetSeq) === String(curVal)) opt.selected = true;
                     parentSel.appendChild(opt);
                 });
+
+            // 부모가 이미 선택돼 있으면 자동 채우기
+            if (parentSel.value) onParentChange();
         }
+    }
+
+    // ── 부모 서버 선택 시 제조사·모델·위치 자동 채우기 ────────
+    function onParentChange() {
+        const parentSeq = document.getElementById('parentSeq').value;
+        if (!parentSeq) return;
+        const parent = ASSET_DATA.find(a => String(a.assetSeq) === String(parentSeq));
+        if (!parent) return;
+        const makerEl    = document.getElementById('assetMaker');
+        const modelEl    = document.getElementById('assetModel');
+        const locationEl = document.getElementById('assetLocation');
+        // 비어있을 때만 채움 (이미 입력된 값은 덮어쓰지 않음)
+        if (makerEl    && !makerEl.value)    makerEl.value    = parent.maker    || '';
+        if (modelEl    && !modelEl.value)    modelEl.value    = parent.model    || '';
+        if (locationEl && !locationEl.value) locationEl.value = parent.location || '';
     }
 
     // ── 자식 행 접기/펼치기 ───────────────────────────────
