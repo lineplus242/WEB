@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, com.admin.servlet.CustomerServlet.CustomerVO" %>
+<%@ page import="java.util.List, com.admin.servlet.CustomerServlet.CustomerVO, com.admin.servlet.CustomerServlet.ManagerVO" %>
 <%
     if (session.getAttribute("loginUser") == null) { response.sendRedirect("../login.jsp"); return; }
     String loginName = (String) session.getAttribute("loginName");
@@ -210,25 +210,23 @@
                         <tr>
                             <th>코드</th>
                             <th>고객사명</th>
-                            <th>업종</th>
                             <th>담당자</th>
                             <th>연락처</th>
-                            <th>서비스</th>
                             <th>상태</th>
                             <th>관리</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% if (list.isEmpty()) { %>
-                        <tr class="empty-row"><td colspan="8">등록된 고객사가 없습니다.</td></tr>
-                        <% } else { for (CustomerVO c : list) { %>
+                        <tr class="empty-row"><td colspan="6">등록된 고객사가 없습니다.</td></tr>
+                        <% } else { for (CustomerVO c : list) {
+                            ManagerVO firstMgr = (c.managers != null && !c.managers.isEmpty()) ? c.managers.get(0) : null;
+                        %>
                         <tr style="cursor:pointer" ondblclick="location.href='../CustomerDetailServlet?action=detail&custSeq=<%= c.custSeq %>'">
                             <td class="td-code"><%= c.custCode %></td>
                             <td><strong style="color:#e8e9eb"><%= c.custName %></strong></td>
-                            <td><%= nvl2(c.industry, "-") %></td>
-                            <td><%= nvl2(c.managerName, "-") %></td>
-                            <td style="font-family:'DM Mono',monospace;font-size:12px"><%= nvl2(c.managerTel, "-") %></td>
-                            <td><%= nvl2(c.serviceType, "-") %></td>
+                            <td><%= firstMgr != null && firstMgr.name != null ? firstMgr.name : "-" %><%= c.managers != null && c.managers.size() > 1 ? " 외 " + (c.managers.size()-1) + "명" : "" %></td>
+                            <td style="font-family:'DM Mono',monospace;font-size:12px"><%= firstMgr != null && firstMgr.tel != null ? firstMgr.tel : "-" %></td>
                             <td><span class="chip <%= statusChip(c.status) %>"><%= statusLabel(c.status) %></span></td>
                             <td>
                                 <div class="td-actions">

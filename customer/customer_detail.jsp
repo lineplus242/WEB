@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, com.admin.servlet.CustomerDetailServlet.*" %>
+<%@ page import="java.util.List, com.admin.servlet.CustomerDetailServlet.*, java.util.ArrayList" %>
 <%
     if (session.getAttribute("loginUser") == null) { response.sendRedirect("../login.jsp"); return; }
     String loginName = (String) session.getAttribute("loginName");
@@ -347,9 +347,17 @@
                 </div>
             </div>
             <div class="cust-meta">
-                <div class="meta-item"><strong>담당자</strong><%= nvl(cust.managerName) %></div>
-                <div class="meta-item"><strong>연락처</strong><%= nvl(cust.managerTel) %></div>
-                <div class="meta-item"><strong>서비스</strong><%= nvl(cust.serviceType) %></div>
+                <%
+                List<ManagerVO> custMgrs = cust.managers != null ? cust.managers : new ArrayList<>();
+                if (custMgrs.isEmpty()) { %>
+                <div class="meta-item"><strong>담당자</strong>-</div>
+                <% } else { for (ManagerVO mgr : custMgrs) { %>
+                <div class="meta-item">
+                    <strong>담당자</strong>
+                    <%= nvl(mgr.name) %>
+                    <% if (mgr.tel != null && !mgr.tel.isEmpty()) { %> &nbsp;<span style="color:#4b5161;font-size:11px"><%= mgr.tel %></span><% } %>
+                </div>
+                <% } } %>
                 <div class="meta-item">
                     <strong>상태</strong>
                     <span class="chip <%= statusChip(cust.status) %>"><%= statusLabel(cust.status) %></span>

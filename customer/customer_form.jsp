@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.admin.servlet.CustomerServlet.CustomerVO" %>
+<%@ page import="com.admin.servlet.CustomerServlet.CustomerVO, com.admin.servlet.CustomerServlet.ManagerVO, java.util.List" %>
 <%
     if (session.getAttribute("loginUser") == null) { response.sendRedirect("../login.jsp"); return; }
     String loginName = (String) session.getAttribute("loginName");
@@ -85,6 +85,17 @@
         input::placeholder, textarea::placeholder { color: #3d4251; }
         select option { background: #131519; }
         textarea { resize: vertical; min-height: 80px; }
+
+        /* 담당자 다중 행 */
+        .manager-list { display: flex; flex-direction: column; gap: 10px; }
+        .manager-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
+        .manager-row .form-group { margin: 0; }
+        .btn-icon { width: 34px; height: 34px; border-radius: 7px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; font-weight: 500; transition: background .12s; }
+        .btn-add-mgr  { background: #1a1e2e; color: #6b9af5; border: 1px solid #252d44; }
+        .btn-add-mgr:hover  { background: #202540; }
+        .btn-del-mgr  { background: #1a0d0d; color: #e05656; border: 1px solid #2a0d0d; }
+        .btn-del-mgr:hover  { background: #2a1010; }
+        .mgr-add-bar { margin-top: 8px; }
 
         /* 하단 버튼 */
         .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
@@ -186,16 +197,11 @@
                                        value="<%= isEdit ? v(c.ceoName) : "" %>">
                             </div>
                             <div class="form-group">
-                                <label>업종</label>
-                                <input type="text" name="industry" placeholder="IT/소프트웨어"
-                                       value="<%= isEdit ? v(c.industry) : "" %>">
-                            </div>
-                            <div class="form-group">
                                 <label>대표 전화</label>
                                 <input type="tel" name="phone" placeholder="02-0000-0000"
                                        value="<%= isEdit ? v(c.phone) : "" %>">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group span2">
                                 <label>대표 이메일</label>
                                 <input type="email" name="email" placeholder="contact@company.com"
                                        value="<%= isEdit ? v(c.email) : "" %>">
@@ -209,45 +215,60 @@
                     </div>
                 </div>
 
-                <!-- 담당자 정보 -->
+                <!-- 담당자 정보 (다중) -->
                 <div class="form-card">
-                    <div class="form-card-title">담당자 정보</div>
+                    <div class="form-card-title" style="display:flex;align-items:center;justify-content:space-between">
+                        <span>담당자 정보</span>
+                        <button type="button" class="btn-icon btn-add-mgr" onclick="addManagerRow()" title="담당자 추가">+</button>
+                    </div>
                     <div class="form-body">
-                        <div class="form-grid col3">
-                            <div class="form-group">
-                                <label>담당자명</label>
-                                <input type="text" name="managerName" placeholder="홍길동"
-                                       value="<%= isEdit ? v(c.managerName) : "" %>">
+                        <div class="manager-list" id="managerList">
+                            <%
+                            List<ManagerVO> mgrs = isEdit ? c.managers : null;
+                            if (mgrs != null && !mgrs.isEmpty()) {
+                                for (ManagerVO m : mgrs) {
+                            %>
+                            <div class="manager-row">
+                                <div class="form-group">
+                                    <% if (mgrs.indexOf(m) == 0) { %><label>담당자명</label><% } %>
+                                    <input type="text" name="managerName" placeholder="홍길동" value="<%= m.name != null ? v(m.name) : "" %>">
+                                </div>
+                                <div class="form-group">
+                                    <% if (mgrs.indexOf(m) == 0) { %><label>연락처</label><% } %>
+                                    <input type="tel" name="managerTel" placeholder="010-0000-0000" value="<%= m.tel != null ? v(m.tel) : "" %>">
+                                </div>
+                                <div class="form-group">
+                                    <% if (mgrs.indexOf(m) == 0) { %><label>이메일</label><% } %>
+                                    <input type="email" name="managerEmail" placeholder="manager@company.com" value="<%= m.email != null ? v(m.email) : "" %>">
+                                </div>
+                                <button type="button" class="btn-icon btn-del-mgr" onclick="removeManagerRow(this)" title="삭제" style="margin-top:<%= mgrs.indexOf(m) == 0 ? "20px" : "0" %>">−</button>
                             </div>
-                            <div class="form-group">
-                                <label>담당자 연락처</label>
-                                <input type="tel" name="managerTel" placeholder="010-0000-0000"
-                                       value="<%= isEdit ? v(c.managerTel) : "" %>">
+                            <% } } else { %>
+                            <div class="manager-row">
+                                <div class="form-group">
+                                    <label>담당자명</label>
+                                    <input type="text" name="managerName" placeholder="홍길동">
+                                </div>
+                                <div class="form-group">
+                                    <label>연락처</label>
+                                    <input type="tel" name="managerTel" placeholder="010-0000-0000">
+                                </div>
+                                <div class="form-group">
+                                    <label>이메일</label>
+                                    <input type="email" name="managerEmail" placeholder="manager@company.com">
+                                </div>
+                                <button type="button" class="btn-icon btn-del-mgr" onclick="removeManagerRow(this)" title="삭제" style="margin-top:20px">−</button>
                             </div>
-                            <div class="form-group">
-                                <label>담당자 이메일</label>
-                                <input type="email" name="managerEmail" placeholder="manager@company.com"
-                                       value="<%= isEdit ? v(c.managerEmail) : "" %>">
-                            </div>
+                            <% } %>
                         </div>
                     </div>
                 </div>
 
-                <!-- 계약/서비스 정보 -->
+                <!-- 상태 -->
                 <div class="form-card">
-                    <div class="form-card-title">계약 / 서비스 정보</div>
+                    <div class="form-card-title">계약 정보</div>
                     <div class="form-body">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>서비스 유형</label>
-                                <select name="serviceType">
-                                    <option value="">선택</option>
-                                    <% String[] svcTypes = {"신규개발","유지보수","컨설팅","기술지원","기타"}; %>
-                                    <% for (String t : svcTypes) { %>
-                                    <option value="<%= t %>" <%= isEdit && t.equals(c.serviceType) ? "selected" : "" %>><%= t %></option>
-                                    <% } %>
-                                </select>
-                            </div>
                             <div class="form-group">
                                 <label>상태</label>
                                 <select name="status">
@@ -277,6 +298,23 @@
         </div>
     </div>
 <script>
+function addManagerRow() {
+    const list = document.getElementById('managerList');
+    const row = document.createElement('div');
+    row.className = 'manager-row';
+    row.innerHTML = `
+        <div class="form-group"><input type="text" name="managerName" placeholder="홍길동"></div>
+        <div class="form-group"><input type="tel" name="managerTel" placeholder="010-0000-0000"></div>
+        <div class="form-group"><input type="email" name="managerEmail" placeholder="manager@company.com"></div>
+        <button type="button" class="btn-icon btn-del-mgr" onclick="removeManagerRow(this)" title="삭제">−</button>
+    `;
+    list.appendChild(row);
+}
+function removeManagerRow(btn) {
+    const list = document.getElementById('managerList');
+    if (list.children.length <= 1) return; // 최소 1행 유지
+    btn.closest('.manager-row').remove();
+}
 function toggleUserMenu(row){const m=document.getElementById('userMenu');if(!m)return;const o=m.classList.toggle('open');row.classList.toggle('open',o);}
 document.addEventListener('click',function(e){const m=document.getElementById('userMenu'),r=document.querySelector('.user-row');if(m&&r&&!r.contains(e.target)&&!m.contains(e.target)){m.classList.remove('open');r.classList.remove('open');}});
 </script>

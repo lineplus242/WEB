@@ -101,9 +101,8 @@ public class CustomerServlet extends HttpServlet {
             }
 
             // 목록
-            String listSql = "SELECT c.cust_seq, c.cust_code, c.cust_name, c.industry, "
-                           + "c.manager_name, c.manager_tel, c.contract_start, c.contract_end, "
-                           + "c.service_type, c.contract_amt, c.status "
+            String listSql = "SELECT c.cust_seq, c.cust_code, c.cust_name, "
+                           + "c.contract_start, c.contract_end, c.contract_amt, c.status "
                            + "FROM tb_customer c " + where
                            + " ORDER BY c.cust_seq DESC LIMIT ? OFFSET ?";
             try (PreparedStatement ps = conn.prepareStatement(listSql)) {
@@ -118,15 +117,33 @@ public class CustomerServlet extends HttpServlet {
                     v.custSeq       = rs.getInt("cust_seq");
                     v.custCode      = rs.getString("cust_code");
                     v.custName      = rs.getString("cust_name");
-                    v.industry      = rs.getString("industry");
-                    v.managerName   = rs.getString("manager_name");
-                    v.managerTel    = rs.getString("manager_tel");
                     v.contractStart = rs.getString("contract_start");
                     v.contractEnd   = rs.getString("contract_end");
-                    v.serviceType   = rs.getString("service_type");
                     v.contractAmt   = rs.getLong("contract_amt");
                     v.status        = rs.getString("status");
                     list.add(v);
+                }
+            }
+            // 목록용 첫 번째 담당자 이름/연락처 로드
+            if (!list.isEmpty()) {
+                StringBuilder inSql = new StringBuilder("SELECT cust_seq, manager_name, manager_tel FROM tb_customer_manager WHERE cust_seq IN (");
+                for (int i = 0; i < list.size(); i++) { inSql.append(i==0?"?":",?"); }
+                inSql.append(") ORDER BY cust_seq, sort_order, manager_seq");
+                try (PreparedStatement ps = conn.prepareStatement(inSql.toString())) {
+                    for (int i = 0; i < list.size(); i++) ps.setInt(i+1, list.get(i).custSeq);
+                    ResultSet rs = ps.executeQuery();
+                    java.util.Map<Integer, CustomerVO> map = new java.util.LinkedHashMap<>();
+                    for (CustomerVO v : list) map.put(v.custSeq, v);
+                    while (rs.next()) {
+                        int seq = rs.getInt("cust_seq");
+                        CustomerVO v = map.get(seq);
+                        if (v != null && v.managers.isEmpty()) {
+                            ManagerVO m = new ManagerVO();
+                            m.name = rs.getString("manager_name");
+                            m.tel  = rs.getString("manager_tel");
+                            v.managers.add(m);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
@@ -157,31 +174,42 @@ public class CustomerServlet extends HttpServlet {
             // 수정: DB에서 기존 데이터 로드
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
                 String sql = "SELECT * FROM tb_customer WHERE cust_seq=? AND del_yn='N'";
+                CustomerVO v = null;
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, Integer.parseInt(seqStr));
                     ResultSet rs = ps.executeQuery();
                     if (rs.next()) {
-                        CustomerVO v = new CustomerVO();
+                        v = new CustomerVO();
                         v.custSeq       = rs.getInt("cust_seq");
                         v.custCode      = rs.getString("cust_code");
                         v.custName      = rs.getString("cust_name");
                         v.bizNo         = rs.getString("biz_no");
                         v.ceoName       = rs.getString("ceo_name");
-                        v.industry      = rs.getString("industry");
                         v.address       = rs.getString("address");
                         v.phone         = rs.getString("phone");
                         v.email         = rs.getString("email");
-                        v.managerName   = rs.getString("manager_name");
-                        v.managerTel    = rs.getString("manager_tel");
-                        v.managerEmail  = rs.getString("manager_email");
                         v.contractStart = rs.getString("contract_start");
                         v.contractEnd   = rs.getString("contract_end");
-                        v.serviceType   = rs.getString("service_type");
                         v.contractAmt   = rs.getLong("contract_amt");
                         v.status        = rs.getString("status");
                         v.memo          = rs.getString("memo");
-                        req.setAttribute("customer", v);
                     }
+                }
+                if (v != null) {
+                    // 담당자 목록 로드
+                    String mgrSql = "SELECT manager_name, manager_tel, manager_email FROM tb_customer_manager WHERE cust_seq=? ORDER BY sort_order, manager_seq";
+                    try (PreparedStatement ps = conn.prepareStatement(mgrSql)) {
+                        ps.setInt(1, v.custSeq);
+                        ResultSet rs = ps.executeQuery();
+                        while (rs.next()) {
+                            ManagerVO m = new ManagerVO();
+                            m.name  = rs.getString("manager_name");
+                            m.tel   = rs.getString("manager_tel");
+                            m.email = rs.getString("manager_email");
+                            v.managers.add(m);
+                        }
+                    }
+                    req.setAttribute("customer", v);
                 }
             } catch (Exception e) {
                 req.setAttribute("dbError", e.getMessage());
@@ -200,38 +228,44 @@ public class CustomerServlet extends HttpServlet {
         String loginUser = (String) req.getSession().getAttribute("loginUser");
 
         String sql = "INSERT INTO tb_customer "
-                   + "(cust_code, cust_name, biz_no, ceo_name, industry, address, phone, email, "
-                   + " manager_name, manager_tel, manager_email, "
-                   + " contract_start, contract_end, service_type, contract_amt, status, memo, reg_user) "
-                   + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                   + "(cust_code, cust_name, biz_no, ceo_name, address, phone, email, "
+                   + " contract_start, contract_end, contract_amt, status, memo, reg_user) "
+                   + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            conn.setAutoCommit(false);
+            int newCustSeq;
+            try {
+                // 고객사 코드 자동 생성 CUST-NNNN
+                long nextSeq = queryLong(conn, "SELECT IFNULL(MAX(cust_seq),0)+1 FROM tb_customer");
+                String custCode = String.format("CUST-%04d", nextSeq);
 
-            // 고객사 코드 자동 생성 CUST-NNNN
-            long nextSeq = queryLong(conn, "SELECT IFNULL(MAX(cust_seq),0)+1 FROM tb_customer");
-            String custCode = String.format("CUST-%04d", nextSeq);
+                try (PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    ps.setString(1,  custCode);
+                    ps.setString(2,  req.getParameter("custName"));
+                    ps.setString(3,  req.getParameter("bizNo"));
+                    ps.setString(4,  req.getParameter("ceoName"));
+                    ps.setString(5,  req.getParameter("address"));
+                    ps.setString(6,  req.getParameter("phone"));
+                    ps.setString(7,  req.getParameter("email"));
+                    ps.setString(8,  emptyToNull(req.getParameter("contractStart")));
+                    ps.setString(9,  emptyToNull(req.getParameter("contractEnd")));
+                    ps.setLong(10,   parseLong(req.getParameter("contractAmt")));
+                    ps.setString(11, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(12, req.getParameter("memo"));
+                    ps.setString(13, loginUser);
+                    ps.executeUpdate();
+                    ResultSet gk = ps.getGeneratedKeys();
+                    newCustSeq = gk.next() ? gk.getInt(1) : 0;
+                }
 
-            ps.setString(1,  custCode);
-            ps.setString(2,  req.getParameter("custName"));
-            ps.setString(3,  req.getParameter("bizNo"));
-            ps.setString(4,  req.getParameter("ceoName"));
-            ps.setString(5,  req.getParameter("industry"));
-            ps.setString(6,  req.getParameter("address"));
-            ps.setString(7,  req.getParameter("phone"));
-            ps.setString(8,  req.getParameter("email"));
-            ps.setString(9,  req.getParameter("managerName"));
-            ps.setString(10, req.getParameter("managerTel"));
-            ps.setString(11, req.getParameter("managerEmail"));
-            ps.setString(12, emptyToNull(req.getParameter("contractStart")));
-            ps.setString(13, emptyToNull(req.getParameter("contractEnd")));
-            ps.setString(14, req.getParameter("serviceType"));
-            ps.setLong(15,   parseLong(req.getParameter("contractAmt")));
-            ps.setString(16, nvl(req.getParameter("status"), "ACTIVE"));
-            ps.setString(17, req.getParameter("memo"));
-            ps.setString(18, loginUser);
-            ps.executeUpdate();
-
+                // 담당자 저장
+                saveManagers(conn, newCustSeq, req);
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
         } catch (Exception e) {
             req.setAttribute("errorMsg", "저장 실패: " + e.getMessage());
             doForm(req, resp);
@@ -249,35 +283,42 @@ public class CustomerServlet extends HttpServlet {
         String loginUser = (String) req.getSession().getAttribute("loginUser");
 
         String sql = "UPDATE tb_customer SET "
-                   + "cust_name=?, biz_no=?, ceo_name=?, industry=?, address=?, phone=?, email=?, "
-                   + "manager_name=?, manager_tel=?, manager_email=?, "
-                   + "contract_start=?, contract_end=?, service_type=?, contract_amt=?, "
+                   + "cust_name=?, biz_no=?, ceo_name=?, address=?, phone=?, email=?, "
+                   + "contract_start=?, contract_end=?, contract_amt=?, "
                    + "status=?, memo=?, upd_user=? "
                    + "WHERE cust_seq=? AND del_yn='N'";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        int custSeq = Integer.parseInt(req.getParameter("custSeq"));
 
-            ps.setString(1,  req.getParameter("custName"));
-            ps.setString(2,  req.getParameter("bizNo"));
-            ps.setString(3,  req.getParameter("ceoName"));
-            ps.setString(4,  req.getParameter("industry"));
-            ps.setString(5,  req.getParameter("address"));
-            ps.setString(6,  req.getParameter("phone"));
-            ps.setString(7,  req.getParameter("email"));
-            ps.setString(8,  req.getParameter("managerName"));
-            ps.setString(9,  req.getParameter("managerTel"));
-            ps.setString(10, req.getParameter("managerEmail"));
-            ps.setString(11, emptyToNull(req.getParameter("contractStart")));
-            ps.setString(12, emptyToNull(req.getParameter("contractEnd")));
-            ps.setString(13, req.getParameter("serviceType"));
-            ps.setLong(14,   parseLong(req.getParameter("contractAmt")));
-            ps.setString(15, nvl(req.getParameter("status"), "ACTIVE"));
-            ps.setString(16, req.getParameter("memo"));
-            ps.setString(17, loginUser);
-            ps.setInt(18,    Integer.parseInt(req.getParameter("custSeq")));
-            ps.executeUpdate();
-
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1,  req.getParameter("custName"));
+                    ps.setString(2,  req.getParameter("bizNo"));
+                    ps.setString(3,  req.getParameter("ceoName"));
+                    ps.setString(4,  req.getParameter("address"));
+                    ps.setString(5,  req.getParameter("phone"));
+                    ps.setString(6,  req.getParameter("email"));
+                    ps.setString(7,  emptyToNull(req.getParameter("contractStart")));
+                    ps.setString(8,  emptyToNull(req.getParameter("contractEnd")));
+                    ps.setLong(9,    parseLong(req.getParameter("contractAmt")));
+                    ps.setString(10, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(11, req.getParameter("memo"));
+                    ps.setString(12, loginUser);
+                    ps.setInt(13,    custSeq);
+                    ps.executeUpdate();
+                }
+                // 담당자 교체 (기존 삭제 후 재삽입)
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_customer_manager WHERE cust_seq=?")) {
+                    ps.setInt(1, custSeq); ps.executeUpdate();
+                }
+                saveManagers(conn, custSeq, req);
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            }
         } catch (Exception e) {
             req.setAttribute("errorMsg", "수정 실패: " + e.getMessage());
             doForm(req, resp);
@@ -309,6 +350,28 @@ public class CustomerServlet extends HttpServlet {
         resp.sendRedirect("CustomerServlet?action=list");
     }
 
+    // ── 담당자 일괄 저장 ──────────────────────────────────
+    private void saveManagers(Connection conn, int custSeq, HttpServletRequest req) throws Exception {
+        String[] names  = req.getParameterValues("managerName");
+        String[] tels   = req.getParameterValues("managerTel");
+        String[] emails = req.getParameterValues("managerEmail");
+        if (names == null) return;
+        String mgrSql = "INSERT INTO tb_customer_manager (cust_seq, manager_name, manager_tel, manager_email, sort_order) VALUES (?,?,?,?,?)";
+        try (PreparedStatement ps = conn.prepareStatement(mgrSql)) {
+            for (int i = 0; i < names.length; i++) {
+                String name = names[i] == null ? "" : names[i].trim();
+                if (name.isEmpty()) continue;
+                ps.setInt(1, custSeq);
+                ps.setString(2, name);
+                ps.setString(3, (tels   != null && i < tels.length)   ? tels[i]   : null);
+                ps.setString(4, (emails != null && i < emails.length)  ? emails[i] : null);
+                ps.setInt(5, i);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
     // ── 유틸 ──────────────────────────────────────────────
     private long queryLong(Connection conn, String sql) throws Exception {
         try (PreparedStatement ps = conn.prepareStatement(sql);
@@ -321,14 +384,18 @@ public class CustomerServlet extends HttpServlet {
     private String emptyToNull(String s)      { return (s == null || s.isEmpty()) ? null : s; }
     private long   parseLong(String s)        { try { return Long.parseLong(s.replaceAll("[^0-9]","")); } catch(Exception e){ return 0L; } }
 
-    // ── Value Object ─────────────────────────────────────
+    // ── Value Objects ─────────────────────────────────────
     public static class CustomerVO {
         public int    custSeq;
-        public String custCode, custName, bizNo, ceoName, industry, address;
+        public String custCode, custName, bizNo, ceoName, address;
         public String phone, email;
-        public String managerName, managerTel, managerEmail;
-        public String contractStart, contractEnd, serviceType;
+        public String contractStart, contractEnd;
         public long   contractAmt;
         public String status, memo;
+        public List<ManagerVO> managers = new ArrayList<>();
+    }
+
+    public static class ManagerVO {
+        public String name, tel, email;
     }
 }

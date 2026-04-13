@@ -91,16 +91,11 @@ public class CustomerDetailServlet extends HttpServlet {
                     customer.custName   = rs.getString("cust_name");
                     customer.bizNo      = rs.getString("biz_no");
                     customer.ceoName    = rs.getString("ceo_name");
-                    customer.industry   = rs.getString("industry");
                     customer.address    = rs.getString("address");
                     customer.phone      = rs.getString("phone");
                     customer.email      = rs.getString("email");
-                    customer.managerName  = rs.getString("manager_name");
-                    customer.managerTel   = rs.getString("manager_tel");
-                    customer.managerEmail = rs.getString("manager_email");
                     customer.contractStart = rs.getString("contract_start");
                     customer.contractEnd   = rs.getString("contract_end");
-                    customer.serviceType   = rs.getString("service_type");
                     customer.contractAmt   = rs.getLong("contract_amt");
                     customer.status        = rs.getString("status");
                     customer.memo          = rs.getString("memo");
@@ -110,6 +105,20 @@ public class CustomerDetailServlet extends HttpServlet {
             if (customer == null) {
                 resp.sendRedirect("CustomerServlet?action=list");
                 return;
+            }
+
+            // 담당자 목록 로드
+            String mgrSql = "SELECT manager_name, manager_tel, manager_email FROM tb_customer_manager WHERE cust_seq=? ORDER BY sort_order, manager_seq";
+            try (PreparedStatement ps = conn.prepareStatement(mgrSql)) {
+                ps.setInt(1, custSeq);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    ManagerVO m = new ManagerVO();
+                    m.name  = rs.getString("manager_name");
+                    m.tel   = rs.getString("manager_tel");
+                    m.email = rs.getString("manager_email");
+                    customer.managers.add(m);
+                }
             }
 
             // 사업정보 목록
@@ -571,12 +580,16 @@ public class CustomerDetailServlet extends HttpServlet {
     // ── Value Objects ─────────────────────────────────────
     public static class CustomerVO {
         public int    custSeq;
-        public String custCode, custName, bizNo, ceoName, industry, address;
+        public String custCode, custName, bizNo, ceoName, address;
         public String phone, email;
-        public String managerName, managerTel, managerEmail;
-        public String contractStart, contractEnd, serviceType;
+        public String contractStart, contractEnd;
         public long   contractAmt;
         public String status, memo;
+        public List<ManagerVO> managers = new ArrayList<>();
+    }
+
+    public static class ManagerVO {
+        public String name, tel, email;
     }
 
     public static class ProjectVO {
