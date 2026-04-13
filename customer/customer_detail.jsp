@@ -1345,6 +1345,13 @@
         document.getElementById('sizeURow').style.display = isGuest ? 'none' : '';
         if (isGuest) document.getElementById('assetSizeU').value = '';
 
+        // 역할 변경 시 자동 채워진 제조사·모델·위치 초기화 (새 부모 선택에 대비)
+        if (isGuest) {
+            document.getElementById('assetMaker').value    = '';
+            document.getElementById('assetModel').value    = '';
+            document.getElementById('assetLocation').value = '';
+        }
+
         if (isGuest) {
             // 역할별 허용 virt_type 필터
             const X86_HV = ['VMWARE','KVM','HYPERV','PROXMOX','XEN'];
