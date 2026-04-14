@@ -1086,7 +1086,6 @@
             const right = document.createElement('div');
             right.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0';
             if (a.sizeU) right.innerHTML += '<span style="font-size:11px;font-family:monospace;color:#6b9af5;background:#1a1e2e;padding:2px 6px;border-radius:4px">' + a.sizeU + 'U</span>';
-            if (a.ipAddr) right.innerHTML += '<span style="font-size:11px;color:#4b5161;font-family:monospace">' + a.ipAddr.split(',')[0].trim() + '</span>';
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = '선택';
@@ -1207,7 +1206,6 @@
                         const h = dev.sizeU * U_H - 1;
                         const tc = TYPE_CSS[dev.deviceType] || 'type-etc';
                         const cc = CHIP_CSS[dev.deviceType] || 'chip-etc';
-                        const ip1 = dev.ipAddr ? dev.ipAddr.split(',')[0].trim() : '';
                         const esc = s => (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
                         const onclk = 'openEditUnitModal(' + rack.rackSeq + ',\'' + side + '\',' + dev.unitSeq + ',' + dev.startU + ',' + dev.sizeU + ',\'' + esc(dev.deviceName) + '\',\'' + esc(dev.deviceType) + '\',\'' + esc(dev.ipAddr) + '\',\'' + esc(dev.memo) + '\')';
                         html += '<div class="rack-slot ' + tc + '" style="height:' + h + 'px;min-height:' + h + 'px" onclick="' + onclk + '">'
@@ -1215,7 +1213,6 @@
                               + '<div class="rack-slot-body">'
                               + '<span class="rack-slot-name">' + dev.deviceName + '</span>'
                               + '<span class="rack-slot-type ' + cc + '">' + dev.deviceType + '</span>'
-                              + (ip1 ? '<span class="rack-slot-ip">' + ip1 + '</span>' : '')
                               + '</div></div>';
                         skip = dev.sizeU - 1;
                     } else {
