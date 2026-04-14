@@ -495,6 +495,7 @@
                                 <th data-col="os">OS</th>
                                 <th data-col="purchase" onclick="sortAsset('purchase')">도입일 <span id="sort-purchase" style="color:#3d4251;font-weight:400">↕</span></th>
                                 <th data-col="status">상태</th>
+                                <th data-col="account" style="cursor:default">계정</th>
                                 <th data-col="actions" style="cursor:default">관리</th>
                             </tr>
                         </thead>
@@ -584,6 +585,11 @@
                                 <td data-col="os" style="color:#6b7280"><%= nvl(a.osInfo) %></td>
                                 <td data-col="purchase" class="td-mono" style="color:#6b7280"><%= nvl(a.purchaseDt) %></td>
                                 <td data-col="status"><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
+                                <td data-col="account" style="color:#6b7280;font-size:11px">
+                                    <% if (a.accountInfo != null && !a.accountInfo.isEmpty()) { %>
+                                    <script>(function(){try{var acc=JSON.parse('<%= a.accountInfo.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>');if(acc&&acc.length)document.write(acc.map(function(x){return x.username;}).join(', '));}catch(e){}})()</script>
+                                    <% } else { %><span style="color:#3d4251">-</span><% } %>
+                                </td>
                                 <td data-col="actions">
                                     <div class="td-actions">
                                         <button class="btn btn-sm btn-secondary" onclick="openAssetModalBySeq(<%= a.assetSeq %>)">수정</button>
@@ -881,7 +887,7 @@
 <div class="modal-overlay" id="assetModal">
     <div class="modal" style="width:640px">
         <div class="modal-title" id="assetModalTitle">서버 추가</div>
-        <form action="../CustomerDetailServlet" method="post" onsubmit="serializeIpData()">
+        <form action="../CustomerDetailServlet" method="post" onsubmit="serializeIpData();serializeAccountData()">
             <input type="hidden" name="action" value="assetSave">
             <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
             <input type="hidden" name="assetSeq" id="assetSeq" value="">
@@ -995,6 +1001,14 @@
                         <option value="INACTIVE">중지</option>
                         <option value="PENDING">대기</option>
                     </select>
+                </div>
+                <div class="form-group full">
+                    <input type="hidden" name="accountInfo" id="assetAccountInfo">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                        <label style="margin:0">계정 정보</label>
+                        <button type="button" onclick="addAccountRow()" style="padding:2px 8px;font-size:14px;line-height:1;background:#1a1e2e;color:#6b9af5;border:1px solid #252d44;border-radius:4px;cursor:pointer;font-family:inherit">+</button>
+                    </div>
+                    <div id="accountRowList" style="display:flex;flex-direction:column;gap:6px"></div>
                 </div>
                 <div class="form-group full">
                     <label>메모</label>
@@ -1259,6 +1273,7 @@
                 .append(",\"location\":\"").append(jesc.apply(a.location)).append("\"")
                 .append(",\"status\":\"").append(jesc.apply(a.status)).append("\"")
                 .append(",\"purchaseDt\":\"").append(jesc.apply(a.purchaseDt)).append("\"")
+                .append(",\"accountInfo\":\"").append(jesc.apply(a.accountInfo)).append("\"")
                 .append(",\"memo\":\"").append(jesc.apply(a.memo)).append("\"")
                 .append("}");
         }
@@ -1435,6 +1450,69 @@
                 tbody.appendChild(child);
             }
         });
+    }
+
+    // ── 계정 정보 관리 ──────────────────────────────────
+    function renderAccountRows(list) {
+        document.getElementById('accountRowList').innerHTML = '';
+        (list || []).forEach(item => addAccountRow(item.username, item.password));
+    }
+
+    function addAccountRow(username, password) {
+        const container = document.getElementById('accountRowList');
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:6px';
+
+        const userInp = document.createElement('input');
+        userInp.type = 'text';
+        userInp.placeholder = '계정명';
+        userInp.value = username || '';
+        userInp.style.cssText = 'flex:1;padding:5px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit';
+
+        const pwWrap = document.createElement('div');
+        pwWrap.style.cssText = 'flex:1;display:flex;align-items:center;gap:0;position:relative';
+
+        const pwInp = document.createElement('input');
+        pwInp.type = 'password';
+        pwInp.placeholder = '패스워드';
+        pwInp.value = password || '';
+        pwInp.style.cssText = 'flex:1;padding:5px 32px 5px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit;width:100%';
+
+        const eyeBtn = document.createElement('button');
+        eyeBtn.type = 'button';
+        eyeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        eyeBtn.style.cssText = 'position:absolute;right:6px;background:none;border:none;cursor:pointer;color:#3d4251;padding:0;display:flex;align-items:center';
+        eyeBtn.onclick = () => {
+            const isVisible = pwInp.type === 'text';
+            pwInp.type = isVisible ? 'password' : 'text';
+            eyeBtn.style.color = isVisible ? '#3d4251' : '#6b9af5';
+        };
+
+        pwWrap.appendChild(pwInp);
+        pwWrap.appendChild(eyeBtn);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '−';
+        del.style.cssText = 'padding:4px 8px;font-size:12px;background:none;color:#6b7280;border:1px solid #252830;border-radius:6px;cursor:pointer;flex-shrink:0';
+        del.onclick = () => row.remove();
+
+        row.appendChild(userInp);
+        row.appendChild(pwWrap);
+        row.appendChild(del);
+        container.appendChild(row);
+    }
+
+    function serializeAccountData() {
+        const rows = document.querySelectorAll('#accountRowList > div');
+        const result = [];
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            const username = inputs[0] ? inputs[0].value.trim() : '';
+            const password = inputs[1] ? inputs[1].value : '';
+            if (username) result.push({ username, password });
+        });
+        document.getElementById('assetAccountInfo').value = result.length ? JSON.stringify(result) : '';
     }
 
     // ── IP 주소 관리 ────────────────────────────────────
@@ -1674,6 +1752,7 @@
             const el = document.getElementById(id); if (el) el.value = '';
         });
         renderIpRows([]);
+        renderAccountRows([]);
         document.getElementById('assetType').value    = 'SERVER';
         document.getElementById('assetSizeU').value   = '';
         document.getElementById('assetStatus').value  = 'ACTIVE';
@@ -1707,9 +1786,14 @@
             const parsed = JSON.parse(a.ipAddr || '[]');
             renderIpRows(Array.isArray(parsed) ? parsed : []);
         } catch(e) {
-            // 기존 콤마 구분 문자열 하위 호환
             const rows = (a.ipAddr || '').split(',').map(s => s.trim()).filter(Boolean).map(addr => ({ type: '관리IP', addr }));
             renderIpRows(rows);
+        }
+        try {
+            const accParsed = JSON.parse(a.accountInfo || '[]');
+            renderAccountRows(Array.isArray(accParsed) ? accParsed : []);
+        } catch(e) {
+            renderAccountRows([]);
         }
         document.getElementById('assetDisk').value      = a.disk       || '';
         document.getElementById('assetCpu').value       = a.cpu        || '';
@@ -1747,9 +1831,10 @@
         { key:'os',       label:'OS' },
         { key:'purchase', label:'도입일' },
         { key:'status',   label:'상태',     fixed:true },
+        { key:'account',  label:'계정' },
         { key:'actions',  label:'관리',     fixed:true },
     ];
-    const COL_DEFAULT = { type:true, name:true, maker:true, model:true, size:false, hostname:false, ip:false, disk:false, cpu:true, memory:true, location:false, os:false, purchase:true, status:true, actions:true };
+    const COL_DEFAULT = { type:true, name:true, maker:true, model:true, size:false, hostname:false, ip:false, disk:false, cpu:true, memory:true, location:false, os:false, purchase:true, status:true, account:false, actions:true };
     const COL_LS_KEY  = 'assetColVis_v1';
 
     function loadColVisibility() {

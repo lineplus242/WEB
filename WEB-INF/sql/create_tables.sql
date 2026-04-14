@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS tb_asset (
     status        VARCHAR(20)  DEFAULT 'ACTIVE',
     purchase_dt   VARCHAR(10)  DEFAULT NULL,
     expire_dt     VARCHAR(10)  DEFAULT NULL,
+    account_info  TEXT         DEFAULT NULL,  -- JSON: [{"username":"...","password":"..."}]
     memo          TEXT         DEFAULT NULL,
     del_yn        CHAR(1)      DEFAULT 'N',
     reg_dt        DATETIME     DEFAULT NOW(),

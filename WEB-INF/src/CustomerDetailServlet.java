@@ -167,8 +167,9 @@ public class CustomerDetailServlet extends HttpServlet {
                     a.osInfo     = rs.getString("os_info");
                     a.location   = rs.getString("location");
                     a.status     = rs.getString("status");
-                    a.purchaseDt = rs.getString("purchase_dt");
-                    a.memo       = rs.getString("memo");
+                    a.purchaseDt   = rs.getString("purchase_dt");
+                    a.memo         = rs.getString("memo");
+                    a.accountInfo  = rs.getString("account_info");
                     int su = rs.getInt("size_u");
                     a.sizeU = rs.wasNull() ? null : su;
                     allAssets.add(a);
@@ -328,7 +329,7 @@ public class CustomerDetailServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (assetSeqStr == null || assetSeqStr.isEmpty()) {
                 // 신규
-                String sql = "INSERT INTO tb_asset (cust_seq, parent_seq, asset_type, asset_role, virt_type, asset_name, maker, model, size_u, hostname, ip_addr, disk, cpu, memory, os_info, location, status, purchase_dt, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                String sql = "INSERT INTO tb_asset (cust_seq, parent_seq, asset_type, asset_role, virt_type, asset_name, maker, model, size_u, hostname, ip_addr, disk, cpu, memory, os_info, location, status, purchase_dt, account_info, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1,     custSeq);
                     String pSeqStr = req.getParameter("parentSeq");
@@ -352,13 +353,14 @@ public class CustomerDetailServlet extends HttpServlet {
                     ps.setString(16, emptyToNull(req.getParameter("location")));
                     ps.setString(17, nvl(req.getParameter("status"), "ACTIVE"));
                     ps.setString(18, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(19, emptyToNull(req.getParameter("memo")));
-                    ps.setString(20, loginUser);
+                    ps.setString(19, emptyToNull(req.getParameter("accountInfo")));
+                    ps.setString(20, emptyToNull(req.getParameter("memo")));
+                    ps.setString(21, loginUser);
                     ps.executeUpdate();
                 }
             } else {
                 // 수정
-                String sql = "UPDATE tb_asset SET parent_seq=?, asset_type=?, asset_role=?, virt_type=?, asset_name=?, maker=?, model=?, size_u=?, hostname=?, ip_addr=?, disk=?, cpu=?, memory=?, os_info=?, location=?, status=?, purchase_dt=?, memo=?, upd_user=? WHERE asset_seq=?";
+                String sql = "UPDATE tb_asset SET parent_seq=?, asset_type=?, asset_role=?, virt_type=?, asset_name=?, maker=?, model=?, size_u=?, hostname=?, ip_addr=?, disk=?, cpu=?, memory=?, os_info=?, location=?, status=?, purchase_dt=?, account_info=?, memo=?, upd_user=? WHERE asset_seq=?";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     String pSeqStr2 = req.getParameter("parentSeq");
                     if (pSeqStr2 == null || pSeqStr2.isEmpty()) ps.setNull(1, java.sql.Types.INTEGER);
@@ -381,9 +383,10 @@ public class CustomerDetailServlet extends HttpServlet {
                     ps.setString(15, emptyToNull(req.getParameter("location")));
                     ps.setString(16, nvl(req.getParameter("status"), "ACTIVE"));
                     ps.setString(17, emptyToNull(req.getParameter("purchaseDt")));
-                    ps.setString(18, emptyToNull(req.getParameter("memo")));
-                    ps.setString(19, loginUser);
-                    ps.setInt(20,    Integer.parseInt(assetSeqStr));
+                    ps.setString(18, emptyToNull(req.getParameter("accountInfo")));
+                    ps.setString(19, emptyToNull(req.getParameter("memo")));
+                    ps.setString(20, loginUser);
+                    ps.setInt(21,    Integer.parseInt(assetSeqStr));
                     ps.executeUpdate();
                 }
             }
@@ -604,7 +607,7 @@ public class CustomerDetailServlet extends HttpServlet {
         public String assetType, assetRole, virtType;
         public String assetName, maker, model, hostname, ipAddr;
         public String disk, cpu, memory, osInfo, location;
-        public String status, purchaseDt, memo;
+        public String status, purchaseDt, memo, accountInfo;
         public Integer sizeU;
         public int childCount;  // DB 저장 안 함, 로드 시 계산
     }
