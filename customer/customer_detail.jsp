@@ -473,7 +473,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-sm btn-secondary" onclick="exportAssetCsv()">↓ 엑셀</button>
+                        <button class="btn btn-sm btn-secondary" onclick="openCsvModal()">↓ 엑셀</button>
                         <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 서버 추가</button>
                     </div>
                 </div>
@@ -578,11 +578,7 @@
                                     <div><%= ip.trim() %></div>
                                     <% } } } else { %><span style="color:#3d4251">-</span><% } %>
                                 </td>
-                                <td data-col="account" style="color:#6b7280;font-size:11px">
-                                    <% if (a.accountInfo != null && !a.accountInfo.isEmpty()) { %>
-                                    <script>(function(){try{var acc=JSON.parse('<%= a.accountInfo.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>');if(acc&&acc.length)document.write(acc.map(function(x){return x.username;}).join(', '));}catch(e){}})()</script>
-                                    <% } else { %><span style="color:#3d4251">-</span><% } %>
-                                </td>
+                                <td data-col="account" class="acct-cell" style="font-size:11px"></td>
                                 <td data-col="disk" style="color:#6b7280"><%= nvl(a.disk) %></td>
                                 <td data-col="cpu" style="color:#6b7280"><%= nvl(a.cpu) %></td>
                                 <td data-col="memory" style="color:#6b7280"><%= nvl(a.memory) %></td>
@@ -1023,6 +1019,21 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="csvModal">
+    <div class="modal" style="width:480px">
+        <div class="modal-title">엑셀 내려받기 — 컬럼 선택</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="csvSelectAll(true)">전체 선택</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="csvSelectAll(false)">전체 해제</button>
+        </div>
+        <div id="csvColList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;max-height:320px;overflow-y:auto;padding-right:4px"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('csvModal')">취소</button>
+            <button type="button" class="btn btn-primary" onclick="doExportCsv()">↓ 내려받기</button>
+        </div>
+    </div>
+</div>
+
 <script>
     function switchTab(tab) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1108,47 +1119,107 @@
     }
 
     // ── 엑셀(CSV) 내보내기 ──────────────────────────────
-    function exportAssetCsv() {
+    const CSV_COL_DEFS = [
+        { key:'type',     label:'유형',      def:true  },
+        { key:'name',     label:'서버명',     def:true  },
+        { key:'role',     label:'역할',      def:false },
+        { key:'parent',   label:'호스트서버', def:false },
+        { key:'maker',    label:'제조사',     def:true  },
+        { key:'model',    label:'모델',      def:true  },
+        { key:'size',     label:'크기(U)',    def:false },
+        { key:'hostname', label:'HostName',  def:false },
+        { key:'ip',       label:'IP 주소',   def:true  },
+        { key:'account',  label:'계정 ID',   def:false },
+        { key:'password', label:'계정 PW',   def:false },
+        { key:'disk',     label:'Disk',      def:false },
+        { key:'cpu',      label:'CPU',       def:true  },
+        { key:'memory',   label:'Memory',    def:true  },
+        { key:'os',       label:'OS',        def:false },
+        { key:'location', label:'위치',      def:false },
+        { key:'purchase', label:'도입일',    def:true  },
+        { key:'status',   label:'상태',      def:true  },
+        { key:'memo',     label:'메모',      def:false },
+    ];
+
+    // IP 파싱 헬퍼
+    function parseIp(ipAddr) {
+        if (!ipAddr) return [];
+        try {
+            const parsed = JSON.parse(ipAddr);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(e) {
+            return ipAddr.split(',').map(s => s.trim()).filter(Boolean).map(addr => ({ type: '관리IP', addr }));
+        }
+    }
+
+    // 계정 파싱 헬퍼
+    function parseAccount(accountInfo) {
+        if (!accountInfo) return [];
+        try {
+            const parsed = JSON.parse(accountInfo);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(e) { return []; }
+    }
+
+    function openCsvModal() {
+        const box = document.getElementById('csvColList');
+        box.innerHTML = '';
+        CSV_COL_DEFS.forEach(c => {
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:#b0b4bf';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.dataset.key = c.key;
+            cb.checked = c.def;
+            cb.style.cssText = 'width:14px;height:14px;accent-color:#3b6ef5;cursor:pointer;flex-shrink:0';
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(c.label));
+            box.appendChild(label);
+        });
+        document.getElementById('csvModal').classList.add('open');
+    }
+
+    function csvSelectAll(checked) {
+        document.querySelectorAll('#csvColList input[type=checkbox]').forEach(cb => cb.checked = checked);
+    }
+
+    function doExportCsv() {
         const custName = '<%= cust != null ? cust.custName.replace("'", "\\'") : "고객사" %>';
         const today = new Date();
         const dateStr = today.getFullYear()
             + String(today.getMonth()+1).padStart(2,'0')
             + String(today.getDate()).padStart(2,'0');
 
-        // IP 파싱 헬퍼
-        function parseIp(ipAddr) {
-            if (!ipAddr) return [];
-            try {
-                const parsed = JSON.parse(ipAddr);
-                return Array.isArray(parsed) ? parsed : [];
-            } catch(e) {
-                // 기존 콤마 구분 문자열 하위 호환
-                return ipAddr.split(',').map(s => s.trim()).filter(Boolean).map(addr => ({ type: '관리IP', addr }));
-            }
-        }
+        // 선택된 컬럼 키 목록
+        const selected = new Set();
+        document.querySelectorAll('#csvColList input[type=checkbox]').forEach(cb => {
+            if (cb.checked) selected.add(cb.dataset.key);
+        });
+        if (!selected.size) { alert('내려받을 컬럼을 하나 이상 선택하세요.'); return; }
 
-        // 역할 레이블
-        const roleLabel = { PHYSICAL:'물리서버', HYPERVISOR:'하이퍼바이저', VM:'VM', LDOM:'LDOM', ZONE:'Zone', CONTAINER:'Container' };
-        // 유형 레이블
-        const typeLabel = { SERVER:'서버', NETWORK:'네트워크', SECURITY:'보안', STORAGE:'스토리지', ETC:'기타' };
-        // 상태 레이블
+        const roleLabel   = { PHYSICAL:'물리서버', HYPERVISOR:'하이퍼바이저', VM:'VM', LDOM:'LDOM', ZONE:'Zone', CONTAINER:'Container' };
+        const typeLabel   = { SERVER:'서버', NETWORK:'네트워크', SECURITY:'보안', STORAGE:'스토리지', ETC:'기타' };
         const statusLabel = { ACTIVE:'운영중', INACTIVE:'중지', PENDING:'대기' };
 
-        // 전체 데이터에서 최대 IP 개수 계산
+        // 동적 IP 컬럼 수
         let maxIp = 0;
-        ASSET_DATA.forEach(a => {
-            const ips = parseIp(a.ipAddr);
-            if (ips.length > maxIp) maxIp = ips.length;
-        });
-        if (maxIp === 0) maxIp = 1;
-
-        // 헤더 생성
-        const ipHeaders = [];
-        for (let i = 1; i <= maxIp; i++) {
-            ipHeaders.push('IP유형' + i, 'IP주소' + i);
+        if (selected.has('ip')) {
+            ASSET_DATA.forEach(a => {
+                const n = parseIp(a.ipAddr).length;
+                if (n > maxIp) maxIp = n;
+            });
+            if (maxIp === 0) maxIp = 1;
         }
-        const headers = ['유형','서버명','역할','호스트서버','제조사','모델','크기(U)','HostName',
-            ...ipHeaders, 'Disk','CPU','Memory','OS','위치','도입일','상태','메모'];
+
+        // 동적 계정 컬럼 수
+        let maxAcc = 0;
+        if (selected.has('account') || selected.has('password')) {
+            ASSET_DATA.forEach(a => {
+                const n = parseAccount(a.accountInfo).length;
+                if (n > maxAcc) maxAcc = n;
+            });
+            if (maxAcc === 0) maxAcc = 1;
+        }
 
         // CSV 셀 이스케이프
         function esc(v) {
@@ -1159,40 +1230,74 @@
             return s;
         }
 
-        // 행 생성
-        const rows = ASSET_DATA.map(a => {
-            const ips = parseIp(a.ipAddr);
-            const parent = a.parentSeq ? ASSET_DATA.find(x => x.assetSeq === a.parentSeq) : null;
-            const ipCols = [];
-            for (let i = 0; i < maxIp; i++) {
-                ipCols.push(ips[i] ? ips[i].type : '', ips[i] ? ips[i].addr : '');
+        // 헤더 조립
+        const headers = [];
+        CSV_COL_DEFS.forEach(c => {
+            if (!selected.has(c.key)) return;
+            if (c.key === 'ip') {
+                for (let i = 1; i <= maxIp; i++) headers.push('IP유형' + i, 'IP주소' + i);
+            } else if (c.key === 'account') {
+                for (let i = 1; i <= maxAcc; i++) headers.push('계정ID' + (maxAcc > 1 ? i : ''));
+            } else if (c.key === 'password') {
+                for (let i = 1; i <= maxAcc; i++) headers.push('계정PW' + (maxAcc > 1 ? i : ''));
+            } else {
+                headers.push(c.label);
             }
-            return [
-                typeLabel[a.assetType] || a.assetType,
-                a.assetName,
-                roleLabel[a.assetRole] || a.assetRole,
-                parent ? parent.assetName : '',
-                a.maker, a.model,
-                a.sizeU != null ? a.sizeU + 'U' : '',
-                a.hostname,
-                ...ipCols,
-                a.disk, a.cpu, a.memory, a.osInfo,
-                a.location, a.purchaseDt,
-                statusLabel[a.status] || a.status,
-                a.memo
-            ].map(esc).join(',');
         });
 
-        const csv = '\uFEFF' + [headers.map(esc).join(','), ...rows].join('\r\n');
+        // 행 조립
+        const rows = ASSET_DATA.map(a => {
+            const ips    = parseIp(a.ipAddr);
+            const accs   = parseAccount(a.accountInfo);
+            const parent = a.parentSeq ? ASSET_DATA.find(x => x.assetSeq === a.parentSeq) : null;
+            const cols   = [];
+
+            CSV_COL_DEFS.forEach(c => {
+                if (!selected.has(c.key)) return;
+                switch (c.key) {
+                    case 'type':     cols.push(typeLabel[a.assetType] || a.assetType); break;
+                    case 'name':     cols.push(a.assetName); break;
+                    case 'role':     cols.push(roleLabel[a.assetRole] || a.assetRole); break;
+                    case 'parent':   cols.push(parent ? parent.assetName : ''); break;
+                    case 'maker':    cols.push(a.maker); break;
+                    case 'model':    cols.push(a.model); break;
+                    case 'size':     cols.push(a.sizeU != null ? a.sizeU + 'U' : ''); break;
+                    case 'hostname': cols.push(a.hostname); break;
+                    case 'ip':
+                        for (let i = 0; i < maxIp; i++) {
+                            cols.push(ips[i] ? ips[i].type : '', ips[i] ? ips[i].addr : '');
+                        }
+                        break;
+                    case 'account':
+                        for (let i = 0; i < maxAcc; i++) cols.push(accs[i] ? accs[i].username : '');
+                        break;
+                    case 'password':
+                        for (let i = 0; i < maxAcc; i++) cols.push(accs[i] ? accs[i].password : '');
+                        break;
+                    case 'disk':     cols.push(a.disk); break;
+                    case 'cpu':      cols.push(a.cpu); break;
+                    case 'memory':   cols.push(a.memory); break;
+                    case 'os':       cols.push(a.osInfo); break;
+                    case 'location': cols.push(a.location); break;
+                    case 'purchase': cols.push(a.purchaseDt); break;
+                    case 'status':   cols.push(statusLabel[a.status] || a.status); break;
+                    case 'memo':     cols.push(a.memo); break;
+                }
+            });
+            return cols.map(esc).join(',');
+        });
+
+        const csv  = '\uFEFF' + [headers.map(esc).join(','), ...rows].join('\r\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = custName + '_자산목록_' + dateStr + '.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const url  = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href     = url;
+        link.download = custName + '_자산목록_' + dateStr + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        closeModal('csvModal');
     }
 
     // ── 장비목록 선택 ────────────────────────────────────
@@ -1280,6 +1385,72 @@
         assetJson.append("]");
         out.print(assetJson.toString());
     %>;
+
+    // ── 계정 셀 렌더링 ──────────────────────────────────
+    function initAccountCells() {
+        document.querySelectorAll('tr[data-asset-id]').forEach(tr => {
+            const id    = parseInt(tr.getAttribute('data-asset-id'), 10);
+            const asset = ASSET_DATA.find(a => a.assetSeq === id);
+            const td    = tr.querySelector('td.acct-cell');
+            if (!td || !asset) return;
+
+            let accs = [];
+            try { accs = JSON.parse(asset.accountInfo || '[]'); } catch(e) {}
+            accs = accs.filter(a => a.username);
+
+            if (!accs.length) {
+                const dash = document.createElement('span');
+                dash.style.color = '#3d4251';
+                dash.textContent = '-';
+                td.appendChild(dash);
+                return;
+            }
+
+            accs.forEach(acc => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:2px;white-space:nowrap';
+
+                const uSpan = document.createElement('span');
+                uSpan.style.color = '#b0b4bf';
+                uSpan.textContent = acc.username;
+                row.appendChild(uSpan);
+
+                if (acc.password) {
+                    const sep = document.createElement('span');
+                    sep.style.cssText = 'color:#2a2d38;font-size:10px';
+                    sep.textContent = '/';
+                    row.appendChild(sep);
+
+                    const mask = document.createElement('span');
+                    mask.style.cssText = 'color:#3d4251;letter-spacing:2px;font-size:9px;font-family:monospace';
+                    mask.textContent = '●●●●●●';
+                    row.appendChild(mask);
+
+                    const plain = document.createElement('span');
+                    plain.style.cssText = 'display:none;color:#d4a017;font-family:monospace;font-size:11px';
+                    plain.textContent = acc.password;
+                    row.appendChild(plain);
+
+                    const eye = document.createElement('button');
+                    eye.type = 'button';
+                    eye.style.cssText = 'background:none;border:none;cursor:pointer;padding:0 1px;color:#3d4251;font-size:11px;line-height:1;flex-shrink:0';
+                    eye.title = '패스워드 보기';
+                    eye.textContent = '👁';
+                    eye.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const hidden = plain.style.display === 'none';
+                        mask.style.display  = hidden ? 'none' : '';
+                        plain.style.display = hidden ? ''     : 'none';
+                        eye.style.color     = hidden ? '#3b6ef5' : '#3d4251';
+                    });
+                    row.appendChild(eye);
+                }
+
+                td.appendChild(row);
+            });
+        });
+    }
+    initAccountCells();
 
     // ── 랙 슬롯 렌더링 ──────────────────────────────────
     const RACK_DATA = <%
