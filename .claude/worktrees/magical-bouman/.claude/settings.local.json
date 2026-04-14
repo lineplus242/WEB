@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -E \"\\\\.\\(xml|gradle|yml|yaml|toml|properties\\)$\")",
-      "Bash(jar tf:*)"
-    ]
-  }
-}
