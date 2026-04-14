@@ -948,7 +948,7 @@
                     <input type="hidden" name="ipAddr" id="assetIp">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
                         <label style="margin:0">IP 주소</label>
-                        <button type="button" onclick="addIpRow()" style="padding:2px 10px;font-size:11px;background:#1a1e2e;color:#6b9af5;border:1px solid #252d44;border-radius:4px;cursor:pointer;font-family:inherit">+ 추가</button>
+                        <button type="button" onclick="addIpRow()" style="padding:2px 8px;font-size:14px;line-height:1;background:#1a1e2e;color:#6b9af5;border:1px solid #252d44;border-radius:4px;cursor:pointer;font-family:inherit">+</button>
                     </div>
                     <div id="ipRowList" style="display:flex;flex-direction:column;gap:6px"></div>
                 </div>
@@ -1354,7 +1354,7 @@
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:6px';
         const sel = document.createElement('select');
-        sel.style.cssText = 'padding:5px 8px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit;flex-shrink:0';
+        sel.style.cssText = 'width:100px;padding:5px 8px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit;flex-shrink:0';
         IP_TYPES.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t; opt.textContent = t;
@@ -1368,7 +1368,7 @@
         inp.style.cssText = 'flex:1;padding:5px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit';
         const del = document.createElement('button');
         del.type = 'button';
-        del.textContent = '✕';
+        del.textContent = '−';
         del.style.cssText = 'padding:4px 8px;font-size:12px;background:none;color:#6b7280;border:1px solid #252830;border-radius:6px;cursor:pointer;flex-shrink:0';
         del.onclick = () => row.remove();
         row.appendChild(sel);
