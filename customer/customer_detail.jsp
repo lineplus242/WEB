@@ -472,7 +472,7 @@
                     <table id="assetTable">
                         <thead>
                             <tr>
-                                <th data-col="type">유형</th>
+                                <th data-col="type" onclick="sortAsset('type')">유형 <span id="sort-type" style="color:#3d4251;font-weight:400">↕</span></th>
                                 <th data-col="name" onclick="sortAsset('name')">서버명 <span id="sort-name" style="color:#3b6ef5;font-weight:400">↕</span></th>
                                 <th data-col="maker">제조사</th>
                                 <th data-col="model">모델</th>
@@ -1282,7 +1282,7 @@
     function sortAsset(col) {
         if (assetSortCol === col) assetSortDir *= -1;
         else { assetSortCol = col; assetSortDir = 1; }
-        ['name','purchase'].forEach(c => {
+        ['name','purchase','type'].forEach(c => {
             const el = document.getElementById('sort-' + c);
             if (!el) return;
             el.textContent = c === col ? (assetSortDir === 1 ? '↑' : '↓') : '↕';
