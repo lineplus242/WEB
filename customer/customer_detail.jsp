@@ -766,7 +766,8 @@
                 </div>
                 <div class="form-group">
                     <label>크기 (U)</label>
-                    <select name="sizeU" id="unitSizeU">
+                    <select name="sizeU" id="unitSizeU" required>
+                        <option value="">-- U 선택 --</option>
                         <% for (int u = 1; u <= 10; u++) { %>
                         <option value="<%= u %>"><%= u %>U</option>
                         <% } %>
@@ -1026,7 +1027,7 @@
         document.getElementById('unitStartUDisplay').value = startU + 'U (' + (side === 'F' ? '전면' : '후면') + ')';
         document.getElementById('unitDeviceName').value = '';
         document.getElementById('unitDeviceType').value = 'SERVER';
-        document.getElementById('unitSizeU').value     = '1';
+        document.getElementById('unitSizeU').value     = '';
         document.getElementById('unitIpAddr').value    = '';
         document.getElementById('unitMemo').value      = '';
         document.getElementById('unitDeleteBtn').style.display = 'none';
@@ -1109,7 +1110,7 @@
         selectedAssetSeq = a.assetSeq;
         document.getElementById('unitDeviceName').value = a.assetName;
         document.getElementById('unitDeviceType').value = a.assetType;
-        if (a.sizeU) document.getElementById('unitSizeU').value = a.sizeU;
+        document.getElementById('unitSizeU').value = a.sizeU || 1;
         filterAssets();
     }
 
