@@ -488,6 +488,7 @@
                                 <th data-col="size">크기</th>
                                 <th data-col="hostname">HostName</th>
                                 <th data-col="ip">IP 주소</th>
+                                <th data-col="account" style="cursor:default">계정</th>
                                 <th data-col="disk">Disk</th>
                                 <th data-col="cpu">CPU</th>
                                 <th data-col="memory">Memory</th>
@@ -495,7 +496,6 @@
                                 <th data-col="os">OS</th>
                                 <th data-col="purchase" onclick="sortAsset('purchase')">도입일 <span id="sort-purchase" style="color:#3d4251;font-weight:400">↕</span></th>
                                 <th data-col="status">상태</th>
-                                <th data-col="account" style="cursor:default">계정</th>
                                 <th data-col="actions" style="cursor:default">관리</th>
                             </tr>
                         </thead>
@@ -578,6 +578,11 @@
                                     <div><%= ip.trim() %></div>
                                     <% } } } else { %><span style="color:#3d4251">-</span><% } %>
                                 </td>
+                                <td data-col="account" style="color:#6b7280;font-size:11px">
+                                    <% if (a.accountInfo != null && !a.accountInfo.isEmpty()) { %>
+                                    <script>(function(){try{var acc=JSON.parse('<%= a.accountInfo.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>');if(acc&&acc.length)document.write(acc.map(function(x){return x.username;}).join(', '));}catch(e){}})()</script>
+                                    <% } else { %><span style="color:#3d4251">-</span><% } %>
+                                </td>
                                 <td data-col="disk" style="color:#6b7280"><%= nvl(a.disk) %></td>
                                 <td data-col="cpu" style="color:#6b7280"><%= nvl(a.cpu) %></td>
                                 <td data-col="memory" style="color:#6b7280"><%= nvl(a.memory) %></td>
@@ -585,11 +590,6 @@
                                 <td data-col="os" style="color:#6b7280"><%= nvl(a.osInfo) %></td>
                                 <td data-col="purchase" class="td-mono" style="color:#6b7280"><%= nvl(a.purchaseDt) %></td>
                                 <td data-col="status"><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
-                                <td data-col="account" style="color:#6b7280;font-size:11px">
-                                    <% if (a.accountInfo != null && !a.accountInfo.isEmpty()) { %>
-                                    <script>(function(){try{var acc=JSON.parse('<%= a.accountInfo.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>');if(acc&&acc.length)document.write(acc.map(function(x){return x.username;}).join(', '));}catch(e){}})()</script>
-                                    <% } else { %><span style="color:#3d4251">-</span><% } %>
-                                </td>
                                 <td data-col="actions">
                                     <div class="td-actions">
                                         <button class="btn btn-sm btn-secondary" onclick="openAssetModalBySeq(<%= a.assetSeq %>)">수정</button>
@@ -1824,6 +1824,7 @@
         { key:'size',     label:'크기 (U)' },
         { key:'hostname', label:'HostName' },
         { key:'ip',       label:'IP 주소' },
+        { key:'account',  label:'계정' },
         { key:'disk',     label:'Disk' },
         { key:'cpu',      label:'CPU' },
         { key:'memory',   label:'Memory' },
@@ -1831,7 +1832,6 @@
         { key:'os',       label:'OS' },
         { key:'purchase', label:'도입일' },
         { key:'status',   label:'상태',     fixed:true },
-        { key:'account',  label:'계정' },
         { key:'actions',  label:'관리',     fixed:true },
     ];
     const COL_DEFAULT = { type:true, name:true, maker:true, model:true, size:false, hostname:false, ip:false, disk:false, cpu:true, memory:true, location:false, os:false, purchase:true, status:true, account:false, actions:true };
