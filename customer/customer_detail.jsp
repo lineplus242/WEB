@@ -368,10 +368,10 @@
         <!-- 탭 -->
         <div class="tab-bar">
             <button class="tab-btn <%= "project".equals(activeTab) ? "active" : "" %>" onclick="switchTab('project')">
-                📋 사업정보 (<%= projects.size() %>)
+                📋 사업정보
             </button>
             <button class="tab-btn <%= "asset".equals(activeTab) ? "active" : "" %>" onclick="switchTab('asset')">
-                🖥 IT 자산 (<%= assets.size() %>)
+                🖥 IT 자산
             </button>
         </div>
 
