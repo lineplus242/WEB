@@ -1030,6 +1030,7 @@
         document.getElementById('unitIpAddr').value    = '';
         document.getElementById('unitMemo').value      = '';
         document.getElementById('unitDeleteBtn').style.display = 'none';
+        selectedAssetSeq = null;
         document.getElementById('assetSearch').value   = '';
         document.getElementById('assetPickList').innerHTML = '';
         filterAssets();
@@ -1051,6 +1052,7 @@
         document.getElementById('unitMemo').value      = memo  || '';
         document.getElementById('unitDeleteBtn').style.display = 'block';
         document.getElementById('unitDeleteSeq').value = unitSeq;
+        selectedAssetSeq = null;
         document.getElementById('assetSearch').value   = '';
         document.getElementById('assetPickList').innerHTML = '';
         filterAssets();
@@ -1063,6 +1065,8 @@
     }
 
     // ── 장비목록 선택 ────────────────────────────────────
+    let selectedAssetSeq = null;
+
     function filterAssets() {
         const q = document.getElementById('assetSearch').value.toLowerCase();
         const list = document.getElementById('assetPickList');
@@ -1075,12 +1079,15 @@
             return;
         }
         filtered.forEach(a => {
+            const isSelected = a.assetSeq === selectedAssetSeq;
             const row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#131519;border:1px solid #1e2025;border-radius:6px;cursor:pointer;gap:8px;';
-            row.onmouseover = () => row.style.borderColor = '#3b6ef5';
-            row.onmouseout  = () => row.style.borderColor = '#1e2025';
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#131519;border:1px solid ' + (isSelected ? '#3b6ef5' : '#1e2025') + ';border-radius:6px;cursor:pointer;gap:8px;';
+            if (!isSelected) {
+                row.onmouseover = () => row.style.borderColor = '#3b6ef5';
+                row.onmouseout  = () => row.style.borderColor = '#1e2025';
+            }
             const left = document.createElement('div');
-            left.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:0';
+            left.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:0;flex:1';
             left.innerHTML = '<span style="font-size:12px;font-weight:500;color:#e8e9eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + a.assetName + '</span>'
                            + '<span style="font-size:11px;color:#4b5161">' + a.assetType + (a.model ? ' · ' + a.model : '') + '</span>';
             const right = document.createElement('div');
@@ -1088,8 +1095,8 @@
             if (a.sizeU) right.innerHTML += '<span style="font-size:11px;font-family:monospace;color:#6b9af5;background:#1a1e2e;padding:2px 6px;border-radius:4px">' + a.sizeU + 'U</span>';
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.textContent = '선택';
-            btn.style.cssText = 'padding:3px 10px;font-size:11px;background:#3b6ef5;color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit';
+            btn.textContent = isSelected ? '✓ 선택됨' : '선택';
+            btn.style.cssText = 'padding:3px 10px;font-size:11px;background:' + (isSelected ? '#1a7a4a' : '#3b6ef5') + ';color:#fff;border:none;border-radius:4px;cursor:pointer;font-family:inherit;white-space:nowrap';
             btn.onclick = () => pickAsset(a);
             row.appendChild(left);
             row.appendChild(right);
@@ -1099,12 +1106,11 @@
     }
 
     function pickAsset(a) {
+        selectedAssetSeq = a.assetSeq;
         document.getElementById('unitDeviceName').value = a.assetName;
         document.getElementById('unitDeviceType').value = a.assetType;
         if (a.sizeU) document.getElementById('unitSizeU').value = a.sizeU;
-        if (a.ipAddr) document.getElementById('unitIpAddr').value = a.ipAddr;
-        document.getElementById('assetSearch').value = '';
-        document.getElementById('assetPickList').innerHTML = '';
+        filterAssets();
     }
 
     // ── 장비목록 데이터 ─────────────────────────────────
