@@ -1072,8 +1072,10 @@
         const q = document.getElementById('assetSearch').value.toLowerCase();
         const list = document.getElementById('assetPickList');
         list.innerHTML = '';
+        const PHYSICAL_ROLES = ['PHYSICAL', 'HYPERVISOR'];
         const filtered = ASSET_DATA.filter(a =>
-            a.assetName.toLowerCase().includes(q) || a.model.toLowerCase().includes(q)
+            PHYSICAL_ROLES.includes(a.assetRole) &&
+            (a.assetName.toLowerCase().includes(q) || a.model.toLowerCase().includes(q))
         ).slice(0, 20);
         if (filtered.length === 0) {
             list.innerHTML = '<div style="font-size:12px;color:#3d4251;padding:6px 8px">일치하는 장비가 없습니다.</div>';
