@@ -547,11 +547,26 @@
                                 <td data-col="model" class="td-mono"><%= nvl(a.model) %></td>
                                 <td data-col="size" class="td-mono"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
                                 <td data-col="hostname" class="td-mono"><%= nvl(a.hostname) %></td>
-                                <td data-col="ip" class="td-mono">
+                                <td data-col="ip" class="td-mono" style="white-space:nowrap">
                                     <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
+                                        boolean isJson = a.ipAddr.trim().startsWith("[");
+                                        if (isJson) { %>
+                                    <script>
+                                    (function(){
+                                        var items;
+                                        try { items = JSON.parse('<%= a.ipAddr.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>'); } catch(e){ items=null; }
+                                        if (!items || !items.length) { document.write('<span style="color:#3d4251">-</span>'); return; }
+                                        items.forEach(function(it){
+                                            document.write('<div style="display:flex;align-items:center;gap:5px">'
+                                                + '<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:#1a1c22;color:#6b9af5;border:1px solid #252830;white-space:nowrap">' + it.type + '</span>'
+                                                + '<span>' + it.addr + '</span></div>');
+                                        });
+                                    })();
+                                    </script>
+                                    <% } else {
                                         for (String ip : a.ipAddr.split(",")) { %>
                                     <div><%= ip.trim() %></div>
-                                    <% } } else { %><span style="color:#3d4251">-</span><% } %>
+                                    <% } } } else { %><span style="color:#3d4251">-</span><% } %>
                                 </td>
                                 <td data-col="disk" style="color:#6b7280"><%= nvl(a.disk) %></td>
                                 <td data-col="cpu" style="color:#6b7280"><%= nvl(a.cpu) %></td>
@@ -857,7 +872,7 @@
 <div class="modal-overlay" id="assetModal">
     <div class="modal" style="width:640px">
         <div class="modal-title" id="assetModalTitle">서버 추가</div>
-        <form action="../CustomerDetailServlet" method="post">
+        <form action="../CustomerDetailServlet" method="post" onsubmit="serializeIpData()">
             <input type="hidden" name="action" value="assetSave">
             <input type="hidden" name="custSeq" value="<%= cust != null ? cust.custSeq : 0 %>">
             <input type="hidden" name="assetSeq" id="assetSeq" value="">
@@ -930,8 +945,12 @@
                     <input type="text" name="hostname" id="assetHostname" placeholder="예: web01.example.com">
                 </div>
                 <div class="form-group full">
-                    <label>IP 주소 (여러 개일 경우 콤마로 구분)</label>
-                    <input type="text" name="ipAddr" id="assetIp" placeholder="예: 192.168.1.10, 192.168.1.11">
+                    <input type="hidden" name="ipAddr" id="assetIp">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                        <label style="margin:0">IP 주소</label>
+                        <button type="button" onclick="addIpRow()" style="padding:2px 10px;font-size:11px;background:#1a1e2e;color:#6b9af5;border:1px solid #252d44;border-radius:4px;cursor:pointer;font-family:inherit">+ 추가</button>
+                    </div>
+                    <div id="ipRowList" style="display:flex;flex-direction:column;gap:6px"></div>
                 </div>
                 <!-- 서버 전용: CPU / Memory -->
                 <div class="form-group" id="cpuRow">
@@ -1321,6 +1340,56 @@
         });
     }
 
+    // ── IP 주소 관리 ────────────────────────────────────
+    const IP_TYPES = ['관리IP', '서비스IP', 'NAS IP', '기타'];
+
+    function renderIpRows(ipList) {
+        const container = document.getElementById('ipRowList');
+        container.innerHTML = '';
+        (ipList || []).forEach((item, idx) => addIpRow(item.type, item.addr));
+    }
+
+    function addIpRow(type, addr) {
+        const container = document.getElementById('ipRowList');
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:6px';
+        const sel = document.createElement('select');
+        sel.style.cssText = 'padding:5px 8px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit;flex-shrink:0';
+        IP_TYPES.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            if (t === (type || '관리IP')) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.placeholder = '예: 192.168.1.10';
+        inp.value = addr || '';
+        inp.style.cssText = 'flex:1;padding:5px 10px;background:#131519;border:1px solid #252830;border-radius:6px;color:#e8e9eb;font-size:12px;font-family:inherit';
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '✕';
+        del.style.cssText = 'padding:4px 8px;font-size:12px;background:none;color:#6b7280;border:1px solid #252830;border-radius:6px;cursor:pointer;flex-shrink:0';
+        del.onclick = () => row.remove();
+        row.appendChild(sel);
+        row.appendChild(inp);
+        row.appendChild(del);
+        container.appendChild(row);
+    }
+
+    function serializeIpData() {
+        const rows = document.querySelectorAll('#ipRowList > div');
+        const result = [];
+        rows.forEach(row => {
+            const sel = row.querySelector('select');
+            const inp = row.querySelector('input');
+            if (inp && inp.value.trim()) {
+                result.push({ type: sel.value, addr: inp.value.trim() });
+            }
+        });
+        document.getElementById('assetIp').value = result.length ? JSON.stringify(result) : '';
+    }
+
     // ── 유형별 필드 표시/숨김 ─────────────────────────────
     function onTypeChange() {
         const type = document.getElementById('assetType').value;
@@ -1507,6 +1576,7 @@
          'assetIp','assetDisk','assetCpu','assetMemory','assetOs','assetLocation','assetMemo'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
+        renderIpRows([]);
         document.getElementById('assetType').value    = 'SERVER';
         document.getElementById('assetSizeU').value   = '';
         document.getElementById('assetStatus').value  = 'ACTIVE';
@@ -1536,6 +1606,14 @@
         document.getElementById('assetSizeU').value     = a.sizeU      || '';
         document.getElementById('assetHostname').value  = a.hostname   || '';
         document.getElementById('assetIp').value        = a.ipAddr     || '';
+        try {
+            const parsed = JSON.parse(a.ipAddr || '[]');
+            renderIpRows(Array.isArray(parsed) ? parsed : []);
+        } catch(e) {
+            // 기존 콤마 구분 문자열 하위 호환
+            const rows = (a.ipAddr || '').split(',').map(s => s.trim()).filter(Boolean).map(addr => ({ type: '관리IP', addr }));
+            renderIpRows(rows);
+        }
         document.getElementById('assetDisk').value      = a.disk       || '';
         document.getElementById('assetCpu').value       = a.cpu        || '';
         document.getElementById('assetMemory').value    = a.memory     || '';
