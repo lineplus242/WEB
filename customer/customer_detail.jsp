@@ -219,11 +219,12 @@
         #assetTable th:active { cursor: grabbing; }
         #assetTable th.col-drag-over { background: #1a1e2e; box-shadow: inset 2px 0 0 #3b6ef5; }
         #assetTable th.col-dragging { opacity: 0.4; }
-        #assetTable td { color: #c8cad0; border-bottom: 1px solid #161820; }
+        #assetTable td { color: #c8cad0; border-bottom: 1px solid #161820; white-space: nowrap; }
+        #assetTable td[data-col="ip"] { white-space: normal; }
         #assetTable tr:last-child td { border-bottom: none; }
         #assetTable tr:hover td { background: #161820; }
         .panel-title { font-size: 13px; font-weight: 500; color: #9ca3af; }
-        .table-wrap { background: #131519; border: 1px solid #1e2025; border-radius: 12px; overflow: hidden; }
+        .table-wrap { background: #131519; border: 1px solid #1e2025; border-radius: 12px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #0f1013; padding: 11px 16px; font-size: 11px; font-weight: 500; color: #6b7280; text-align: left; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid #1e2025; white-space: nowrap; vertical-align: middle; }
         td { padding: 12px 16px; font-size: 13px; color: #c8cad0; border-bottom: 1px solid #161820; vertical-align: middle; }
