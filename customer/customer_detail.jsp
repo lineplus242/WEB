@@ -218,6 +218,8 @@
         .vm-count-badge { display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#4b5161;background:#131519;border:1px solid #1e2025;border-radius:4px;padding:1px 5px;margin-left:6px; }
         #assetTable th { background: #0f1013; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; border-bottom: 1px solid #1e2025; cursor: grab; user-select: none; position: relative; }
         #assetTable th:active { cursor: grabbing; }
+        #assetTable th .col-resizer { position:absolute; right:0; top:0; width:5px; height:100%; cursor:col-resize; z-index:1; }
+        #assetTable th .col-resizer:hover, #assetTable th .col-resizer.resizing { background: #3b6ef5; opacity: 0.6; }
         #assetTable th.col-drag-over { background: #1a1e2e; box-shadow: inset 2px 0 0 #3b6ef5; }
         #assetTable th.col-dragging { opacity: 0.4; }
         #assetTable td { color: #c8cad0; border-bottom: 1px solid #161820; white-space: nowrap; }
@@ -1703,9 +1705,11 @@
         const stored = JSON.parse(localStorage.getItem(COL_LS_KEY) || '{}');
         const newStored = { _order: stored._order };   // 순서는 유지, 가시성만 초기화
         localStorage.setItem(COL_LS_KEY, JSON.stringify(newStored));
+        localStorage.removeItem(COL_WIDTH_LS_KEY);
         const vis = Object.assign({}, COL_DEFAULT);
         buildColPanel(vis);
         applyColVisibility(vis);
+        document.querySelectorAll('#assetTable thead th').forEach(th => th.style.width = '');
     }
 
     // ── 컬럼 드래그앤드롭 순서 변경 ─────────────────────────
@@ -1799,13 +1803,75 @@
         });
     }
 
+    // ── 컬럼 리사이즈 ──────────────────────────────────
+    const COL_WIDTH_LS_KEY = 'assetColWidth_v1';
+
+    function loadColWidths() {
+        try { return JSON.parse(localStorage.getItem(COL_WIDTH_LS_KEY) || '{}'); }
+        catch(e) { return {}; }
+    }
+
+    function saveColWidth(colKey, width) {
+        const widths = loadColWidths();
+        widths[colKey] = width;
+        localStorage.setItem(COL_WIDTH_LS_KEY, JSON.stringify(widths));
+    }
+
+    function applyColWidths() {
+        const widths = loadColWidths();
+        const table = document.getElementById('assetTable');
+        if (!table) return;
+        table.querySelectorAll('thead th').forEach(th => {
+            const col = th.getAttribute('data-col');
+            if (col && widths[col]) th.style.width = widths[col] + 'px';
+        });
+    }
+
+    function initColResize() {
+        const table = document.getElementById('assetTable');
+        if (!table) return;
+        table.style.tableLayout = 'fixed';
+        table.querySelectorAll('thead th').forEach(th => {
+            const handle = document.createElement('div');
+            handle.className = 'col-resizer';
+            th.appendChild(handle);
+            let startX, startW;
+            handle.addEventListener('mousedown', e => {
+                e.stopPropagation();
+                e.preventDefault();
+                startX = e.clientX;
+                startW = th.offsetWidth;
+                handle.classList.add('resizing');
+                document.body.style.userSelect = 'none';
+                document.body.style.cursor = 'col-resize';
+                function onMove(e) {
+                    const newW = Math.max(40, startW + (e.clientX - startX));
+                    th.style.width = newW + 'px';
+                }
+                function onUp(e) {
+                    handle.classList.remove('resizing');
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    const col = th.getAttribute('data-col');
+                    if (col) saveColWidth(col, th.offsetWidth);
+                }
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+            });
+        });
+    }
+
     // 초기화
     (function() {
         const vis = loadColVisibility();
         restoreColOrder();          // 저장된 순서 먼저 복원
         buildColPanel(vis);
         applyColVisibility(vis);
+        applyColWidths();           // 저장된 컬럼 너비 복원
         initColDrag();              // 드래그 이벤트 등록
+        initColResize();            // 리사이즈 핸들 등록
         // 패널 외부 클릭 시 닫기
         document.addEventListener('click', e => {
             const btn   = document.getElementById('colToggleBtn');
