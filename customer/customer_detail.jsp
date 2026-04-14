@@ -473,6 +473,7 @@
                                 </div>
                             </div>
                         </div>
+                        <button class="btn btn-sm btn-secondary" onclick="exportAssetCsv()">↓ 엑셀</button>
                         <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 서버 추가</button>
                     </div>
                 </div>
@@ -1090,6 +1091,94 @@
     function submitUnitDelete() {
         if (!confirm('이 장비를 삭제하시겠습니까?')) return;
         document.getElementById('unitDeleteForm').submit();
+    }
+
+    // ── 엑셀(CSV) 내보내기 ──────────────────────────────
+    function exportAssetCsv() {
+        const custName = '<%= cust != null ? cust.custName.replace("'", "\\'") : "고객사" %>';
+        const today = new Date();
+        const dateStr = today.getFullYear()
+            + String(today.getMonth()+1).padStart(2,'0')
+            + String(today.getDate()).padStart(2,'0');
+
+        // IP 파싱 헬퍼
+        function parseIp(ipAddr) {
+            if (!ipAddr) return [];
+            try {
+                const parsed = JSON.parse(ipAddr);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch(e) {
+                // 기존 콤마 구분 문자열 하위 호환
+                return ipAddr.split(',').map(s => s.trim()).filter(Boolean).map(addr => ({ type: '관리IP', addr }));
+            }
+        }
+
+        // 역할 레이블
+        const roleLabel = { PHYSICAL:'물리서버', HYPERVISOR:'하이퍼바이저', VM:'VM', LDOM:'LDOM', ZONE:'Zone', CONTAINER:'Container' };
+        // 유형 레이블
+        const typeLabel = { SERVER:'서버', NETWORK:'네트워크', SECURITY:'보안', STORAGE:'스토리지', ETC:'기타' };
+        // 상태 레이블
+        const statusLabel = { ACTIVE:'운영중', INACTIVE:'중지', PENDING:'대기' };
+
+        // 전체 데이터에서 최대 IP 개수 계산
+        let maxIp = 0;
+        ASSET_DATA.forEach(a => {
+            const ips = parseIp(a.ipAddr);
+            if (ips.length > maxIp) maxIp = ips.length;
+        });
+        if (maxIp === 0) maxIp = 1;
+
+        // 헤더 생성
+        const ipHeaders = [];
+        for (let i = 1; i <= maxIp; i++) {
+            ipHeaders.push('IP유형' + i, 'IP주소' + i);
+        }
+        const headers = ['유형','서버명','역할','호스트서버','제조사','모델','크기(U)','HostName',
+            ...ipHeaders, 'Disk','CPU','Memory','OS','위치','도입일','상태','메모'];
+
+        // CSV 셀 이스케이프
+        function esc(v) {
+            const s = v == null ? '' : String(v);
+            if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+                return '"' + s.replace(/"/g, '""') + '"';
+            }
+            return s;
+        }
+
+        // 행 생성
+        const rows = ASSET_DATA.map(a => {
+            const ips = parseIp(a.ipAddr);
+            const parent = a.parentSeq ? ASSET_DATA.find(x => x.assetSeq === a.parentSeq) : null;
+            const ipCols = [];
+            for (let i = 0; i < maxIp; i++) {
+                ipCols.push(ips[i] ? ips[i].type : '', ips[i] ? ips[i].addr : '');
+            }
+            return [
+                typeLabel[a.assetType] || a.assetType,
+                a.assetName,
+                roleLabel[a.assetRole] || a.assetRole,
+                parent ? parent.assetName : '',
+                a.maker, a.model,
+                a.sizeU != null ? a.sizeU + 'U' : '',
+                a.hostname,
+                ...ipCols,
+                a.disk, a.cpu, a.memory, a.osInfo,
+                a.location, a.purchaseDt,
+                statusLabel[a.status] || a.status,
+                a.memo
+            ].map(esc).join(',');
+        });
+
+        const csv = '\uFEFF' + [headers.map(esc).join(','), ...rows].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = custName + '_자산목록_' + dateStr + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     // ── 장비목록 선택 ────────────────────────────────────
