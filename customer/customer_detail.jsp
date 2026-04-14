@@ -232,6 +232,9 @@
         th { background: #0f1013; padding: 11px 16px; font-size: 11px; font-weight: 500; color: #6b7280; text-align: left; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid #1e2025; white-space: nowrap; vertical-align: middle; }
         td { padding: 12px 16px; font-size: 13px; color: #c8cad0; border-bottom: 1px solid #161820; vertical-align: middle; }
         th[data-col="type"], td[data-col="type"],
+        th[data-col="cpu"], td[data-col="cpu"],
+        th[data-col="memory"], td[data-col="memory"],
+        th[data-col="purchase"], td[data-col="purchase"],
         th[data-col="size"], td[data-col="size"],
         th[data-col="status"], td[data-col="status"],
         th[data-col="actions"], td[data-col="actions"] { text-align: center; }
