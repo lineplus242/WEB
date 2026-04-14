@@ -201,7 +201,8 @@
         .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 8px; flex-wrap: nowrap; }
         .toolbar-sep { width: 1px; height: 18px; background: #252830; flex-shrink: 0; }
         .filter-sel { padding: 5px 8px; background: #0e0f11; border: 1px solid #1e2025; border-radius: 6px; color: #b0b4bf; font-size: 12px; font-family: inherit; cursor: pointer; height: 30px; }
-        #assetTable th, #assetTable td { padding: 10px 14px; font-size: 12px; vertical-align: middle; text-align: left; box-sizing: border-box; }
+        #assetTable th, #assetTable td { padding: 10px 14px; font-size: 12px; vertical-align: middle; text-align: left; box-sizing: border-box; border-right: 1px solid #1a1c22; }
+        #assetTable th:last-child, #assetTable td:last-child { border-right: none; }
         .asset-child td { background: #0f1113 !important; border-left: 2px solid #1e2025; }
         .asset-child:hover td { background: #141618 !important; }
         .asset-child .cell-name { padding-left: 28px; }
