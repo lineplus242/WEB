@@ -169,6 +169,12 @@ public class AssetDetailServlet extends HttpServlet {
         } catch (Exception e) {
             req.setAttribute("dbError", e.getMessage());
         }
+
+        String uploadErr = req.getParameter("uploadErr");
+        if (uploadErr != null && !uploadErr.isEmpty()) {
+            req.setAttribute("dbError", "사진 업로드 오류: " + uploadErr);
+        }
+
         req.getRequestDispatcher("/asset/asset_detail.jsp").forward(req, resp);
     }
 
@@ -220,7 +226,12 @@ public class AssetDetailServlet extends HttpServlet {
                     ps.executeUpdate();
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&photoTab=" + side
+                    + "&uploadErr=" + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : e.getClass().getName(), "UTF-8"));
+            return;
+        }
         resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&photoTab=" + side);
     }
 

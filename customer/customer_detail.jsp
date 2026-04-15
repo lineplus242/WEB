@@ -238,12 +238,12 @@
         #assetTable th[data-col="purchase"], #assetTable td[data-col="purchase"],
         #assetTable th[data-col="size"], #assetTable td[data-col="size"],
         #assetTable th[data-col="status"], #assetTable td[data-col="status"],
-        #assetTable th[data-col="actions"], #assetTable td[data-col="actions"] { text-align: center; }
+        #assetTable th[data-col="actions"], #assetTable td[data-col="actions"] { text-align: center; white-space: nowrap; width: 1px; }
         #assetTable { width: auto; min-width: 100%; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #161820; }
         .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; }
-        .td-actions { display: flex; gap: 6px; }
+        .td-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; width: fit-content; }
         .empty-row td { text-align: center; padding: 48px; color: #3d4251; }
 
         /* 칩 */
