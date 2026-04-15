@@ -101,8 +101,7 @@ public class CustomerServlet extends HttpServlet {
             }
 
             // 목록
-            String listSql = "SELECT c.cust_seq, c.cust_code, c.cust_name, "
-                           + "c.contract_start, c.contract_end, c.contract_amt, c.status "
+            String listSql = "SELECT c.cust_seq, c.cust_code, c.cust_name, c.status "
                            + "FROM tb_customer c " + where
                            + " ORDER BY c.cust_seq DESC LIMIT ? OFFSET ?";
             try (PreparedStatement ps = conn.prepareStatement(listSql)) {
@@ -114,13 +113,10 @@ public class CustomerServlet extends HttpServlet {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     CustomerVO v = new CustomerVO();
-                    v.custSeq       = rs.getInt("cust_seq");
-                    v.custCode      = rs.getString("cust_code");
-                    v.custName      = rs.getString("cust_name");
-                    v.contractStart = rs.getString("contract_start");
-                    v.contractEnd   = rs.getString("contract_end");
-                    v.contractAmt   = rs.getLong("contract_amt");
-                    v.status        = rs.getString("status");
+                    v.custSeq  = rs.getInt("cust_seq");
+                    v.custCode = rs.getString("cust_code");
+                    v.custName = rs.getString("cust_name");
+                    v.status   = rs.getString("status");
                     list.add(v);
                 }
             }
@@ -186,12 +182,9 @@ public class CustomerServlet extends HttpServlet {
                         v.bizNo         = rs.getString("biz_no");
                         v.ceoName       = rs.getString("ceo_name");
                         v.address       = rs.getString("address");
-                        v.phone         = rs.getString("phone");
-                        v.email         = rs.getString("email");
-                        v.contractStart = rs.getString("contract_start");
-                        v.contractEnd   = rs.getString("contract_end");
-                        v.contractAmt   = rs.getLong("contract_amt");
-                        v.status        = rs.getString("status");
+                        v.phone  = rs.getString("phone");
+                        v.email  = rs.getString("email");
+                        v.status = rs.getString("status");
                         v.memo          = rs.getString("memo");
                     }
                 }
@@ -229,8 +222,8 @@ public class CustomerServlet extends HttpServlet {
 
         String sql = "INSERT INTO tb_customer "
                    + "(cust_code, cust_name, biz_no, ceo_name, address, phone, email, "
-                   + " contract_start, contract_end, contract_amt, status, memo, reg_user) "
-                   + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                   + " status, memo, reg_user) "
+                   + "VALUES (?,?,?,?,?,?,?,?,?,?)";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             conn.setAutoCommit(false);
@@ -241,19 +234,16 @@ public class CustomerServlet extends HttpServlet {
                 String custCode = String.format("CUST-%04d", nextSeq);
 
                 try (PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                    ps.setString(1,  custCode);
-                    ps.setString(2,  req.getParameter("custName"));
-                    ps.setString(3,  req.getParameter("bizNo"));
-                    ps.setString(4,  req.getParameter("ceoName"));
-                    ps.setString(5,  req.getParameter("address"));
-                    ps.setString(6,  req.getParameter("phone"));
-                    ps.setString(7,  req.getParameter("email"));
-                    ps.setString(8,  emptyToNull(req.getParameter("contractStart")));
-                    ps.setString(9,  emptyToNull(req.getParameter("contractEnd")));
-                    ps.setLong(10,   parseLong(req.getParameter("contractAmt")));
-                    ps.setString(11, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(12, req.getParameter("memo"));
-                    ps.setString(13, loginUser);
+                    ps.setString(1, custCode);
+                    ps.setString(2, req.getParameter("custName"));
+                    ps.setString(3, req.getParameter("bizNo"));
+                    ps.setString(4, req.getParameter("ceoName"));
+                    ps.setString(5, req.getParameter("address"));
+                    ps.setString(6, req.getParameter("phone"));
+                    ps.setString(7, req.getParameter("email"));
+                    ps.setString(8, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(9, req.getParameter("memo"));
+                    ps.setString(10, loginUser);
                     ps.executeUpdate();
                     ResultSet gk = ps.getGeneratedKeys();
                     newCustSeq = gk.next() ? gk.getInt(1) : 0;
@@ -284,7 +274,6 @@ public class CustomerServlet extends HttpServlet {
 
         String sql = "UPDATE tb_customer SET "
                    + "cust_name=?, biz_no=?, ceo_name=?, address=?, phone=?, email=?, "
-                   + "contract_start=?, contract_end=?, contract_amt=?, "
                    + "status=?, memo=?, upd_user=? "
                    + "WHERE cust_seq=? AND del_yn='N'";
 
@@ -294,19 +283,16 @@ public class CustomerServlet extends HttpServlet {
             conn.setAutoCommit(false);
             try {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setString(1,  req.getParameter("custName"));
-                    ps.setString(2,  req.getParameter("bizNo"));
-                    ps.setString(3,  req.getParameter("ceoName"));
-                    ps.setString(4,  req.getParameter("address"));
-                    ps.setString(5,  req.getParameter("phone"));
-                    ps.setString(6,  req.getParameter("email"));
-                    ps.setString(7,  emptyToNull(req.getParameter("contractStart")));
-                    ps.setString(8,  emptyToNull(req.getParameter("contractEnd")));
-                    ps.setLong(9,    parseLong(req.getParameter("contractAmt")));
-                    ps.setString(10, nvl(req.getParameter("status"), "ACTIVE"));
-                    ps.setString(11, req.getParameter("memo"));
-                    ps.setString(12, loginUser);
-                    ps.setInt(13,    custSeq);
+                    ps.setString(1, req.getParameter("custName"));
+                    ps.setString(2, req.getParameter("bizNo"));
+                    ps.setString(3, req.getParameter("ceoName"));
+                    ps.setString(4, req.getParameter("address"));
+                    ps.setString(5, req.getParameter("phone"));
+                    ps.setString(6, req.getParameter("email"));
+                    ps.setString(7, nvl(req.getParameter("status"), "ACTIVE"));
+                    ps.setString(8, req.getParameter("memo"));
+                    ps.setString(9, loginUser);
+                    ps.setInt(10,   custSeq);
                     ps.executeUpdate();
                 }
                 // 담당자 교체 (기존 삭제 후 재삽입)
@@ -389,8 +375,6 @@ public class CustomerServlet extends HttpServlet {
         public int    custSeq;
         public String custCode, custName, bizNo, ceoName, address;
         public String phone, email;
-        public String contractStart, contractEnd;
-        public long   contractAmt;
         public String status, memo;
         public List<ManagerVO> managers = new ArrayList<>();
     }

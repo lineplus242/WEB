@@ -92,12 +92,9 @@ public class CustomerDetailServlet extends HttpServlet {
                     customer.bizNo      = rs.getString("biz_no");
                     customer.ceoName    = rs.getString("ceo_name");
                     customer.address    = rs.getString("address");
-                    customer.phone      = rs.getString("phone");
-                    customer.email      = rs.getString("email");
-                    customer.contractStart = rs.getString("contract_start");
-                    customer.contractEnd   = rs.getString("contract_end");
-                    customer.contractAmt   = rs.getLong("contract_amt");
-                    customer.status        = rs.getString("status");
+                    customer.phone  = rs.getString("phone");
+                    customer.email  = rs.getString("email");
+                    customer.status = rs.getString("status");
                     customer.memo          = rs.getString("memo");
                 }
             }
