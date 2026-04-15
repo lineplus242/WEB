@@ -155,16 +155,16 @@
         .photo-placeholder p { font-size: 13px; }
         .photo-actions { display: flex; align-items: center; gap: 8px; }
 
-        /* 정보 섹션 */
-        .info-section { margin-bottom: 20px; }
-        .info-section-title { font-size: 11px; font-weight: 500; color: #4b5161; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #1e2025; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-        .info-row { display: contents; }
-        .info-label { font-size: 11px; color: #4b5161; padding: 9px 0; border-bottom: 1px solid #161820; letter-spacing: 0.03em; }
-        .info-value { font-size: 13px; color: #c8cad0; padding: 9px 0 9px 16px; border-bottom: 1px solid #161820; }
-        .info-value.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
-        .info-value.full { grid-column: 1 / -1; padding-left: 0; }
-        .info-label.full { grid-column: 1 / -1; }
+        /* 정보 카드 그리드 */
+        .info-cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .info-card { background: #0e0f11; border: 1px solid #1e2025; border-radius: 10px; padding: 16px 18px; }
+        .ic-section-label { font-size: 10px; font-weight: 500; color: #3d4251; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #1e2025; }
+        .ic-fields { display: flex; flex-direction: column; gap: 12px; }
+        .ic-field { display: flex; flex-direction: column; gap: 3px; }
+        .ic-label { font-size: 10px; color: #4b5161; letter-spacing: 0.04em; text-transform: uppercase; }
+        .ic-value { font-size: 13px; color: #c8cad0; }
+        .ic-value.strong { color: #f2f3f5; font-weight: 500; font-size: 14px; }
+        .ic-value.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
 
         /* 하단 탭 */
         .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid #1e2025; padding-bottom: 0; margin-bottom: 20px; }
@@ -365,82 +365,119 @@
             <div class="card">
                 <div class="card-body">
 
-                    <!-- 기본 정보 -->
-                    <div class="info-section">
-                        <div class="info-section-title">기본 정보</div>
-                        <div class="info-grid">
-                            <div class="info-label">자산명</div>
-                            <div class="info-value"><strong style="color:#f2f3f5"><%= nvl(asset.assetName) %></strong></div>
-                            <div class="info-label">자산 유형</div>
-                            <div class="info-value"><span class="chip <%= assetTypeChip(asset.assetType) %>"><%= assetTypeLabel(asset.assetType) %></span></div>
-                            <div class="info-label">역할</div>
-                            <div class="info-value"><%= roleLabel(asset.assetRole, asset.virtType) %></div>
-                            <div class="info-label">제조사</div>
-                            <div class="info-value"><%= dash(asset.maker) %></div>
-                            <div class="info-label">모델명</div>
-                            <div class="info-value mono"><%= dash(asset.model) %></div>
-                            <div class="info-label">랙 크기</div>
-                            <div class="info-value"><%= asset.sizeU != null ? asset.sizeU + "U" : "-" %></div>
-                            <div class="info-label">위치</div>
-                            <div class="info-value"><%= dash(asset.location) %></div>
-                            <div class="info-label">상태</div>
-                            <div class="info-value"><span class="chip <%= statusChip(asset.status) %>"><%= statusLabel(asset.status) %></span></div>
-                            <div class="info-label">도입일</div>
-                            <div class="info-value mono"><%= dash(asset.purchaseDt) %></div>
-                            <div class="info-label">만료일</div>
-                            <div class="info-value mono"><%= dash(asset.expireDt) %></div>
-                        </div>
-                    </div>
+                    <!-- 3-column: 기본정보 / 사양 / 네트워크 -->
+                    <div class="info-cards-grid">
 
-                    <!-- 네트워크 -->
-                    <div class="info-section">
-                        <div class="info-section-title">네트워크</div>
-                        <div class="info-grid">
-                            <div class="info-label">호스트명</div>
-                            <div class="info-value mono"><%= dash(asset.hostname) %></div>
-                            <div class="info-label full">IP 주소</div>
-                            <div class="info-value full" id="ipDisplay">
-                                <% if (asset.ipAddr != null && !asset.ipAddr.isEmpty()) { %>
-                                <script>
-                                (function(){
-                                    var raw = '<%= asset.ipAddr.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>';
-                                    var items; try { items = JSON.parse(raw); } catch(e){ items = null; }
-                                    var el = document.getElementById('ipDisplay');
-                                    if (!el) return;
-                                    if (items && Array.isArray(items)) {
-                                        el.innerHTML = items.map(function(it){
-                                            return '<span style="display:inline-flex;align-items:center;gap:6px;margin-right:12px;margin-bottom:4px">'
-                                                + '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#1a1c22;color:#6b9af5;border:1px solid #252830">' + it.type + '</span>'
-                                                + '<span style="font-family:\'DM Mono\',monospace;font-size:12px">' + it.addr + '</span></span>';
-                                        }).join('');
-                                    } else {
-                                        el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:12px">' + raw.replace(/,/g, '&nbsp;&nbsp;') + '</span>';
-                                    }
-                                })();
-                                </script>
-                                <% } else { %>-<% } %>
+                        <!-- 기본 정보 -->
+                        <div class="info-card">
+                            <div class="ic-section-label">기본 정보</div>
+                            <div class="ic-fields">
+                                <div class="ic-field">
+                                    <span class="ic-label">자산명</span>
+                                    <span class="ic-value strong"><%= nvl(asset.assetName) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">자산 유형</span>
+                                    <span class="ic-value"><span class="chip <%= assetTypeChip(asset.assetType) %>"><%= assetTypeLabel(asset.assetType) %></span></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">역할</span>
+                                    <span class="ic-value"><%= roleLabel(asset.assetRole, asset.virtType) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">제조사</span>
+                                    <span class="ic-value"><%= dash(asset.maker) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">모델명</span>
+                                    <span class="ic-value mono"><%= dash(asset.model) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">랙 크기</span>
+                                    <span class="ic-value"><%= asset.sizeU != null ? asset.sizeU + "U" : "-" %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">위치</span>
+                                    <span class="ic-value"><%= dash(asset.location) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">상태</span>
+                                    <span class="ic-value"><span class="chip <%= statusChip(asset.status) %>"><%= statusLabel(asset.status) %></span></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">도입일</span>
+                                    <span class="ic-value mono"><%= dash(asset.purchaseDt) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">만료일</span>
+                                    <span class="ic-value mono"><%= dash(asset.expireDt) %></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 사양 -->
-                    <div class="info-section">
-                        <div class="info-section-title">사양</div>
-                        <div class="info-grid">
-                            <div class="info-label">CPU</div>
-                            <div class="info-value"><%= dash(asset.cpu) %></div>
-                            <div class="info-label">메모리</div>
-                            <div class="info-value"><%= dash(asset.memory) %></div>
-                            <div class="info-label">Disk</div>
-                            <div class="info-value"><%= dash(asset.disk) %></div>
-                            <div class="info-label">OS / 펌웨어</div>
-                            <div class="info-value"><%= dash(asset.osInfo) %></div>
+                        <!-- 사양 -->
+                        <div class="info-card">
+                            <div class="ic-section-label">사양</div>
+                            <div class="ic-fields">
+                                <div class="ic-field">
+                                    <span class="ic-label">CPU</span>
+                                    <span class="ic-value"><%= dash(asset.cpu) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">메모리</span>
+                                    <span class="ic-value"><%= dash(asset.memory) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">Disk</span>
+                                    <span class="ic-value"><%= dash(asset.disk) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">OS / 펌웨어</span>
+                                    <span class="ic-value"><%= dash(asset.osInfo) %></span>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- 네트워크 -->
+                        <div class="info-card">
+                            <div class="ic-section-label">네트워크</div>
+                            <div class="ic-fields">
+                                <div class="ic-field">
+                                    <span class="ic-label">호스트명</span>
+                                    <span class="ic-value mono"><%= dash(asset.hostname) %></span>
+                                </div>
+                                <div class="ic-field">
+                                    <span class="ic-label">IP 주소</span>
+                                    <span class="ic-value" id="ipDisplay">
+                                        <% if (asset.ipAddr != null && !asset.ipAddr.isEmpty()) { %>
+                                        <script>
+                                        (function(){
+                                            var raw = '<%= asset.ipAddr.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>';
+                                            var items; try { items = JSON.parse(raw); } catch(e){ items = null; }
+                                            var el = document.getElementById('ipDisplay');
+                                            if (!el) return;
+                                            if (items && Array.isArray(items)) {
+                                                el.innerHTML = items.map(function(it){
+                                                    return '<span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">'
+                                                        + '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#1a1c22;color:#6b9af5;border:1px solid #252830">' + it.type + '</span>'
+                                                        + '<span style="font-family:\'DM Mono\',monospace;font-size:12px">' + it.addr + '</span></span>';
+                                                }).join('');
+                                            } else {
+                                                el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:12px">' + raw.replace(/,/g, '<br>') + '</span>';
+                                            }
+                                        })();
+                                        </script>
+                                        <% } else { %>-<% } %>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- 계정 정보 -->
-                    <div class="info-section">
-                        <div class="info-section-title">계정 정보</div>
+                    <!-- 계정 정보 (전체 너비) -->
+                    <div class="info-card" style="margin-bottom:14px">
+                        <div class="ic-section-label">계정 정보</div>
                         <div id="accountDisplay">
                             <% if (asset.accountInfo != null && !asset.accountInfo.isEmpty()) { %>
                             <script>
@@ -466,10 +503,10 @@
                         </div>
                     </div>
 
-                    <!-- 메모 -->
+                    <!-- 메모 (전체 너비, 조건부) -->
                     <% if (asset.memo != null && !asset.memo.isEmpty()) { %>
-                    <div class="info-section">
-                        <div class="info-section-title">메모</div>
+                    <div class="info-card">
+                        <div class="ic-section-label">메모</div>
                         <div style="font-size:13px;color:#9ca3af;line-height:1.6;white-space:pre-wrap"><%= asset.memo %></div>
                     </div>
                     <% } %>

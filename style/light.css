@@ -225,3 +225,25 @@
 [data-theme="light"] .error-box { background:rgba(224,86,86,.08); border-color:rgba(224,86,86,.3); color:#c0392b; }
 [data-theme="light"] .alert-err { background:rgba(224,86,86,.08); border-color:rgba(224,86,86,.3); color:#c0392b; }
 [data-theme="light"] .alert-ok  { background:rgba(34,201,122,.08); border-color:rgba(34,201,122,.3); color:#15803d; }
+
+/* ── asset_detail — 3-column info cards ── */
+[data-theme="light"] .info-card { background:#f8fafc; border-color:#e2e8f0; }
+[data-theme="light"] .ic-section-label { color:#94a3b8; border-color:#e2e8f0; }
+[data-theme="light"] .ic-label { color:#94a3b8; }
+[data-theme="light"] .ic-value { color:#1e293b; }
+[data-theme="light"] .ic-value.strong { color:#0f172a; }
+[data-theme="light"] .ic-value.mono { color:#1e293b; }
+
+/* ── asset_detail — 사진 탭 ── */
+[data-theme="light"] .photo-tab-bar { background:#f3f4f6; border-color:#cbd5e1; }
+[data-theme="light"] .photo-tab-btn { color:#475569; }
+[data-theme="light"] .photo-tab-btn.active { background:#ffffff; color:#3b6ef5; }
+[data-theme="light"] .photo-area { background:#f8fafc; border-color:#e2e8f0; }
+[data-theme="light"] .photo-placeholder { color:#94a3b8; }
+
+/* ── asset_detail — 계정 정보 ── */
+[data-theme="light"] .account-row { border-color:#e2e8f0; }
+[data-theme="light"] .account-id { color:#3b6ef5; }
+[data-theme="light"] .account-pw { color:#94a3b8; }
+[data-theme="light"] .pw-toggle { color:#94a3b8; border-color:#e2e8f0; background:#f8fafc; }
+[data-theme="light"] .pw-toggle:hover { color:#3b6ef5; border-color:#3b6ef5; }
