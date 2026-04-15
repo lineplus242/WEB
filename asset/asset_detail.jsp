@@ -344,7 +344,8 @@
                     <input type="hidden" name="action" value="photoUpload">
                     <input type="hidden" name="assetSeq" value="<%= asset.assetSeq %>">
                     <input type="hidden" name="side" id="uploadSide" value="F">
-                    <input type="file" name="photoFile" id="photoFileInput" accept="image/*" style="display:none" onchange="this.form.submit()">
+                    <input type="file" name="photoFile" id="photoFileInput" accept="image/*" style="display:none"
+                           onchange="if(this.files && this.files[0]) this.form.submit()">
                 </form>
                 <form id="deleteForm" action="../AssetDetailServlet" method="post" style="display:none">
                     <input type="hidden" name="action" value="photoDelete">
@@ -668,23 +669,19 @@
     function renderPhotoActions() {
         const hasPhoto = PHOTO_STATE[currentPhotoTab];
         const actEl = document.getElementById('photoActions');
-        let html = '<label class="btn btn-secondary btn-sm" style="cursor:pointer">'
+        let html = '<button class="btn btn-secondary btn-sm" onclick="openPhotoPicker(\'' + currentPhotoTab + '\')">'
                  + (hasPhoto ? '사진 교체' : '+ 사진 업로드')
-                 + '<input type="file" accept="image/*" style="display:none" onchange="submitUpload(this, \'' + currentPhotoTab + '\')">'
-                 + '</label>';
+                 + '</button>';
         if (hasPhoto) {
             html += '<button class="btn btn-danger btn-sm" onclick="submitDelete(\'' + currentPhotoTab + '\')">삭제</button>';
         }
         actEl.innerHTML = html;
     }
 
-    function submitUpload(input, side) {
-        if (!input.files || !input.files[0]) return;
+    function openPhotoPicker(side) {
         document.getElementById('uploadSide').value = side;
-        const dt = new DataTransfer();
-        dt.items.add(input.files[0]);
-        document.getElementById('photoFileInput').files = dt.files;
-        document.getElementById('uploadForm').submit();
+        document.getElementById('photoFileInput').value = '';  // 같은 파일 재선택 가능
+        document.getElementById('photoFileInput').click();
     }
 
     function submitDelete(side) {
