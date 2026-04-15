@@ -223,6 +223,7 @@
         #assetTable th.col-drag-over { background: #1a1e2e; box-shadow: inset 2px 0 0 #3b6ef5; }
         #assetTable th.col-dragging { opacity: 0.4; }
         #assetTable td { color: #c8cad0; border-bottom: 1px solid #161820; white-space: nowrap; }
+        #assetTbody tr { cursor: pointer; }
         #assetTable td[data-col="ip"] { white-space: normal; }
         #assetTable tr:last-child td { border-bottom: none; }
         #assetTable tr:hover td { background: #161820; }
@@ -588,6 +589,7 @@
                                 <td data-col="status"><span class="chip <%= statusChip(a.status) %>"><%= statusLabel(a.status) %></span></td>
                                 <td data-col="actions">
                                     <div class="td-actions">
+                                        <a href="../AssetDetailServlet?assetSeq=<%= a.assetSeq %>" class="btn btn-sm btn-secondary">상세</a>
                                         <button class="btn btn-sm btn-secondary" onclick="openAssetModalBySeq(<%= a.assetSeq %>)">수정</button>
                                         <form action="../CustomerDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
                                             <input type="hidden" name="action" value="assetDelete">
@@ -2230,6 +2232,13 @@
             }
         });
     })();
+
+    // ── 장비 행 더블클릭 → 상세 페이지 이동 ─────────────────
+    document.getElementById('assetTbody').addEventListener('dblclick', function(e) {
+        if (e.target.closest('button, a, input, form')) return; // 버튼 클릭은 무시
+        const tr = e.target.closest('tr[data-asset-id]');
+        if (tr) location.href = '../AssetDetailServlet?assetSeq=' + tr.getAttribute('data-asset-id');
+    });
 
     function toggleUserMenu(row){const m=document.getElementById('userMenu');if(!m)return;const o=m.classList.toggle('open');row.classList.toggle('open',o);}
     document.addEventListener('click',function(e){const m=document.getElementById('userMenu'),r=document.querySelector('.user-row');if(m&&r&&!r.contains(e.target)&&!m.contains(e.target)){m.classList.remove('open');r.classList.remove('open');}});

@@ -151,3 +151,36 @@ CREATE TABLE IF NOT EXISTS tb_asset (
     upd_user      VARCHAR(100) DEFAULT NULL,
     PRIMARY KEY (asset_seq)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================================
+-- IT 자산 사진 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS tb_asset_photo (
+    photo_seq  INT          NOT NULL AUTO_INCREMENT,
+    asset_seq  INT          NOT NULL,
+    side       CHAR(1)      NOT NULL DEFAULT 'F',  -- F=전면, B=후면
+    file_path  VARCHAR(500) NOT NULL,
+    orig_name  VARCHAR(200) DEFAULT NULL,
+    reg_dt     DATETIME     DEFAULT NOW(),
+    PRIMARY KEY (photo_seq),
+    UNIQUE KEY uq_asset_side (asset_seq, side)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =============================================
+-- 포트맵 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS tb_port_map (
+    port_seq         INT          NOT NULL AUTO_INCREMENT,
+    asset_seq        INT          NOT NULL,                -- 출발지 자산
+    src_port         VARCHAR(100) NOT NULL,                -- 출발지 포트명 (eth0, Gi0/1 등)
+    dst_asset_seq    INT          DEFAULT NULL,            -- 도착지 자산 (같은 고객사 내, NULL=외부)
+    dst_device_name  VARCHAR(200) DEFAULT NULL,            -- 도착지 장비명 (자유입력)
+    dst_port         VARCHAR(100) DEFAULT NULL,            -- 도착지 포트명
+    cable_type       VARCHAR(50)  DEFAULT NULL,            -- 케이블 종류 (CAT6, SFP, FC 8G 등)
+    cable_color      VARCHAR(20)  DEFAULT NULL,            -- 케이블 색상
+    memo             TEXT         DEFAULT NULL,
+    sort_order       INT          DEFAULT 0,
+    reg_dt           DATETIME     DEFAULT NOW(),
+    upd_dt           DATETIME     DEFAULT NULL ON UPDATE NOW(),
+    PRIMARY KEY (port_seq)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
