@@ -214,6 +214,14 @@
         /* 이미지 확대 모달 */
         #imgModal { cursor: zoom-out; }
         #imgModal img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+
+        /* 도착지 장비 커스텀 드롭다운 */
+        .sibling-wrap { position: relative; }
+        .sibling-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #131519; border: 1px solid #1e2025; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 400; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .sibling-option { padding: 8px 12px; font-size: 13px; color: #c8cad0; cursor: pointer; transition: background 0.1s; }
+        .sibling-option:hover, .sibling-option.active { background: #1a1e2e; color: #6b9af5; }
+        .sibling-option.empty { color: #4b5161; cursor: default; }
+        .sibling-option.empty:hover { background: none; color: #4b5161; }
     </style>
     <link rel="stylesheet" href="../style/light.css">
 </head>
@@ -597,12 +605,14 @@
                 </div>
                 <div class="form-group full">
                     <label>도착지 장비</label>
-                    <input type="text" name="dstDeviceName" id="dstDeviceName" placeholder="장비명 직접 입력 또는 아래 목록에서 선택" list="siblingList" oninput="onDstDeviceInput(this.value)">
-                    <datalist id="siblingList">
-                        <% for (SimpleAssetVO sa : siblingAssets) { %>
-                        <option value="<%= sa.assetName %>" data-seq="<%= sa.assetSeq %>"></option>
-                        <% } %>
-                    </datalist>
+                    <div class="sibling-wrap">
+                        <input type="text" name="dstDeviceName" id="dstDeviceName"
+                               placeholder="장비명 직접 입력 또는 목록에서 선택"
+                               autocomplete="off"
+                               oninput="filterSiblings(this.value)"
+                               onfocus="filterSiblings(this.value)">
+                        <div id="siblingDropdown" class="sibling-dropdown"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>도착지 포트</label>
@@ -699,28 +709,59 @@
     }
 
     // ── 포트맵 모달 ──────────────────────────────────────
-    const SIBLING_MAP = {
+    const SIBLING_LIST = [
         <% for (int si = 0; si < siblingAssets.size(); si++) {
             SimpleAssetVO sa = siblingAssets.get(si); %>
-        '<%= sa.assetName.replace("'", "\\'") %>': <%= sa.assetSeq %><%= si < siblingAssets.size()-1 ? "," : "" %>
+        { seq: <%= sa.assetSeq %>, name: '<%= sa.assetName.replace("'", "\\'") %>' }<%= si < siblingAssets.size()-1 ? "," : "" %>
         <% } %>
-    };
+    ];
 
-    function onDstDeviceInput(val) {
-        const seq = SIBLING_MAP[val] || '';
-        document.getElementById('dstAssetSeqHidden').value = seq;
+    function filterSiblings(val) {
+        const dd = document.getElementById('siblingDropdown');
+        const q = val.trim().toLowerCase();
+        const matches = q === '' ? SIBLING_LIST : SIBLING_LIST.filter(s => s.name.toLowerCase().includes(q));
+        if (matches.length === 0) {
+            dd.innerHTML = '<div class="sibling-option empty">일치하는 장비 없음</div>';
+        } else {
+            dd.innerHTML = matches.map(s =>
+                '<div class="sibling-option" onmousedown="selectSibling(\'' + s.name.replace(/'/g, "\\'") + '\',' + s.seq + ')">' + s.name + '</div>'
+            ).join('');
+        }
+        dd.style.display = 'block';
     }
+
+    function selectSibling(name, seq) {
+        document.getElementById('dstDeviceName').value = name;
+        document.getElementById('dstAssetSeqHidden').value = seq;
+        document.getElementById('siblingDropdown').style.display = 'none';
+    }
+
+    function closeSiblingDropdown() {
+        document.getElementById('siblingDropdown').style.display = 'none';
+    }
+
+    document.addEventListener('click', function(e) {
+        const wrap = document.querySelector('.sibling-wrap');
+        if (wrap && !wrap.contains(e.target)) closeSiblingDropdown();
+    });
+
+    // input에서 직접 입력 시 seq 초기화 (목록 선택 아닌 경우)
+    document.getElementById('dstDeviceName').addEventListener('input', function() {
+        const matched = SIBLING_LIST.find(s => s.name === this.value);
+        document.getElementById('dstAssetSeqHidden').value = matched ? matched.seq : '';
+    });
 
     function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo) {
         document.getElementById('portModalTitle').textContent = portSeq ? '포트 수정' : '포트 추가';
-        document.getElementById('portSeq').value          = portSeq    || '';
-        document.getElementById('srcPort').value          = srcPort    || '';
-        document.getElementById('dstAssetSeqHidden').value = dstSeq   || '';
-        document.getElementById('dstDeviceName').value    = dstDevice  || '';
-        document.getElementById('dstPort').value          = dstPort    || '';
-        document.getElementById('cableType').value        = cableType  || '';
-        document.getElementById('cableColor').value       = cableColor || '';
-        document.getElementById('portMemo').value         = memo       || '';
+        document.getElementById('portSeq').value           = portSeq    || '';
+        document.getElementById('srcPort').value           = srcPort    || '';
+        document.getElementById('dstAssetSeqHidden').value = dstSeq    || '';
+        document.getElementById('dstDeviceName').value     = dstDevice  || '';
+        document.getElementById('dstPort').value           = dstPort    || '';
+        document.getElementById('cableType').value         = cableType  || '';
+        document.getElementById('cableColor').value        = cableColor || '';
+        document.getElementById('portMemo').value          = memo       || '';
+        closeSiblingDropdown();
         document.getElementById('portModal').classList.add('open');
     }
 
