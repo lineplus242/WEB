@@ -197,7 +197,10 @@ public class AssetDetailServlet extends HttpServlet {
             String ext       = origName.contains(".") ? origName.substring(origName.lastIndexOf(".")).toLowerCase() : ".jpg";
             String savedName = side + "_" + System.currentTimeMillis() + ext;
             String uploadDir = getServletContext().getRealPath("/upload/asset/" + assetSeq + "/");
-            new File(uploadDir).mkdirs();
+            File dir = new File(uploadDir);
+            if (!dir.exists() && !dir.mkdirs()) {
+                throw new IOException("업로드 디렉터리 생성 실패: " + uploadDir + " (권한 확인 필요)");
+            }
 
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
                 // 기존 파일 삭제
