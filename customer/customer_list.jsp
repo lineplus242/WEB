@@ -114,10 +114,14 @@
         .td-code { font-family: 'DM Mono', monospace; font-size: 12px; color: #5a80d0; }
         .td-amt  { font-family: 'DM Mono', monospace; font-size: 12px; text-align: right; }
         .td-actions { display: flex; gap: 6px; }
-        .chip { font-size: 10px; padding: 3px 9px; border-radius: 4px; font-family: 'DM Mono', monospace; font-weight: 500; white-space: nowrap; }
-        .chip-g { background: #0d2a1a; color: #22c97a; border: 1px solid #0f3d25; }
-        .chip-r { background: #2a0d0d; color: #e05656; border: 1px solid #3d0f0f; }
-        .chip-y { background: #2a200d; color: #d4a017; border: 1px solid #3d2e0f; }
+        .chip { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-family: 'Pretendard', system-ui, sans-serif; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: none; }
+        .chip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .chip-g { background: rgba(34,201,122,0.1); color: #22c97a; }
+        .chip-g::before { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
+        .chip-r { background: rgba(224,86,86,0.1); color: #e05656; }
+        .chip-r::before { background: #e05656; }
+        .chip-y { background: rgba(212,160,23,0.1); color: #d4a017; }
+        .chip-y::before { background: #d4a017; }
         .empty-row td { text-align: center; padding: 48px; color: #3d4251; }
 
         /* 페이지네이션 */
