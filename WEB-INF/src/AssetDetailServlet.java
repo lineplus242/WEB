@@ -151,6 +151,7 @@ public class AssetDetailServlet extends HttpServlet {
                     pm.peerAssetSeq   = pm.dstAssetSeq;
                     pm.peerAssetName  = pm.dstAssetName != null ? pm.dstAssetName : pm.dstDeviceName;
                     pm.peerDeviceName = pm.dstDeviceName;
+                    pm.ownerAssetName = asset.assetName;
                     unifiedPortMap.add(pm);
                 }
             }
@@ -178,6 +179,7 @@ public class AssetDetailServlet extends HttpServlet {
                     pm.peerPort       = pm.srcPort;
                     pm.peerAssetSeq   = pm.ownerAssetSeq;
                     pm.peerAssetName  = pm.srcAssetName;
+                    pm.ownerAssetName = pm.srcAssetName;
                     unifiedPortMap.add(pm);
                 }
             }
@@ -413,12 +415,13 @@ public class AssetDetailServlet extends HttpServlet {
         public String  srcPort, dstDeviceName, dstPort, cableType, cableColor, memo, dstAssetName, srcAssetName;
         public Integer dstAssetSeq;
         // 통합 포트맵용 정규화 필드
-        public String  direction;      // "OUT" | "IN"
-        public String  myPort;         // 이 장비의 포트
-        public String  peerPort;       // 상대 장비의 포트
-        public String  peerAssetName;  // 상대 장비명
-        public String  peerDeviceName; // 상대 장비 자유입력명 (OUT일 때)
-        public Integer peerAssetSeq;   // 상대 장비 seq (링크용)
+        public String  direction;       // "OUT" | "IN"
+        public String  myPort;          // 이 장비의 포트
+        public String  peerPort;        // 상대 장비의 포트
+        public String  peerAssetName;   // 상대 장비명
+        public String  peerDeviceName;  // 상대 장비 자유입력명 (OUT일 때)
+        public Integer peerAssetSeq;    // 상대 장비 seq (링크용)
+        public String  ownerAssetName;  // 레코드 소유자(출발지 장비) 이름
     }
 
     public static class SimpleAssetVO {

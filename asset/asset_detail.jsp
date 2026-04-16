@@ -215,10 +215,6 @@
         #imgModal { cursor: zoom-out; }
         #imgModal img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
 
-        /* 포트맵 방향 chip */
-        .chip-out { background:#0d1a2e;color:#5a9af5;border:1px solid #0f2544;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;white-space:nowrap; }
-        .chip-in  { background:#0d2a1a;color:#22c97a;border:1px solid #0f3d25;font-size:10px;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;white-space:nowrap; }
-
         /* 도착지 장비 커스텀 드롭다운 */
         .sibling-wrap { position: relative; }
         .sibling-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #131519; border: 1px solid #1e2025; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 400; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
@@ -539,7 +535,6 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>방향</th>
                             <th>내 포트</th>
                             <th>상대 장비</th>
                             <th>상대 포트</th>
@@ -551,20 +546,13 @@
                     </thead>
                     <tbody>
                         <% if (unifiedPortMap.isEmpty()) { %>
-                        <tr class="empty-row"><td colspan="9">등록된 포트맵이 없습니다.</td></tr>
+                        <tr class="empty-row"><td colspan="8">등록된 포트맵이 없습니다.</td></tr>
                         <% } else { int pIdx = 1; for (PortMapVO pm : unifiedPortMap) {
                             boolean isOut = "OUT".equals(pm.direction);
                             String peerDisplay = pm.peerAssetName != null ? pm.peerAssetName : (pm.peerDeviceName != null ? pm.peerDeviceName : "-");
                         %>
                         <tr>
                             <td class="td-mono" style="color:#4b5161"><%= pIdx++ %></td>
-                            <td>
-                                <% if (isOut) { %>
-                                <span class="chip-out">→ 송신</span>
-                                <% } else { %>
-                                <span class="chip-in">← 수신</span>
-                                <% } %>
-                            </td>
                             <td class="td-mono" style="color:#6b9af5"><%= pm.myPort != null ? pm.myPort : "-" %></td>
                             <td>
                                 <% if (pm.peerAssetSeq != null) { %>
@@ -588,8 +576,13 @@
                             <td style="color:#6b7280"><%= pm.memo != null ? pm.memo : "" %></td>
                             <td>
                                 <div class="td-actions" style="justify-content:center">
+                                    <% if (isOut) { %>
                                     <button class="btn btn-sm btn-secondary"
-                                        onclick="openPortModal(<%= pm.portSeq %>, '<%= nvl(pm.srcPort).replace("'","\\'") %>', '<%= (pm.peerAssetSeq != null ? pm.peerAssetSeq : "") %>', '<%= (pm.peerDeviceName != null ? pm.peerDeviceName.replace("'","\\'") : (pm.peerAssetName != null ? pm.peerAssetName.replace("'","\\'") : "")) %>', '<%= (pm.peerPort != null ? pm.peerPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>)">수정</button>
+                                        onclick="openPortModal(<%= pm.portSeq %>, '<%= nvl(pm.srcPort).replace("'","\\'") %>', '<%= (pm.peerAssetSeq != null ? pm.peerAssetSeq : "") %>', '<%= (pm.peerDeviceName != null ? pm.peerDeviceName.replace("'","\\'") : (pm.peerAssetName != null ? pm.peerAssetName.replace("'","\\'") : "")) %>', '<%= (pm.peerPort != null ? pm.peerPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>, '<%= (pm.ownerAssetName != null ? pm.ownerAssetName.replace("'","\\'") : "") %>'>수정</button>
+                                    <% } else { %>
+                                    <button class="btn btn-sm btn-secondary"
+                                        onclick="openPortModal(<%= pm.portSeq %>, '<%= nvl(pm.srcPort).replace("'","\\'") %>', <%= asset.assetSeq %>, '', '<%= (pm.myPort != null ? pm.myPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>, '<%= (pm.ownerAssetName != null ? pm.ownerAssetName.replace("'","\\'") : "") %>'>수정</button>
+                                    <% } %>
                                     <form action="../AssetDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
                                         <input type="hidden" name="action" value="portDelete">
                                         <input type="hidden" name="assetSeq" value="<%= pm.ownerAssetSeq %>">
@@ -621,6 +614,13 @@
             <input type="hidden" name="portSeq" id="portSeq" value="">
             <input type="hidden" name="dstAssetSeq" id="dstAssetSeqHidden" value="">
             <div class="form-grid">
+                <div class="form-group full">
+                    <label>출발지 장비</label>
+                    <div id="srcAssetNameDisplay"
+                         style="font-size:13px;padding:8px 12px;background:#0e0f11;
+                                border:1px solid #1e2025;border-radius:8px;color:#6b7280;
+                                cursor:default;user-select:none"></div>
+                </div>
                 <div class="form-group full">
                     <label>출발지 포트 *</label>
                     <input type="text" name="srcPort" id="srcPort" placeholder="예: eth0, Gi0/1, FC-HBA0" required>
@@ -773,7 +773,7 @@
         document.getElementById('dstAssetSeqHidden').value = matched ? matched.seq : '';
     });
 
-    function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo, ownerAssetSeq, returnAssetSeq) {
+    function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo, ownerAssetSeq, returnAssetSeq, srcAssetName) {
         document.getElementById('portModalTitle').textContent = portSeq ? '포트 수정' : '포트 추가';
         document.getElementById('portSeq').value           = portSeq       || '';
         document.getElementById('srcPort').value           = srcPort       || '';
@@ -786,6 +786,9 @@
         // 수신 포트맵 수정: 레코드 소유자(ownerAssetSeq)로 제출, 현재 페이지(returnAssetSeq)로 복귀
         document.getElementById('portAssetSeq').value      = ownerAssetSeq || '<%= asset != null ? asset.assetSeq : 0 %>';
         document.getElementById('portReturnAssetSeq').value = returnAssetSeq || '';
+        // 출발지 장비명 표시 (없으면 현재 장비명)
+        document.getElementById('srcAssetNameDisplay').textContent =
+            srcAssetName || '<%= asset != null ? asset.assetName.replace("\\", "\\\\").replace("'", "\\'") : "" %>';
         closeSiblingDropdown();
         document.getElementById('portModal').classList.add('open');
     }
