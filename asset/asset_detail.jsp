@@ -581,7 +581,7 @@
                                         onclick="openPortModal(<%= pm.portSeq %>, '<%= nvl(pm.srcPort).replace("'","\\'") %>', '<%= (pm.peerAssetSeq != null ? pm.peerAssetSeq : "") %>', '<%= (pm.peerDeviceName != null ? pm.peerDeviceName.replace("'","\\'") : (pm.peerAssetName != null ? pm.peerAssetName.replace("'","\\'") : "")) %>', '<%= (pm.peerPort != null ? pm.peerPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>, '<%= (pm.ownerAssetName != null ? pm.ownerAssetName.replace("'","\\'") : "") %>')">수정</button>
                                     <% } else { %>
                                     <button class="btn btn-sm btn-secondary"
-                                        onclick="openPortModal(<%= pm.portSeq %>, '<%= nvl(pm.srcPort).replace("'","\\'") %>', <%= asset.assetSeq %>, '', '<%= (pm.myPort != null ? pm.myPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>, '<%= (pm.ownerAssetName != null ? pm.ownerAssetName.replace("'","\\'") : "") %>')">수정</button>
+                                        onclick="openPortModal(<%= pm.portSeq %>, '<%= (pm.myPort != null ? pm.myPort.replace("'","\\'") : "") %>', '<%= (pm.peerAssetSeq != null ? pm.peerAssetSeq : "") %>', '<%= (pm.peerAssetName != null ? pm.peerAssetName.replace("'","\\'") : "") %>', '<%= (pm.peerPort != null ? pm.peerPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>, '<%= asset.assetName.replace("'","\\'") %>', 'Y')">수정</button>
                                     <% } %>
                                     <form action="../AssetDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
                                         <input type="hidden" name="action" value="portDelete">
@@ -613,6 +613,7 @@
             <input type="hidden" name="returnAssetSeq" id="portReturnAssetSeq" value="">
             <input type="hidden" name="portSeq" id="portSeq" value="">
             <input type="hidden" name="dstAssetSeq" id="dstAssetSeqHidden" value="">
+            <input type="hidden" name="swapSrcDst" id="swapSrcDst" value="">
             <div class="form-grid">
                 <div class="form-group full">
                     <label>출발지 장비</label>
@@ -773,7 +774,7 @@
         document.getElementById('dstAssetSeqHidden').value = matched ? matched.seq : '';
     });
 
-    function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo, ownerAssetSeq, returnAssetSeq, srcAssetName) {
+    function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo, ownerAssetSeq, returnAssetSeq, srcAssetName, swapSrcDst) {
         document.getElementById('portModalTitle').textContent = portSeq ? '포트 수정' : '포트 추가';
         document.getElementById('portSeq').value           = portSeq       || '';
         document.getElementById('srcPort').value           = srcPort       || '';
@@ -786,9 +787,22 @@
         // 수신 포트맵 수정: 레코드 소유자(ownerAssetSeq)로 제출, 현재 페이지(returnAssetSeq)로 복귀
         document.getElementById('portAssetSeq').value      = ownerAssetSeq || '<%= asset != null ? asset.assetSeq : 0 %>';
         document.getElementById('portReturnAssetSeq').value = returnAssetSeq || '';
+        // swapSrcDst 플래그 (IN 행: 'Y')
+        document.getElementById('swapSrcDst').value        = swapSrcDst   || '';
         // 출발지 장비명 표시 (없으면 현재 장비명)
         document.getElementById('srcAssetNameDisplay').textContent =
             srcAssetName || '<%= asset != null ? asset.assetName.replace("\\", "\\\\").replace("'", "\\'") : "" %>';
+        // IN 행 수정 시 도착지 장비 드롭다운 read-only (상대 장비 고정)
+        const dstInput = document.getElementById('dstDeviceName');
+        if (swapSrcDst === 'Y') {
+            dstInput.readOnly = true;
+            dstInput.style.opacity = '0.6';
+            dstInput.style.cursor  = 'default';
+        } else {
+            dstInput.readOnly = false;
+            dstInput.style.opacity = '';
+            dstInput.style.cursor  = '';
+        }
         closeSiblingDropdown();
         document.getElementById('portModal').classList.add('open');
     }

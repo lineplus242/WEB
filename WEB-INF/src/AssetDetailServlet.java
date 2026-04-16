@@ -330,6 +330,15 @@ public class AssetDetailServlet extends HttpServlet {
         String cableType     = emptyToNull(req.getParameter("cableType"));
         String cableColor    = emptyToNull(req.getParameter("cableColor"));
         String memo          = emptyToNull(req.getParameter("memo"));
+        String retSeqSave    = req.getParameter("returnAssetSeq");
+
+        // IN 행을 B 관점으로 수정할 때: 모달에서 srcPort=B포트, dstPort=A포트로 입력됨
+        // DB에는 src_port=A포트, dst_port=B포트로 저장해야 하므로 교환
+        boolean swap = "Y".equals(nvl(req.getParameter("swapSrcDst"), ""));
+        String actualSrcPort    = swap ? emptyToNull(req.getParameter("dstPort")) : srcPort;
+        String actualDstPort    = swap ? srcPort                                   : dstPort;
+        String actualDstSeqStr  = swap ? retSeqSave                               : dstSeqStr;
+        String actualDstDevName = swap ? null                                     : dstDeviceName;
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (portSeqStr == null || portSeqStr.isEmpty()) {
@@ -343,22 +352,22 @@ public class AssetDetailServlet extends HttpServlet {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO tb_port_map (asset_seq,src_port,dst_asset_seq,dst_device_name,dst_port,cable_type,cable_color,memo,sort_order) VALUES (?,?,?,?,?,?,?,?,?)")) {
                     ps.setInt(1, assetSeq);
-                    ps.setString(2, srcPort);
-                    if (dstSeqStr == null || dstSeqStr.isEmpty()) ps.setNull(3, Types.INTEGER);
-                    else ps.setInt(3, Integer.parseInt(dstSeqStr));
-                    ps.setString(4, dstDeviceName); ps.setString(5, dstPort);
-                    ps.setString(6, cableType);     ps.setString(7, cableColor);
-                    ps.setString(8, memo);          ps.setInt(9, sort);
+                    ps.setString(2, actualSrcPort);
+                    if (actualDstSeqStr == null || actualDstSeqStr.isEmpty()) ps.setNull(3, Types.INTEGER);
+                    else ps.setInt(3, Integer.parseInt(actualDstSeqStr));
+                    ps.setString(4, actualDstDevName); ps.setString(5, actualDstPort);
+                    ps.setString(6, cableType);        ps.setString(7, cableColor);
+                    ps.setString(8, memo);             ps.setInt(9, sort);
                     ps.executeUpdate();
                 }
             } else {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "UPDATE tb_port_map SET src_port=?,dst_asset_seq=?,dst_device_name=?,dst_port=?,cable_type=?,cable_color=?,memo=? WHERE port_seq=? AND asset_seq=?")) {
-                    ps.setString(1, srcPort);
-                    if (dstSeqStr == null || dstSeqStr.isEmpty()) ps.setNull(2, Types.INTEGER);
-                    else ps.setInt(2, Integer.parseInt(dstSeqStr));
-                    ps.setString(3, dstDeviceName); ps.setString(4, dstPort);
-                    ps.setString(5, cableType);     ps.setString(6, cableColor);
+                    ps.setString(1, actualSrcPort);
+                    if (actualDstSeqStr == null || actualDstSeqStr.isEmpty()) ps.setNull(2, Types.INTEGER);
+                    else ps.setInt(2, Integer.parseInt(actualDstSeqStr));
+                    ps.setString(3, actualDstDevName); ps.setString(4, actualDstPort);
+                    ps.setString(5, cableType);        ps.setString(6, cableColor);
                     ps.setString(7, memo);
                     ps.setInt(8, Integer.parseInt(portSeqStr));
                     ps.setInt(9, assetSeq);
@@ -366,7 +375,6 @@ public class AssetDetailServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) { e.printStackTrace(); }
-        String retSeqSave = req.getParameter("returnAssetSeq");
         int redirectSeqSave = (retSeqSave != null && !retSeqSave.isEmpty()) ? Integer.parseInt(retSeqSave) : assetSeq;
         resp.sendRedirect("AssetDetailServlet?assetSeq=" + redirectSeqSave + "&tab=port");
     }
