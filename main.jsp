@@ -297,13 +297,13 @@
             gap: 6px;
             border: none;
         }
-        .chip-g::before, .chip-r::before, .chip-y::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .chip-dot::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
         .chip-g { background: rgba(34,201,122,0.1);  color: #22c97a; }
-        .chip-g::before { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
+        .chip-g.chip-dot::before { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
         .chip-r { background: rgba(224,86,86,0.1);   color: #e05656; }
-        .chip-r::before { background: #e05656; }
+        .chip-r.chip-dot::before { background: #e05656; }
         .chip-y { background: rgba(212,160,23,0.1);  color: #d4a017; }
-        .chip-y::before { background: #d4a017; }
+        .chip-y.chip-dot::before { background: #d4a017; }
     </style>
     <link rel="stylesheet" href="style/light.css">
 </head>
@@ -452,7 +452,7 @@
                                 <div class="li-name"><%= loginUser %></div>
                                 <div class="li-sub"><%= request.getRemoteAddr() %> · 방금</div>
                             </div>
-                            <span class="chip chip-g">성공</span>
+                            <span class="chip chip-g chip-dot">성공</span>
                         </div>
                     </div>
                 </div>
@@ -481,7 +481,7 @@
                                 <div class="li-name">\${u.name}</div>
                                 <div class="li-sub">\${u.email}</div>
                             </div>
-                            <span class="chip \${ u.useYn === 'Y' ? 'chip-g' : 'chip-r' }">
+                            <span class="chip chip-dot \${ u.useYn === 'Y' ? 'chip-g' : 'chip-r' }">
                                 \${ u.useYn === 'Y' ? '활성' : '정지' }
                             </span>
                         </div>`).join('');
@@ -494,7 +494,7 @@
                                 <div class="li-name">\${l.userId}</div>
                                 <div class="li-sub">\${l.ipAddr} · ${l.loginDt}</div>
                             </div>
-                            <span class="chip \${ l.result === 'S' ? 'chip-g' : 'chip-r' }">
+                            <span class="chip chip-dot \${ l.result === 'S' ? 'chip-g' : 'chip-r' }">
                                 \${ l.result === 'S' ? '성공' : '실패' }
                             </span>
                         </div>`).join('');

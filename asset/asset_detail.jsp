@@ -29,9 +29,9 @@
         return s != null ? s : "-";
     }
     String statusChip(String s) {
-        if ("ACTIVE".equals(s))   return "chip-g";
-        if ("INACTIVE".equals(s)) return "chip-r";
-        return "chip-y";
+        if ("ACTIVE".equals(s))   return "chip-g chip-dot";
+        if ("INACTIVE".equals(s)) return "chip-r chip-dot";
+        return "chip-y chip-dot";
     }
     String assetTypeLabel(String t) {
         if ("SERVER".equals(t))   return "서버";
@@ -128,14 +128,14 @@
 
         /* 칩 */
         .chip { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-family: 'Pretendard', system-ui, sans-serif; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: none; }
-        /* 상태 — dot 표시 */
-        .chip-g::before, .chip-r::before, .chip-y::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        /* 상태 — dot (chip-dot 클래스가 있을 때만) */
+        .chip-dot::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
         .chip-g      { background: rgba(34,201,122,0.1);  color: #22c97a; }
-        .chip-g::before  { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
+        .chip-g.chip-dot::before { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
         .chip-r      { background: rgba(224,86,86,0.1);   color: #e05656; }
-        .chip-r::before  { background: #e05656; }
+        .chip-r.chip-dot::before { background: #e05656; }
         .chip-y      { background: rgba(212,160,23,0.1);  color: #d4a017; }
-        .chip-y::before  { background: #d4a017; }
+        .chip-y.chip-dot::before { background: #d4a017; }
         /* 유형 — dot 없음 */
         .chip-blue   { background: rgba(90,154,245,0.1);  color: #5a9af5; }
         .chip-purple { background: rgba(155,106,245,0.1); color: #9b6af5; }
