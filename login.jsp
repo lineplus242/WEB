@@ -136,8 +136,8 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             padding: 56px 64px;
-            border-right: 1px solid rgba(255,255,255,0.05);
         }
 
         /* ── 브랜드 ── */
@@ -400,131 +400,9 @@
             animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;
         }
 
-        /* ── 오른쪽 패널 ── */
-        .right-panel {
-            width: 320px;
-            background: rgba(255,255,255,0.01);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 48px 32px;
-            gap: 16px;
-        }
-
-        /* ── 상태 태그 ── */
-        .status-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: rgba(34,197,94,0.08);
-            border: 1px solid rgba(34,197,94,0.18);
-            border-radius: 99px;
-            padding: 5px 13px;
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #4ade80;
-            letter-spacing: 0.03em;
-            opacity: 0;
-            animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
-        }
-
-        .pulse-dot {
-            width: 6px; height: 6px;
-            background: #22c55e;
-            border-radius: 50%;
-            box-shadow: 0 0 8px rgba(34,197,94,0.6);
-            animation: blink 1.8s ease-in-out infinite;
-        }
-
-        @keyframes blink {
-            0%,100% { opacity: 1; }
-            50%      { opacity: 0.2; }
-        }
-
-        /* ── 스탯 카드 (Double-Bezel) ── */
-        .stat-outer {
-            width: 100%;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 18px;
-            padding: 5px;
-            opacity: 0;
-            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1);
-        }
-
-        .stat-outer:nth-child(2) { animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s forwards; }
-        .stat-outer:nth-child(3) { animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s forwards; }
-        .stat-outer:nth-child(4) { animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s forwards; }
-
-        .stat-outer:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-        }
-
-        .stat-inner {
-            background: rgba(255,255,255,0.03);
-            border-radius: 14px;
-            padding: 18px 20px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            font-weight: 500;
-            color: #52525b;
-            letter-spacing: 0.07em;
-            text-transform: uppercase;
-        }
-
-        .stat-icon {
-            color: #3b6ef5;
-            opacity: 0.7;
-        }
-
-        .stat-val {
-            font-size: 26px;
-            font-weight: 700;
-            color: #f4f4f5;
-            letter-spacing: -0.03em;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-            margin-bottom: 6px;
-        }
-
-        .stat-change {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            color: #4ade80;
-        }
-
-        .stat-change.neutral { color: #71717a; }
-
-        .right-label {
-            font-size: 11.5px;
-            color: #3f3f46;
-            text-align: center;
-            line-height: 1.7;
-            margin-top: 8px;
-            word-break: keep-all;
-            opacity: 0;
-            animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;
-        }
-
         /* ── 반응형 ── */
         @media (max-width: 768px) {
-            .right-panel { display: none; }
-            .left-panel { padding: 40px 28px; border-right: none; }
+            .left-panel { padding: 40px 28px; }
             body { overflow-y: auto; }
         }
     </style>
@@ -623,69 +501,6 @@
                 <div class="footer-copy">© 2026 Bumil Information Admin System.</div>
 
             </div>
-        </div>
-
-        <!-- ── 오른쪽: 시스템 정보 ── -->
-        <div class="right-panel">
-
-            <div class="status-tag">
-                <span class="pulse-dot"></span>
-                시스템 정상 운영 중
-            </div>
-
-            <!-- 오늘 접속자 -->
-            <div class="stat-outer">
-                <div class="stat-inner">
-                    <div class="stat-header">
-                        <span class="stat-label">오늘 접속자</span>
-                        <span class="stat-icon">
-                            <iconify-icon icon="solar:users-group-rounded-linear" style="font-size:16px;"></iconify-icon>
-                        </span>
-                    </div>
-                    <div class="stat-val">1,284</div>
-                    <div class="stat-change">
-                        <iconify-icon icon="solar:alt-arrow-up-linear" style="font-size:11px;"></iconify-icon>
-                        어제 대비 +12%
-                    </div>
-                </div>
-            </div>
-
-            <!-- 활성 세션 -->
-            <div class="stat-outer">
-                <div class="stat-inner">
-                    <div class="stat-header">
-                        <span class="stat-label">활성 세션</span>
-                        <span class="stat-icon">
-                            <iconify-icon icon="solar:bolt-linear" style="font-size:16px;"></iconify-icon>
-                        </span>
-                    </div>
-                    <div class="stat-val">47</div>
-                    <div class="stat-change neutral">
-                        <iconify-icon icon="solar:refresh-linear" style="font-size:11px;"></iconify-icon>
-                        실시간 갱신
-                    </div>
-                </div>
-            </div>
-
-            <!-- DB 응답시간 -->
-            <div class="stat-outer">
-                <div class="stat-inner">
-                    <div class="stat-header">
-                        <span class="stat-label">DB 응답시간</span>
-                        <span class="stat-icon">
-                            <iconify-icon icon="solar:database-linear" style="font-size:16px;"></iconify-icon>
-                        </span>
-                    </div>
-                    <div class="stat-val">3.2<span style="font-size:14px;font-weight:500;color:#71717a;margin-left:2px;">ms</span></div>
-                    <div class="stat-change">
-                        <iconify-icon icon="solar:check-circle-linear" style="font-size:11px;"></iconify-icon>
-                        MariaDB 정상
-                    </div>
-                </div>
-            </div>
-
-            <p class="right-label">내부 관리 시스템<br>접근 권한이 있는 계정만 이용 가능합니다</p>
-
         </div>
 
     </div>
