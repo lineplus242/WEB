@@ -137,7 +137,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 56px 64px;
+            padding: 56px 24px;
         }
 
         /* ── 브랜드 ── */
@@ -177,7 +177,7 @@
 
         /* ── 폼 영역 ── */
         .form-wrap {
-            max-width: 360px;
+            max-width: 580px;
         }
 
         .heading-area {
