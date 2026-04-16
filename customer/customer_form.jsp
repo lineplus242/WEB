@@ -53,7 +53,8 @@
 
         /* 메인 */
         .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
-        .topbar { height: 52px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; gap: 12px; padding: 0 28px; background: #0e0f11; position: sticky; top: 0; z-index: 50; }
+        .topbar { height: 52px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: #0e0f11; position: sticky; top: 0; z-index: 50; }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
         .topbar a { font-size: 13px; color: #4b5161; text-decoration: none; }
         .topbar a:hover { color: #6b9af5; }
         .topbar-sep { color: #2a2d36; }
@@ -162,9 +163,15 @@
     <!-- 메인 -->
     <div class="main">
         <div class="topbar">
-            <a href="../CustomerServlet?action=list">고객사 관리</a>
-            <span class="topbar-sep">/</span>
-            <span class="topbar-cur"><%= isEdit ? "수정" : "신규 등록" %></span>
+            <div class="topbar-left">
+                <a href="../CustomerServlet?action=list">고객사 관리</a>
+                <span class="topbar-sep">/</span>
+                <span class="topbar-cur"><%= isEdit ? "수정" : "신규 등록" %></span>
+            </div>
+            <div class="theme-toggle">
+                <button class="theme-toggle-btn" id="btnDark"  onclick="setTheme('dark')">다크모드</button>
+                <button class="theme-toggle-btn" id="btnLight" onclick="setTheme('light')">라이트모드</button>
+            </div>
         </div>
         <div class="content">
 
@@ -319,5 +326,9 @@ function toggleUserMenu(row){const m=document.getElementById('userMenu');if(!m)r
 document.addEventListener('click',function(e){const m=document.getElementById('userMenu'),r=document.querySelector('.user-row');if(m&&r&&!r.contains(e.target)&&!m.contains(e.target)){m.classList.remove('open');r.classList.remove('open');}});
 </script>
 <script src="../js/common.js"></script>
+<script>
+    function setTheme(t){localStorage.setItem('theme',t);if(t==='light')document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');document.getElementById('btnDark').classList.toggle('active',t!=='light');document.getElementById('btnLight').classList.toggle('active',t==='light');}
+    (function(){var t=localStorage.getItem('theme')||'dark';document.getElementById('btnDark').classList.toggle('active',t!=='light');document.getElementById('btnLight').classList.toggle('active',t==='light');})();
+</script>
 </body>
 </html>
