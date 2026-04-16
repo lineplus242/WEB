@@ -177,10 +177,10 @@
         .type-kvm      { background: rgba(236,72,153,0.15); border-left: 3px solid #ec4899; }
         .type-blank    { background: #0a0b0d; border-left: 3px solid #1e2025; }
         .type-etc      { background: rgba(71,85,105,0.15); border-left: 3px solid #475569; }
-        .chip-server   { background: rgba(59,110,245,0.2);  color: #6b9af5; }
-        .chip-network  { background: rgba(34,201,122,0.2);  color: #22c97a; }
-        .chip-security { background: rgba(212,160,23,0.2);  color: #d4a017; }
-        .chip-storage  { background: rgba(167,139,250,0.2); color: #a78bfa; }
+        .chip-server   { background: rgba(90,154,245,0.15);  color: #5a9af5; }
+        .chip-network  { background: rgba(155,106,245,0.15); color: #9b6af5; }
+        .chip-security { background: rgba(224,86,86,0.15);   color: #e05656; }
+        .chip-storage  { background: rgba(61,214,200,0.15);  color: #3dd6c8; }
         .chip-pdu      { background: rgba(249,115,22,0.2);  color: #f97316; }
         .chip-patch    { background: rgba(100,116,139,0.2); color: #94a3b8; }
         .chip-kvm      { background: rgba(236,72,153,0.2);  color: #ec4899; }
