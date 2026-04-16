@@ -253,7 +253,7 @@
         .ip-type-mgmt    { background: rgba(90,154,245,0.12);  color: #5a9af5; }
         .ip-type-service { background: rgba(61,214,200,0.12);  color: #3dd6c8; }
         .ip-type-nas      { background: rgba(155,106,245,0.12); color: #9b6af5; }
-        .ip-type-bmc     { background: rgba(212,160,23,0.12);  color: #d4a017; }
+        .ip-type-etc     { background: rgba(212,160,23,0.12);  color: #d4a017; }
         .ip-type-default { background: rgba(90,154,245,0.1);   color: #6b9af5; }
         .ip-addr { font-family: 'DM Mono', monospace; font-size: 12.5px; color: #a1a1aa; letter-spacing: 0.02em; }
 
@@ -591,7 +591,7 @@
                                             if (k === '관리ip' || k === 'mgmt' || k === 'management') cls = 'ip-type-mgmt';
                                             else if (k === '서비스ip' || k === 'service')             cls = 'ip-type-service';
                                             else if (k === 'nas ip' || k === 'nas')                                    cls = 'ip-type-nas';
-                                            else if (k === 'bmc')                                      cls = 'ip-type-bmc';
+                                            else if (k === '기타' || k === 'etc' || k === 'bmc')       cls = 'ip-type-etc';
                                             html += '<div class="ip-item"><span class="ip-type ' + cls + '">' + it.type + '</span><span class="ip-addr">' + it.addr + '</span></div>';
                                         });
                                         html += '</div>';
