@@ -145,6 +145,29 @@ public class AssetDetailServlet extends HttpServlet {
                 }
             }
 
+            // 수신 포트맵 (다른 장비에서 이 장비로 연결된 포트)
+            List<PortMapVO> incomingPortMap = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT p.*, a.asset_name AS src_asset_name FROM tb_port_map p " +
+                    "JOIN tb_asset a ON p.asset_seq = a.asset_seq " +
+                    "WHERE p.dst_asset_seq=? AND a.del_yn='N' ORDER BY p.sort_order, p.port_seq")) {
+                ps.setInt(1, assetSeq);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    PortMapVO pm      = new PortMapVO();
+                    pm.portSeq        = rs.getInt("port_seq");
+                    pm.ownerAssetSeq  = rs.getInt("asset_seq");
+                    pm.srcAssetName   = rs.getString("src_asset_name");
+                    pm.srcPort        = rs.getString("src_port");
+                    pm.dstPort        = rs.getString("dst_port");
+                    pm.cableType      = rs.getString("cable_type");
+                    pm.cableColor     = rs.getString("cable_color");
+                    pm.memo           = rs.getString("memo");
+                    pm.sortOrder      = rs.getInt("sort_order");
+                    incomingPortMap.add(pm);
+                }
+            }
+
             // 같은 고객사 자산 (도착지 자동완성용)
             List<SimpleAssetVO> siblingAssets = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement(
@@ -160,11 +183,12 @@ public class AssetDetailServlet extends HttpServlet {
                 }
             }
 
-            req.setAttribute("asset",         asset);
-            req.setAttribute("frontPhoto",    frontPhoto);
-            req.setAttribute("rearPhoto",     rearPhoto);
-            req.setAttribute("portMap",       portMap);
-            req.setAttribute("siblingAssets", siblingAssets);
+            req.setAttribute("asset",           asset);
+            req.setAttribute("frontPhoto",      frontPhoto);
+            req.setAttribute("rearPhoto",       rearPhoto);
+            req.setAttribute("portMap",         portMap);
+            req.setAttribute("incomingPortMap", incomingPortMap);
+            req.setAttribute("siblingAssets",   siblingAssets);
 
         } catch (Exception e) {
             req.setAttribute("dbError", e.getMessage());
@@ -320,7 +344,9 @@ public class AssetDetailServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) { e.printStackTrace(); }
-        resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&tab=port");
+        String retSeqSave = req.getParameter("returnAssetSeq");
+        int redirectSeqSave = (retSeqSave != null && !retSeqSave.isEmpty()) ? Integer.parseInt(retSeqSave) : assetSeq;
+        resp.sendRedirect("AssetDetailServlet?assetSeq=" + redirectSeqSave + "&tab=port");
     }
 
     // ─────────────────────────────────────────────────────
@@ -331,6 +357,8 @@ public class AssetDetailServlet extends HttpServlet {
 
         int assetSeq = Integer.parseInt(req.getParameter("assetSeq"));
         int portSeq  = Integer.parseInt(req.getParameter("portSeq"));
+        String retSeq = req.getParameter("returnAssetSeq");
+        int redirectSeq = (retSeq != null && !retSeq.isEmpty()) ? Integer.parseInt(retSeq) : assetSeq;
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
              PreparedStatement ps = conn.prepareStatement(
@@ -338,7 +366,7 @@ public class AssetDetailServlet extends HttpServlet {
             ps.setInt(1, portSeq); ps.setInt(2, assetSeq);
             ps.executeUpdate();
         } catch (Exception e) { e.printStackTrace(); }
-        resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&tab=port");
+        resp.sendRedirect("AssetDetailServlet?assetSeq=" + redirectSeq + "&tab=port");
     }
 
     // ── 유틸 ──────────────────────────────────────────────
@@ -361,8 +389,8 @@ public class AssetDetailServlet extends HttpServlet {
     }
 
     public static class PortMapVO {
-        public int     portSeq, sortOrder;
-        public String  srcPort, dstDeviceName, dstPort, cableType, cableColor, memo, dstAssetName;
+        public int     portSeq, sortOrder, ownerAssetSeq;
+        public String  srcPort, dstDeviceName, dstPort, cableType, cableColor, memo, dstAssetName, srcAssetName;
         public Integer dstAssetSeq;
     }
 

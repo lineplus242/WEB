@@ -8,10 +8,12 @@
     AssetDetailVO asset = (AssetDetailVO) request.getAttribute("asset");
     PhotoVO frontPhoto  = (PhotoVO)       request.getAttribute("frontPhoto");
     PhotoVO rearPhoto   = (PhotoVO)       request.getAttribute("rearPhoto");
-    List<PortMapVO>    portMap       = (List<PortMapVO>)    request.getAttribute("portMap");
-    List<SimpleAssetVO> siblingAssets = (List<SimpleAssetVO>) request.getAttribute("siblingAssets");
-    if (portMap      == null) portMap      = new java.util.ArrayList<>();
-    if (siblingAssets == null) siblingAssets = new java.util.ArrayList<>();
+    List<PortMapVO>    portMap         = (List<PortMapVO>)    request.getAttribute("portMap");
+    List<PortMapVO>    incomingPortMap = (List<PortMapVO>)    request.getAttribute("incomingPortMap");
+    List<SimpleAssetVO> siblingAssets  = (List<SimpleAssetVO>) request.getAttribute("siblingAssets");
+    if (portMap         == null) portMap         = new java.util.ArrayList<>();
+    if (incomingPortMap == null) incomingPortMap = new java.util.ArrayList<>();
+    if (siblingAssets   == null) siblingAssets   = new java.util.ArrayList<>();
 
     String activeTab  = "port".equals(request.getParameter("tab")) ? "port" : "info";
     String photoTab   = "B".equals(request.getParameter("photoTab")) ? "B" : "F";
@@ -526,11 +528,13 @@
 
         <!-- ── 포트맵 탭 ──────────────────────────────────────── -->
         <div id="tab-port" class="tab-panel <%= "port".equals(activeTab) ? "active" : "" %>">
+
+            <!-- 출발 포트맵 -->
             <div class="panel-header">
-                <span style="font-size:13px;font-weight:500;color:#9ca3af">포트맵</span>
+                <span style="font-size:13px;font-weight:500;color:#9ca3af">출발 포트맵 <span style="font-size:11px;color:#4b5161;font-weight:400">이 장비에서 연결되는 포트</span></span>
                 <button class="btn btn-primary btn-sm" onclick="openPortModal()">+ 포트 추가</button>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap" style="margin-bottom:24px">
                 <table>
                     <thead>
                         <tr>
@@ -546,7 +550,7 @@
                     </thead>
                     <tbody>
                         <% if (portMap.isEmpty()) { %>
-                        <tr class="empty-row"><td colspan="8">등록된 포트맵이 없습니다.</td></tr>
+                        <tr class="empty-row"><td colspan="8">등록된 출발 포트맵이 없습니다.</td></tr>
                         <% } else { int pIdx = 1; for (PortMapVO pm : portMap) {
                             String dstDevice = pm.dstAssetName != null ? pm.dstAssetName : (pm.dstDeviceName != null ? pm.dstDeviceName : "-");
                         %>
@@ -583,6 +587,70 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 수신 포트맵 -->
+            <div class="panel-header">
+                <span style="font-size:13px;font-weight:500;color:#9ca3af">수신 포트맵 <span style="font-size:11px;color:#4b5161;font-weight:400">다른 장비에서 이 장비로 연결된 포트</span></span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>출발지 장비</th>
+                            <th>출발지 포트</th>
+                            <th>내 포트</th>
+                            <th>케이블 종류</th>
+                            <th>케이블 색상</th>
+                            <th>비고</th>
+                            <th style="text-align:center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (incomingPortMap.isEmpty()) { %>
+                        <tr class="empty-row"><td colspan="8">연결된 수신 포트맵이 없습니다.</td></tr>
+                        <% } else { int iIdx = 1; for (PortMapVO pm : incomingPortMap) { %>
+                        <tr>
+                            <td class="td-mono" style="color:#4b5161"><%= iIdx++ %></td>
+                            <td>
+                                <a href="../AssetDetailServlet?assetSeq=<%= pm.ownerAssetSeq %>&tab=port"
+                                   style="color:#6b9af5;text-decoration:none;font-size:13px"
+                                   onmouseover="this.style.textDecoration='underline'"
+                                   onmouseout="this.style.textDecoration='none'">
+                                   <%= nvl(pm.srcAssetName) %>
+                                </a>
+                            </td>
+                            <td class="td-mono" style="color:#6b9af5"><%= nvl(pm.srcPort) %></td>
+                            <td class="td-mono"><%= pm.dstPort != null ? pm.dstPort : "-" %></td>
+                            <td><% if (pm.cableType != null) { %><span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#1a1c22;color:#9ca3af;border:1px solid #252830"><%= pm.cableType %></span><% } else { %>-<% } %></td>
+                            <td>
+                                <% if (pm.cableColor != null && !pm.cableColor.isEmpty()) { %>
+                                <span style="display:inline-flex;align-items:center;gap:6px">
+                                    <span id="colorDotIn-<%= pm.portSeq %>" style="width:10px;height:10px;border-radius:50%;border:1px solid #252830;display:inline-block"></span>
+                                    <script>document.getElementById('colorDotIn-<%= pm.portSeq %>').style.background='<%= pm.cableColor.replace("'","") %>';</script>
+                                    <span style="font-size:12px"><%= pm.cableColor %></span>
+                                </span>
+                                <% } else { %>-<% } %>
+                            </td>
+                            <td style="color:#6b7280"><%= pm.memo != null ? pm.memo : "" %></td>
+                            <td>
+                                <div class="td-actions" style="justify-content:center">
+                                    <button class="btn btn-sm btn-secondary"
+                                        onclick="openPortModal(<%= pm.portSeq %>, '<%= nvl(pm.srcPort).replace("'","\\'") %>', '<%= asset.assetSeq %>', '<%= nvl(pm.srcAssetName).replace("'","\\'") %>', '<%= (pm.dstPort != null ? pm.dstPort.replace("'","\\'") : "") %>', '<%= (pm.cableType != null ? pm.cableType.replace("'","\\'") : "") %>', '<%= (pm.cableColor != null ? pm.cableColor.replace("'","\\'") : "") %>', '<%= (pm.memo != null ? pm.memo.replace("'","\\'") : "") %>', <%= pm.ownerAssetSeq %>, <%= asset.assetSeq %>)">수정</button>
+                                    <form action="../AssetDetailServlet" method="post" style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
+                                        <input type="hidden" name="action" value="portDelete">
+                                        <input type="hidden" name="assetSeq" value="<%= pm.ownerAssetSeq %>">
+                                        <input type="hidden" name="portSeq" value="<%= pm.portSeq %>">
+                                        <input type="hidden" name="returnAssetSeq" value="<%= asset.assetSeq %>">
+                                        <button type="submit" class="btn btn-sm btn-danger">삭제</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <% } } %>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <% } /* asset != null */ %>
@@ -595,7 +663,8 @@
         <div class="modal-title" id="portModalTitle">포트 추가</div>
         <form action="../AssetDetailServlet" method="post">
             <input type="hidden" name="action" value="portSave">
-            <input type="hidden" name="assetSeq" value="<%= asset != null ? asset.assetSeq : 0 %>">
+            <input type="hidden" name="assetSeq" id="portAssetSeq" value="<%= asset != null ? asset.assetSeq : 0 %>">
+            <input type="hidden" name="returnAssetSeq" id="portReturnAssetSeq" value="">
             <input type="hidden" name="portSeq" id="portSeq" value="">
             <input type="hidden" name="dstAssetSeq" id="dstAssetSeqHidden" value="">
             <div class="form-grid">
@@ -751,16 +820,19 @@
         document.getElementById('dstAssetSeqHidden').value = matched ? matched.seq : '';
     });
 
-    function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo) {
+    function openPortModal(portSeq, srcPort, dstSeq, dstDevice, dstPort, cableType, cableColor, memo, ownerAssetSeq, returnAssetSeq) {
         document.getElementById('portModalTitle').textContent = portSeq ? '포트 수정' : '포트 추가';
-        document.getElementById('portSeq').value           = portSeq    || '';
-        document.getElementById('srcPort').value           = srcPort    || '';
-        document.getElementById('dstAssetSeqHidden').value = dstSeq    || '';
-        document.getElementById('dstDeviceName').value     = dstDevice  || '';
-        document.getElementById('dstPort').value           = dstPort    || '';
-        document.getElementById('cableType').value         = cableType  || '';
-        document.getElementById('cableColor').value        = cableColor || '';
-        document.getElementById('portMemo').value          = memo       || '';
+        document.getElementById('portSeq').value           = portSeq       || '';
+        document.getElementById('srcPort').value           = srcPort       || '';
+        document.getElementById('dstAssetSeqHidden').value = dstSeq        || '';
+        document.getElementById('dstDeviceName').value     = dstDevice     || '';
+        document.getElementById('dstPort').value           = dstPort       || '';
+        document.getElementById('cableType').value         = cableType     || '';
+        document.getElementById('cableColor').value        = cableColor    || '';
+        document.getElementById('portMemo').value          = memo          || '';
+        // 수신 포트맵 수정: 레코드 소유자(ownerAssetSeq)로 제출, 현재 페이지(returnAssetSeq)로 복귀
+        document.getElementById('portAssetSeq').value      = ownerAssetSeq || '<%= asset != null ? asset.assetSeq : 0 %>';
+        document.getElementById('portReturnAssetSeq').value = returnAssetSeq || '';
         closeSiblingDropdown();
         document.getElementById('portModal').classList.add('open');
     }
