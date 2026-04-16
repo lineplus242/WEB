@@ -49,11 +49,12 @@ public class AssetDetailServlet extends HttpServlet {
             throws ServletException, IOException {
         String action = nvl(req.getParameter("action"), "");
         switch (action) {
-            case "photoUpload" -> doPhotoUpload(req, resp);
-            case "photoDelete" -> doPhotoDelete(req, resp);
-            case "portSave"    -> doPortSave(req, resp);
-            case "portDelete"  -> doPortDelete(req, resp);
-            default            -> resp.sendRedirect("CustomerServlet?action=list");
+            case "photoUpload"       -> doPhotoUpload(req, resp);
+            case "photoFromLibrary"  -> doPhotoFromLibrary(req, resp);
+            case "photoDelete"       -> doPhotoDelete(req, resp);
+            case "portSave"          -> doPortSave(req, resp);
+            case "portDelete"        -> doPortDelete(req, resp);
+            default                  -> resp.sendRedirect("CustomerServlet?action=list");
         }
     }
 
@@ -285,6 +286,71 @@ public class AssetDetailServlet extends HttpServlet {
     }
 
     // ─────────────────────────────────────────────────────
+    // 라이브러리 이미지 선택
+    // ─────────────────────────────────────────────────────
+    private void doPhotoFromLibrary(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        int assetSeq  = Integer.parseInt(req.getParameter("assetSeq"));
+        String side   = "B".equals(req.getParameter("side")) ? "B" : "F";
+        String imgSeqStr = req.getParameter("imgSeq");
+        if (imgSeqStr == null || imgSeqStr.isEmpty()) {
+            resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&photoTab=" + side);
+            return;
+        }
+        int imgSeq = Integer.parseInt(imgSeqStr);
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            // 라이브러리 이미지 경로 조회
+            String libFilePath = null;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT file_path FROM tb_image_library WHERE img_seq=? AND is_deleted=0")) {
+                ps.setInt(1, imgSeq);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) libFilePath = rs.getString("file_path");
+            }
+            if (libFilePath == null) {
+                resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&photoTab=" + side);
+                return;
+            }
+
+            // 기존 사진 삭제 (UPLOAD 타입만 물리 파일 삭제)
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT file_path, source_type FROM tb_asset_photo WHERE asset_seq=? AND side=?")) {
+                ps.setInt(1, assetSeq); ps.setString(2, side);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    String srcType = rs.getString("source_type");
+                    if (!"LIBRARY".equals(srcType)) {
+                        String old = rs.getString("file_path");
+                        if (old != null) {
+                            File f = new File(getServletContext().getRealPath("/" + old));
+                            if (f.exists()) f.delete();
+                        }
+                    }
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM tb_asset_photo WHERE asset_seq=? AND side=?")) {
+                ps.setInt(1, assetSeq); ps.setString(2, side); ps.executeUpdate();
+            }
+
+            // 라이브러리 참조 레코드 삽입
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO tb_asset_photo (asset_seq, side, file_path, orig_name, source_type, img_seq) VALUES (?,?,?,?,?,?)")) {
+                ps.setInt(1, assetSeq);
+                ps.setString(2, side);
+                ps.setString(3, libFilePath);
+                ps.setString(4, "library");
+                ps.setString(5, "LIBRARY");
+                ps.setInt(6, imgSeq);
+                ps.executeUpdate();
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        resp.sendRedirect("AssetDetailServlet?assetSeq=" + assetSeq + "&photoTab=" + side);
+    }
+
+    // ─────────────────────────────────────────────────────
     // 사진 삭제
     // ─────────────────────────────────────────────────────
     private void doPhotoDelete(HttpServletRequest req, HttpServletResponse resp)
@@ -295,14 +361,18 @@ public class AssetDetailServlet extends HttpServlet {
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT file_path FROM tb_asset_photo WHERE asset_seq=? AND side=?")) {
+                    "SELECT file_path, source_type FROM tb_asset_photo WHERE asset_seq=? AND side=?")) {
                 ps.setInt(1, assetSeq); ps.setString(2, side);
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
-                    String old = rs.getString("file_path");
-                    if (old != null) {
-                        File f = new File(getServletContext().getRealPath("/" + old));
-                        if (f.exists()) f.delete();
+                    String srcType = rs.getString("source_type");
+                    // LIBRARY 타입은 물리 파일을 삭제하지 않음
+                    if (!"LIBRARY".equals(srcType)) {
+                        String old = rs.getString("file_path");
+                        if (old != null) {
+                            File f = new File(getServletContext().getRealPath("/" + old));
+                            if (f.exists()) f.delete();
+                        }
                     }
                 }
             }

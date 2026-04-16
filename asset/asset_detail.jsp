@@ -159,7 +159,38 @@
         .photo-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; color: #3d4251; }
         .photo-placeholder svg { opacity: 0.4; }
         .photo-placeholder p { font-size: 13px; }
-        .photo-actions { display: flex; align-items: center; gap: 8px; }
+        .photo-actions { display: flex; align-items: center; gap: 8px; position: relative; }
+
+        /* 소스 선택 드롭다운 */
+        .src-dropdown { position: absolute; top: calc(100% + 6px); right: 0; background: #1a1c22; border: 1px solid #252830; border-radius: 10px; padding: 5px; z-index: 300; min-width: 180px; display: none; }
+        .src-dropdown.open { display: block; }
+        .src-dd-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; color: #c8cad0; cursor: pointer; transition: background 0.12s; white-space: nowrap; }
+        .src-dd-item:hover { background: #252830; }
+        .src-dd-item svg { width: 15px; height: 15px; flex-shrink: 0; color: #6b9af5; }
+
+        /* 라이브러리 picker 모달 */
+        .lib-modal { background: #131519; border: 1px solid #252830; border-radius: 14px; width: 760px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+        .lib-modal-header { padding: 16px 20px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .lib-modal-title { font-size: 14px; font-weight: 500; color: #f2f3f5; }
+        .lib-modal-toolbar { padding: 12px 20px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+        .lib-search { position: relative; }
+        .lib-search input { background: #0e0f11; border: 1px solid #252830; border-radius: 8px; padding: 7px 10px 7px 32px; font-size: 13px; color: #e8e9eb; font-family: 'DM Sans', sans-serif; outline: none; width: 200px; transition: border 0.15s; }
+        .lib-search input:focus { border-color: #3b6ef5; }
+        .lib-search svg { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #4b5161; pointer-events: none; }
+        .lib-cat-filter { background: #0e0f11; border: 1px solid #252830; border-radius: 8px; padding: 7px 10px; font-size: 13px; color: #c8cad0; font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer; }
+        .lib-grid-wrap { overflow-y: auto; padding: 16px 20px; flex: 1; }
+        .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .lib-item { border: 2px solid #1e2025; border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.15s; }
+        .lib-item:hover { border-color: #3b6ef5; }
+        .lib-item.selected { border-color: #3b6ef5; background: #0e1428; }
+        .lib-item img { width: 100%; height: 100px; object-fit: contain; background: #0e0f11; display: block; }
+        .lib-item-name { padding: 7px 8px; font-size: 11px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lib-item-cat { padding: 0 8px 6px; }
+        .lib-item-cat span { font-size: 10px; background: #1a1e2e; color: #6b9af5; padding: 2px 7px; border-radius: 99px; }
+        .lib-empty { text-align: center; padding: 60px 20px; color: #3d4251; font-size: 13px; }
+        .lib-modal-footer { padding: 14px 20px; border-top: 1px solid #1e2025; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .lib-selected-info { font-size: 12px; color: #6b7280; }
+        .lib-selected-info strong { color: #6b9af5; }
 
         /* 정보 카드 그리드 */
         .info-cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
@@ -275,6 +306,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
         설정
     </a>
+    <% if ("ADMIN".equals(loginRole)) { %>
+    <a href="../admin/image_library.jsp" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        이미지 라이브러리
+    </a>
+    <% } %>
     <div class="sb-bottom">
         <div id="userMenu" class="user-menu">
             <a href="../mypage.jsp" class="user-menu-item">
@@ -702,6 +739,44 @@
     </div>
 </div>
 
+<!-- ── 라이브러리 picker 모달 ────────────────────────────── -->
+<div class="modal-overlay" id="libPickerModal">
+    <div class="lib-modal">
+        <div class="lib-modal-header">
+            <span class="lib-modal-title">서버 이미지 라이브러리</span>
+            <button style="width:28px;height:28px;border-radius:7px;border:none;background:none;color:#6b7280;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .12s"
+                    onmouseover="this.style.background='#1e2025'" onmouseout="this.style.background='none'"
+                    onclick="closeLibPicker()">×</button>
+        </div>
+        <div class="lib-modal-toolbar">
+            <div class="lib-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="libSearchInput" placeholder="이름 검색..." oninput="debounceLibLoad()">
+            </div>
+            <select class="lib-cat-filter" id="libCatFilter" onchange="loadLibImages()">
+                <option value="">전체</option>
+                <option value="서버">서버</option>
+                <option value="네트워크">네트워크</option>
+                <option value="보안">보안</option>
+                <option value="스토리지">스토리지</option>
+                <option value="기타">기타</option>
+            </select>
+        </div>
+        <div class="lib-grid-wrap">
+            <div id="libGrid" class="lib-grid"></div>
+            <div id="libEmpty" class="lib-empty" style="display:none">등록된 이미지가 없습니다</div>
+        </div>
+        <div class="lib-modal-footer">
+            <span class="lib-selected-info" id="libSelectedInfo">선택된 이미지 없음</span>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" onclick="closeLibPicker()">취소</button>
+                <button class="btn btn-primary btn-sm" id="libConfirmBtn" onclick="confirmLibSelect()" disabled
+                        style="opacity:0.5;cursor:not-allowed">선택</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ── 이미지 확대 모달 ──────────────────────────────────── -->
 <div class="modal-overlay" id="imgModal" onclick="closeModal('imgModal')">
     <img id="imgModalImg" src="" alt="">
@@ -727,20 +802,119 @@
     function renderPhotoActions() {
         const hasPhoto = PHOTO_STATE[currentPhotoTab];
         const actEl = document.getElementById('photoActions');
-        let html = '<button class="btn btn-secondary btn-sm" onclick="openPhotoPicker(\'' + currentPhotoTab + '\')">'
+        let html = '<button class="btn btn-secondary btn-sm" onclick="toggleSrcDropdown(event, \'' + currentPhotoTab + '\')">'
                  + (hasPhoto ? '사진 교체' : '+ 사진 업로드')
-                 + '</button>';
+                 + '</button>'
+                 + '<div class="src-dropdown" id="srcDropdown">'
+                 + '  <div class="src-dd-item" onclick="pickFromPC()">'
+                 + '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+                 + '    내 PC에서 업로드'
+                 + '  </div>'
+                 + '  <div class="src-dd-item" onclick="pickFromLibrary()">'
+                 + '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
+                 + '    서버 라이브러리에서 선택'
+                 + '  </div>'
+                 + '</div>';
         if (hasPhoto) {
             html += '<button class="btn btn-danger btn-sm" onclick="submitDelete(\'' + currentPhotoTab + '\')">삭제</button>';
         }
         actEl.innerHTML = html;
     }
 
-    function openPhotoPicker(side) {
-        document.getElementById('uploadSide').value = side;
-        document.getElementById('photoFileInput').value = '';  // 같은 파일 재선택 가능
+    let _srcDropSide = 'F';
+    function toggleSrcDropdown(e, side) {
+        e.stopPropagation();
+        _srcDropSide = side;
+        const dd = document.getElementById('srcDropdown');
+        if (!dd) return;
+        dd.classList.toggle('open');
+    }
+    document.addEventListener('click', function() {
+        const dd = document.getElementById('srcDropdown');
+        if (dd) dd.classList.remove('open');
+    });
+
+    function pickFromPC() {
+        const dd = document.getElementById('srcDropdown');
+        if (dd) dd.classList.remove('open');
+        document.getElementById('uploadSide').value = _srcDropSide;
+        document.getElementById('photoFileInput').value = '';
         document.getElementById('photoFileInput').click();
     }
+
+    function pickFromLibrary() {
+        const dd = document.getElementById('srcDropdown');
+        if (dd) dd.classList.remove('open');
+        _libTargetSide = _srcDropSide;
+        _libSelectedSeq = null;
+        document.getElementById('libSearchInput').value = '';
+        document.getElementById('libCatFilter').value = '';
+        document.getElementById('libSelectedInfo').textContent = '선택된 이미지 없음';
+        const btn = document.getElementById('libConfirmBtn');
+        btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+        document.getElementById('libPickerModal').classList.add('open');
+        loadLibImages();
+    }
+
+    // ── 라이브러리 picker ────────────────────────────────
+    let _libTargetSide = 'F';
+    let _libSelectedSeq = null;
+    let _libDebTimer = null;
+    function debounceLibLoad() { clearTimeout(_libDebTimer); _libDebTimer = setTimeout(loadLibImages, 300); }
+
+    function loadLibImages() {
+        const q   = document.getElementById('libSearchInput').value.trim();
+        const cat = document.getElementById('libCatFilter').value;
+        let url   = '../ImageLibraryServlet?action=listForPicker';
+        if (q)   url += '&q='        + encodeURIComponent(q);
+        if (cat) url += '&category=' + encodeURIComponent(cat);
+
+        fetch(url).then(r => r.json()).then(data => {
+            const grid  = document.getElementById('libGrid');
+            const empty = document.getElementById('libEmpty');
+            if (!Array.isArray(data) || data.length === 0) {
+                grid.innerHTML = ''; empty.style.display = 'block'; return;
+            }
+            empty.style.display = 'none';
+            grid.innerHTML = data.map(img => `
+                <div class="lib-item" id="lib-item-${img.imgSeq}" onclick="selectLibItem(${img.imgSeq}, '${escHtml(img.imgName)}')">
+                    <img src="../${img.filePath}" alt="${escHtml(img.imgName)}"
+                         onerror="this.style.background='#1a1c22';this.style.height='100px'">
+                    <div class="lib-item-name" title="${escHtml(img.imgName)}">${escHtml(img.imgName)}</div>
+                    <div class="lib-item-cat"><span>${escHtml(img.category)}</span></div>
+                </div>
+            `).join('');
+        }).catch(() => {});
+    }
+
+    function selectLibItem(imgSeq, imgName) {
+        document.querySelectorAll('.lib-item').forEach(el => el.classList.remove('selected'));
+        document.getElementById('lib-item-' + imgSeq)?.classList.add('selected');
+        _libSelectedSeq = imgSeq;
+        document.getElementById('libSelectedInfo').innerHTML = '선택: <strong>' + escHtml(imgName) + '</strong>';
+        const btn = document.getElementById('libConfirmBtn');
+        btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+    }
+
+    function confirmLibSelect() {
+        if (!_libSelectedSeq) return;
+        const fd = new FormData();
+        fd.append('action',   'photoFromLibrary');
+        fd.append('assetSeq', '<%= asset != null ? asset.assetSeq : 0 %>');
+        fd.append('side',     _libTargetSide);
+        fd.append('imgSeq',   _libSelectedSeq);
+        fetch('../AssetDetailServlet', { method: 'POST', body: fd })
+            .then(() => { location.reload(); })
+            .catch(e => alert('오류: ' + e.message));
+        closeLibPicker();
+    }
+
+    function closeLibPicker() {
+        document.getElementById('libPickerModal').classList.remove('open');
+        _libSelectedSeq = null;
+    }
+
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     function submitDelete(side) {
         if (!confirm('사진을 삭제하시겠습니까?')) return;
@@ -866,7 +1040,12 @@
     // 모달 외부 클릭 닫기 (imgModal 제외 - imgModal은 자체 처리)
     document.querySelectorAll('.modal-overlay').forEach(el => {
         if (el.id === 'imgModal') return;
-        el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+        el.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('open');
+                if (this.id === 'libPickerModal') { _libSelectedSeq = null; }
+            }
+        });
     });
 
     // 초기 사진 액션 버튼 렌더링
