@@ -246,6 +246,17 @@
         .td-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; width: fit-content; }
         .empty-row td { text-align: center; padding: 48px; color: #3d4251; }
 
+        /* IP 주소 */
+        .ip-list { display: flex; flex-direction: column; gap: 8px; }
+        .ip-item { display: inline-flex; align-items: center; gap: 8px; }
+        .ip-type { font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 5px; font-family: 'Pretendard', system-ui, sans-serif; white-space: nowrap; flex-shrink: 0; }
+        .ip-type-mgmt    { background: rgba(90,154,245,0.12);  color: #5a9af5; }
+        .ip-type-service { background: rgba(61,214,200,0.12);  color: #3dd6c8; }
+        .ip-type-ha      { background: rgba(155,106,245,0.12); color: #9b6af5; }
+        .ip-type-bmc     { background: rgba(212,160,23,0.12);  color: #d4a017; }
+        .ip-type-default { background: rgba(90,154,245,0.1);   color: #6b9af5; }
+        .ip-addr { font-family: 'DM Mono', monospace; font-size: 12.5px; color: #a1a1aa; letter-spacing: 0.02em; }
+
         /* 칩 */
         .chip { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-family: 'Pretendard', system-ui, sans-serif; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: none; }
         /* 상태 — dot (chip-dot 클래스가 있을 때만) */
@@ -564,7 +575,7 @@
                                 <td data-col="model" class="td-mono"><%= nvl(a.model) %></td>
                                 <td data-col="size" class="td-mono"><%= a.sizeU != null ? a.sizeU + "U" : "-" %></td>
                                 <td data-col="hostname" class="td-mono"><%= nvl(a.hostname) %></td>
-                                <td data-col="ip" class="td-mono" style="white-space:nowrap">
+                                <td data-col="ip">
                                     <% if (a.ipAddr != null && !a.ipAddr.isEmpty()) {
                                         boolean isJson = a.ipAddr.trim().startsWith("[");
                                         if (isJson) { %>
@@ -573,16 +584,23 @@
                                         var items;
                                         try { items = JSON.parse('<%= a.ipAddr.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","") %>'); } catch(e){ items=null; }
                                         if (!items || !items.length) { document.write('<span style="color:#3d4251">-</span>'); return; }
+                                        var html = '<div class="ip-list">';
                                         items.forEach(function(it){
-                                            document.write('<div style="display:flex;align-items:center;gap:5px">'
-                                                + '<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:#1a1c22;color:#6b9af5;border:1px solid #252830;white-space:nowrap">' + it.type + '</span>'
-                                                + '<span>' + it.addr + '</span></div>');
+                                            var k = it.type ? it.type.toLowerCase() : '';
+                                            var cls = 'ip-type-default';
+                                            if (k === '관리ip' || k === 'mgmt' || k === 'management') cls = 'ip-type-mgmt';
+                                            else if (k === '서비스ip' || k === 'service')             cls = 'ip-type-service';
+                                            else if (k === 'ha')                                       cls = 'ip-type-ha';
+                                            else if (k === 'bmc')                                      cls = 'ip-type-bmc';
+                                            html += '<div class="ip-item"><span class="ip-type ' + cls + '">' + it.type + '</span><span class="ip-addr">' + it.addr + '</span></div>';
                                         });
+                                        html += '</div>';
+                                        document.write(html);
                                     })();
                                     </script>
                                     <% } else {
                                         for (String ip : a.ipAddr.split(",")) { %>
-                                    <div><%= ip.trim() %></div>
+                                    <div class="ip-item"><span class="ip-addr"><%= ip.trim() %></span></div>
                                     <% } } } else { %><span style="color:#3d4251">-</span><% } %>
                                 </td>
                                 <td data-col="account" class="acct-cell" style="font-size:11px"></td>
