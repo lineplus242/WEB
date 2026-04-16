@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>IP 주소 디자인 미리보기</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Pretendard', system-ui, sans-serif; background: #09090b; color: #e4e4e7; padding: 40px; }
+
+        .page-title { font-size: 18px; font-weight: 600; color: #f4f4f5; margin-bottom: 6px; }
+        .page-sub   { font-size: 13px; color: #52525b; margin-bottom: 48px; }
+
+        /* 섹션 레이아웃 */
+        .sections { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 48px; }
+        .section { }
+        .section-title {
+            font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+            text-transform: uppercase; color: #52525b;
+            margin-bottom: 16px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* 카드 래퍼 (다크/라이트 공통 구조) */
+        .card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-dark  { background: #111113; border: 1px solid rgba(255,255,255,0.07); }
+        .card-light { background: #ffffff; border: 1px solid #e2e8f0; }
+
+        .ic-field { display: flex; flex-direction: column; gap: 6px; }
+        .ic-label-dark  { font-size: 11px; font-weight: 500; color: #52525b; text-transform: uppercase; letter-spacing: 0.06em; }
+        .ic-label-light { font-size: 11px; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        /* ────────────────────────────
+           현재 (Before) — 다크
+        ──────────────────────────── */
+        .before-ip-item {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-bottom: 4px; flex-wrap: wrap;
+        }
+        .before-type-badge {
+            font-size: 10px; padding: 1px 6px; border-radius: 3px;
+            background: #1a1c22; color: #6b9af5; border: 1px solid #252830;
+            font-family: 'DM Mono', monospace;
+        }
+        .before-addr {
+            font-family: 'DM Mono', monospace; font-size: 12px; color: #e4e4e7;
+        }
+        /* 현재 라이트 — 같은 하드코딩 색상 그대로 */
+        .before-addr-light { font-family: 'DM Mono', monospace; font-size: 12px; color: #1e293b; }
+
+        /* ────────────────────────────
+           제안 (After)
+        ──────────────────────────── */
+
+        /* IP 행 — 간격 개선 */
+        .ip-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .ip-item {
+            display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+
+        /* 다크 타입 뱃지 */
+        .ip-type-dark {
+            font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 5px;
+            font-family: 'Pretendard', system-ui, sans-serif;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .ip-type-dark.mgmt    { background: rgba(90,154,245,0.12); color: #5a9af5; }
+        .ip-type-dark.service { background: rgba(61,214,200,0.12); color: #3dd6c8; }
+        .ip-type-dark.ha      { background: rgba(155,106,245,0.12); color: #9b6af5; }
+        .ip-type-dark.bmc     { background: rgba(212,160,23,0.12); color: #d4a017; }
+
+        .ip-addr-dark {
+            font-family: 'DM Mono', monospace; font-size: 12.5px;
+            color: #a1a1aa; letter-spacing: 0.02em;
+        }
+
+        /* 라이트 타입 뱃지 */
+        .ip-type-light {
+            font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 5px;
+            font-family: 'Pretendard', system-ui, sans-serif;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .ip-type-light.mgmt    { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .ip-type-light.service { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
+        .ip-type-light.ha      { background: #faf5ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+        .ip-type-light.bmc     { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+
+        .ip-addr-light {
+            font-family: 'DM Mono', monospace; font-size: 12.5px;
+            color: #475569; letter-spacing: 0.02em;
+        }
+
+        /* 간격 비교용 */
+        .spacing-title {
+            font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+            text-transform: uppercase; color: #52525b;
+            margin: 32px 0 16px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .spacing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    </style>
+</head>
+<body>
+
+    <div class="page-title">IP 주소 디자인 미리보기</div>
+    <p class="page-sub">장비 상세 페이지의 IP 주소 표시 영역</p>
+
+    <!-- ── 다크모드 비교 ── -->
+    <div class="sections">
+
+        <!-- 현재 다크 -->
+        <div class="section">
+            <div class="section-title">현재 — 다크모드</div>
+            <div class="card card-dark">
+                <div class="ic-field">
+                    <span class="ic-label-dark">IP 주소</span>
+                    <div>
+                        <div class="before-ip-item">
+                            <span class="before-type-badge">관리IP</span>
+                            <span class="before-addr">192.168.1.101</span>
+                        </div>
+                        <div class="before-ip-item">
+                            <span class="before-type-badge">서비스IP</span>
+                            <span class="before-addr">10.10.0.55</span>
+                        </div>
+                        <div class="before-ip-item">
+                            <span class="before-type-badge">HA</span>
+                            <span class="before-addr">172.16.0.10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 제안 다크 -->
+        <div class="section">
+            <div class="section-title">제안 — 다크모드</div>
+            <div class="card card-dark">
+                <div class="ic-field">
+                    <span class="ic-label-dark">IP 주소</span>
+                    <div class="ip-list">
+                        <div class="ip-item">
+                            <span class="ip-type-dark mgmt">관리IP</span>
+                            <span class="ip-addr-dark">192.168.1.101</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-dark service">서비스IP</span>
+                            <span class="ip-addr-dark">10.10.0.55</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-dark ha">HA</span>
+                            <span class="ip-addr-dark">172.16.0.10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 현재 라이트 -->
+        <div class="section">
+            <div class="section-title">현재 — 라이트모드 (다크와 동일)</div>
+            <div class="card card-light">
+                <div class="ic-field">
+                    <span class="ic-label-light">IP 주소</span>
+                    <div>
+                        <div class="before-ip-item">
+                            <span class="before-type-badge">관리IP</span><!-- 하드코딩 다크색 그대로 -->
+                            <span class="before-addr-light">192.168.1.101</span>
+                        </div>
+                        <div class="before-ip-item">
+                            <span class="before-type-badge">서비스IP</span>
+                            <span class="before-addr-light">10.10.0.55</span>
+                        </div>
+                        <div class="before-ip-item">
+                            <span class="before-type-badge">HA</span>
+                            <span class="before-addr-light">172.16.0.10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 제안 라이트 -->
+        <div class="section">
+            <div class="section-title">제안 — 라이트모드</div>
+            <div class="card card-light">
+                <div class="ic-field">
+                    <span class="ic-label-light">IP 주소</span>
+                    <div class="ip-list">
+                        <div class="ip-item">
+                            <span class="ip-type-light mgmt">관리IP</span>
+                            <span class="ip-addr-light">192.168.1.101</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-light service">서비스IP</span>
+                            <span class="ip-addr-light">10.10.0.55</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-light ha">HA</span>
+                            <span class="ip-addr-light">172.16.0.10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── 간격 비교 ── -->
+    <div class="spacing-title">IP 항목 간격 비교</div>
+    <div class="spacing-grid">
+
+        <div>
+            <div style="font-size:12px;color:#52525b;margin-bottom:10px;">현재 — margin-bottom: 4px (붙어있음)</div>
+            <div class="card card-dark">
+                <div class="ic-field">
+                    <span class="ic-label-dark">IP 주소</span>
+                    <div>
+                        <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px">
+                            <span class="before-type-badge">관리IP</span>
+                            <span class="before-addr">192.168.1.101</span>
+                        </div>
+                        <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px">
+                            <span class="before-type-badge">서비스IP</span>
+                            <span class="before-addr">10.10.0.55</span>
+                        </div>
+                        <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px">
+                            <span class="before-type-badge">HA</span>
+                            <span class="before-addr">172.16.0.10</span>
+                        </div>
+                        <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px">
+                            <span class="before-type-badge">BMC</span>
+                            <span class="before-addr">10.20.0.5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div style="font-size:12px;color:#52525b;margin-bottom:10px;">제안 — gap: 8px (여유있음)</div>
+            <div class="card card-dark">
+                <div class="ic-field">
+                    <span class="ic-label-dark">IP 주소</span>
+                    <div class="ip-list">
+                        <div class="ip-item">
+                            <span class="ip-type-dark mgmt">관리IP</span>
+                            <span class="ip-addr-dark">192.168.1.101</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-dark service">서비스IP</span>
+                            <span class="ip-addr-dark">10.10.0.55</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-dark ha">HA</span>
+                            <span class="ip-addr-dark">172.16.0.10</span>
+                        </div>
+                        <div class="ip-item">
+                            <span class="ip-type-dark bmc">BMC</span>
+                            <span class="ip-addr-dark">10.20.0.5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

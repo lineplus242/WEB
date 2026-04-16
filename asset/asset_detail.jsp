@@ -474,7 +474,7 @@
                                 </div>
                                 <div class="ic-field">
                                     <span class="ic-label">IP 주소</span>
-                                    <span class="ic-value" id="ipDisplay">
+                                    <div class="ic-value" id="ipDisplay">
                                         <% if (asset.ipAddr != null && !asset.ipAddr.isEmpty()) { %>
                                         <script>
                                         (function(){
@@ -486,10 +486,10 @@
                                                 el.innerHTML = '<div class="ip-list">' + items.map(function(it){
                                                     var k = it.type ? it.type.toLowerCase() : '';
                                                     var cls = 'ip-type-default';
-                                                    if (k === 'mgmt' || k === 'management') cls = 'ip-type-mgmt';
-                                                    else if (k === 'service') cls = 'ip-type-service';
-                                                    else if (k === 'ha')      cls = 'ip-type-ha';
-                                                    else if (k === 'bmc')     cls = 'ip-type-bmc';
+                                                    if (k === '관리ip' || k === 'mgmt' || k === 'management') cls = 'ip-type-mgmt';
+                                                    else if (k === '서비스ip' || k === 'service')             cls = 'ip-type-service';
+                                                    else if (k === 'ha')                                       cls = 'ip-type-ha';
+                                                    else if (k === 'bmc')                                      cls = 'ip-type-bmc';
                                                     return '<div class="ip-item"><span class="ip-type ' + cls + '">' + it.type + '</span><span class="ip-addr">' + it.addr + '</span></div>';
                                                 }).join('') + '</div>';
                                             } else {
@@ -498,7 +498,7 @@
                                         })();
                                         </script>
                                         <% } else { %>-<% } %>
-                                    </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
