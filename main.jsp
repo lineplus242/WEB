@@ -396,7 +396,10 @@
             <span class="topbar-title">대시보드</span>
             <div class="topbar-right">
                 <div class="badge"><span class="pulse"></span>MySQL 연결됨</div>
-                <div class="badge">Tomcat 10</div>
+                <div class="theme-toggle">
+                    <button class="theme-toggle-btn" id="btnDark"  onclick="setTheme('dark')">다크모드</button>
+                    <button class="theme-toggle-btn" id="btnLight" onclick="setTheme('light')">라이트모드</button>
+                </div>
             </div>
         </div>
 
@@ -519,5 +522,18 @@
     });
     </script>
 <script src="js/common.js"></script>
+<script>
+    function setTheme(t) {
+        localStorage.setItem('theme', t);
+        if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+        else document.documentElement.removeAttribute('data-theme');
+        updateToggle(t);
+    }
+    function updateToggle(t) {
+        document.getElementById('btnDark').classList.toggle('active', t !== 'light');
+        document.getElementById('btnLight').classList.toggle('active', t === 'light');
+    }
+    updateToggle(localStorage.getItem('theme') || 'dark');
+</script>
 </body>
 </html>

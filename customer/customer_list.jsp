@@ -189,6 +189,10 @@
     <div class="main">
         <div class="topbar">
             <span class="topbar-title">고객사 관리</span>
+            <div class="theme-toggle">
+                <button class="theme-toggle-btn" id="btnDark"  onclick="setTheme('dark')">다크모드</button>
+                <button class="theme-toggle-btn" id="btnLight" onclick="setTheme('light')">라이트모드</button>
+            </div>
         </div>
         <div class="content">
 
@@ -269,5 +273,9 @@ function toggleUserMenu(row){const m=document.getElementById('userMenu');if(!m)r
 document.addEventListener('click',function(e){const m=document.getElementById('userMenu'),r=document.querySelector('.user-row');if(m&&r&&!r.contains(e.target)&&!m.contains(e.target)){m.classList.remove('open');r.classList.remove('open');}});
 </script>
 <script src="../js/common.js"></script>
+<script>
+    function setTheme(t){localStorage.setItem('theme',t);if(t==='light')document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');document.getElementById('btnDark').classList.toggle('active',t!=='light');document.getElementById('btnLight').classList.toggle('active',t==='light');}
+    (function(){var t=localStorage.getItem('theme')||'dark';document.getElementById('btnDark').classList.toggle('active',t!=='light');document.getElementById('btnLight').classList.toggle('active',t==='light');})();
+</script>
 </body>
 </html>

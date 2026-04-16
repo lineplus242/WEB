@@ -173,6 +173,10 @@
     <div class="main">
         <div class="topbar">
             <span class="topbar-title">설정</span>
+            <div class="theme-toggle">
+                <button class="theme-toggle-btn" id="btnDark"  onclick="setTheme('dark')">다크모드</button>
+                <button class="theme-toggle-btn" id="btnLight" onclick="setTheme('light')">라이트모드</button>
+            </div>
         </div>
         <div class="content">
 
@@ -240,6 +244,8 @@
             document.documentElement.removeAttribute('data-theme');
         }
         updateThemeCards(theme);
+        document.getElementById('btnDark').classList.toggle('active', theme !== 'light');
+        document.getElementById('btnLight').classList.toggle('active', theme === 'light');
     }
 
     function updateThemeCards(theme) {
@@ -258,6 +264,8 @@
     (function() {
         const t = localStorage.getItem('theme') || 'dark';
         updateThemeCards(t);
+        document.getElementById('btnDark').classList.toggle('active', t !== 'light');
+        document.getElementById('btnLight').classList.toggle('active', t === 'light');
     })();
 
     function toggleUserMenu(row) {
