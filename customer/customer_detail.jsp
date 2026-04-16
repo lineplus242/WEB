@@ -247,13 +247,19 @@
         .empty-row td { text-align: center; padding: 48px; color: #3d4251; }
 
         /* 칩 */
-        .chip { font-size: 10px; padding: 3px 9px; border-radius: 4px; font-family: 'DM Mono', monospace; font-weight: 500; white-space: nowrap; }
-        .chip-g      { background: #0d2a1a; color: #22c97a; border: 1px solid #0f3d25; }
-        .chip-r      { background: #2a0d0d; color: #e05656; border: 1px solid #3d0f0f; }
-        .chip-y      { background: #2a200d; color: #d4a017; border: 1px solid #3d2e0f; }
-        .chip-blue   { background: #0d1a2e; color: #5a9af5; border: 1px solid #0f2544; }
-        .chip-purple { background: #1a0d2e; color: #9b6af5; border: 1px solid #280f44; }
-        .chip-teal   { background: #0d2229; color: #3dd6c8; border: 1px solid #0f3540; }
+        .chip { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-family: 'Pretendard', system-ui, sans-serif; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: none; }
+        /* 상태 — dot */
+        .chip-g::before, .chip-r::before, .chip-y::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .chip-g      { background: rgba(34,201,122,0.1);  color: #22c97a; }
+        .chip-g::before  { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
+        .chip-r      { background: rgba(224,86,86,0.1);   color: #e05656; }
+        .chip-r::before  { background: #e05656; }
+        .chip-y      { background: rgba(212,160,23,0.1);  color: #d4a017; }
+        .chip-y::before  { background: #d4a017; }
+        /* 유형 — dot 없음 */
+        .chip-blue   { background: rgba(90,154,245,0.1);  color: #5a9af5; }
+        .chip-purple { background: rgba(155,106,245,0.1); color: #9b6af5; }
+        .chip-teal   { background: rgba(61,214,200,0.1);  color: #3dd6c8; }
 
         /* 모달 */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }

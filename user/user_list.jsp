@@ -89,9 +89,9 @@
         .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; color: #6b9af5; }
         .td-actions { display: flex; gap: 6px; }
 
-        .chip { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-family: 'DM Mono', monospace; font-weight: 500; }
-        .chip-admin { background: #1a1430; color: #a78bfa; border: 1px solid #2d2050; }
-        .chip-user  { background: #0d1a2a; color: #5a80d0; border: 1px solid #152240; }
+        .chip { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-family: 'Pretendard', system-ui, sans-serif; font-weight: 500; display: inline-flex; align-items: center; border: none; }
+        .chip-admin { background: rgba(167,139,250,0.1); color: #a78bfa; }
+        .chip-user  { background: rgba(90,128,208,0.1);  color: #5a80d0; }
         .chip-on  { background: #0d2a1a; color: #22c97a; border: 1px solid #0f3d25; }
         .chip-off { background: #2a0d0d; color: #e05656; border: 1px solid #3d0f0f; }
 
