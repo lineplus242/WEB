@@ -475,7 +475,7 @@
                             </div>
                         </div>
                         <button class="btn btn-sm btn-secondary" onclick="openCsvModal()">↓ 엑셀</button>
-                        <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 서버 추가</button>
+                        <button class="btn btn-primary btn-sm" onclick="openAssetModal()">+ 추가</button>
                     </div>
                 </div>
                 <div class="table-wrap">
