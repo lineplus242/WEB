@@ -168,10 +168,10 @@
         .rack-slot.empty:hover .rack-slot-add { color: #3b6ef5; }
 
         /* 장비 타입 색상 */
-        .type-server   { background: rgba(59,110,245,0.18); border-left: 3px solid #3b6ef5; }
-        .type-network  { background: rgba(34,201,122,0.15); border-left: 3px solid #22c97a; }
-        .type-security { background: rgba(212,160,23,0.15); border-left: 3px solid #d4a017; }
-        .type-storage  { background: rgba(167,139,250,0.15); border-left: 3px solid #a78bfa; }
+        .type-server   { background: rgba(90,154,245,0.15);  border-left: 3px solid #5a9af5; }
+        .type-network  { background: rgba(155,106,245,0.15); border-left: 3px solid #9b6af5; }
+        .type-security { background: rgba(224,86,86,0.15);   border-left: 3px solid #e05656; }
+        .type-storage  { background: rgba(61,214,200,0.15);  border-left: 3px solid #3dd6c8; }
         .type-pdu      { background: rgba(249,115,22,0.15); border-left: 3px solid #f97316; }
         .type-patch    { background: rgba(100,116,139,0.15); border-left: 3px solid #64748b; }
         .type-kvm      { background: rgba(236,72,153,0.15); border-left: 3px solid #ec4899; }
