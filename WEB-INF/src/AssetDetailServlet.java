@@ -122,31 +122,40 @@ public class AssetDetailServlet extends HttpServlet {
                 }
             }
 
-            // 포트맵
-            List<PortMapVO> portMap = new ArrayList<>();
+            // 통합 포트맵 (출발 + 수신 병합)
+            List<PortMapVO> unifiedPortMap = new ArrayList<>();
+
+            // 출발 포트맵 (이 장비 → 상대)
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT p.*, a.asset_name AS dst_asset_name FROM tb_port_map p LEFT JOIN tb_asset a ON p.dst_asset_seq = a.asset_seq WHERE p.asset_seq=? ORDER BY p.sort_order, p.port_seq")) {
+                    "SELECT p.*, a.asset_name AS dst_asset_name FROM tb_port_map p " +
+                    "LEFT JOIN tb_asset a ON p.dst_asset_seq = a.asset_seq WHERE p.asset_seq=? ORDER BY p.sort_order, p.port_seq")) {
                 ps.setInt(1, assetSeq);
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
-                    PortMapVO pm     = new PortMapVO();
-                    pm.portSeq       = rs.getInt("port_seq");
-                    pm.srcPort       = rs.getString("src_port");
-                    int dSeq         = rs.getInt("dst_asset_seq");
-                    pm.dstAssetSeq   = rs.wasNull() ? null : dSeq;
-                    pm.dstAssetName  = rs.getString("dst_asset_name");
-                    pm.dstDeviceName = rs.getString("dst_device_name");
-                    pm.dstPort       = rs.getString("dst_port");
-                    pm.cableType     = rs.getString("cable_type");
-                    pm.cableColor    = rs.getString("cable_color");
-                    pm.memo          = rs.getString("memo");
-                    pm.sortOrder     = rs.getInt("sort_order");
-                    portMap.add(pm);
+                    PortMapVO pm      = new PortMapVO();
+                    pm.portSeq        = rs.getInt("port_seq");
+                    pm.ownerAssetSeq  = assetSeq;
+                    pm.srcPort        = rs.getString("src_port");
+                    pm.dstDeviceName  = rs.getString("dst_device_name");
+                    pm.dstPort        = rs.getString("dst_port");
+                    pm.dstAssetName   = rs.getString("dst_asset_name");
+                    int dSeq          = rs.getInt("dst_asset_seq");
+                    pm.dstAssetSeq    = rs.wasNull() ? null : dSeq;
+                    pm.cableType      = rs.getString("cable_type");
+                    pm.cableColor     = rs.getString("cable_color");
+                    pm.memo           = rs.getString("memo");
+                    pm.sortOrder      = rs.getInt("sort_order");
+                    pm.direction      = "OUT";
+                    pm.myPort         = pm.srcPort;
+                    pm.peerPort       = pm.dstPort;
+                    pm.peerAssetSeq   = pm.dstAssetSeq;
+                    pm.peerAssetName  = pm.dstAssetName != null ? pm.dstAssetName : pm.dstDeviceName;
+                    pm.peerDeviceName = pm.dstDeviceName;
+                    unifiedPortMap.add(pm);
                 }
             }
 
-            // 수신 포트맵 (다른 장비에서 이 장비로 연결된 포트)
-            List<PortMapVO> incomingPortMap = new ArrayList<>();
+            // 수신 포트맵 (상대 → 이 장비)
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT p.*, a.asset_name AS src_asset_name FROM tb_port_map p " +
                     "JOIN tb_asset a ON p.asset_seq = a.asset_seq " +
@@ -164,9 +173,21 @@ public class AssetDetailServlet extends HttpServlet {
                     pm.cableColor     = rs.getString("cable_color");
                     pm.memo           = rs.getString("memo");
                     pm.sortOrder      = rs.getInt("sort_order");
-                    incomingPortMap.add(pm);
+                    pm.direction      = "IN";
+                    pm.myPort         = pm.dstPort;
+                    pm.peerPort       = pm.srcPort;
+                    pm.peerAssetSeq   = pm.ownerAssetSeq;
+                    pm.peerAssetName  = pm.srcAssetName;
+                    unifiedPortMap.add(pm);
                 }
             }
+
+            // 내 포트명 기준 알파벳 정렬
+            unifiedPortMap.sort((a2, b2) -> {
+                String pa = a2.myPort != null ? a2.myPort : "";
+                String pb = b2.myPort != null ? b2.myPort : "";
+                return pa.compareToIgnoreCase(pb);
+            });
 
             // 같은 고객사 자산 (도착지 자동완성용)
             List<SimpleAssetVO> siblingAssets = new ArrayList<>();
@@ -186,8 +207,7 @@ public class AssetDetailServlet extends HttpServlet {
             req.setAttribute("asset",           asset);
             req.setAttribute("frontPhoto",      frontPhoto);
             req.setAttribute("rearPhoto",       rearPhoto);
-            req.setAttribute("portMap",         portMap);
-            req.setAttribute("incomingPortMap", incomingPortMap);
+            req.setAttribute("unifiedPortMap",  unifiedPortMap);
             req.setAttribute("siblingAssets",   siblingAssets);
 
         } catch (Exception e) {
@@ -392,6 +412,13 @@ public class AssetDetailServlet extends HttpServlet {
         public int     portSeq, sortOrder, ownerAssetSeq;
         public String  srcPort, dstDeviceName, dstPort, cableType, cableColor, memo, dstAssetName, srcAssetName;
         public Integer dstAssetSeq;
+        // 통합 포트맵용 정규화 필드
+        public String  direction;      // "OUT" | "IN"
+        public String  myPort;         // 이 장비의 포트
+        public String  peerPort;       // 상대 장비의 포트
+        public String  peerAssetName;  // 상대 장비명
+        public String  peerDeviceName; // 상대 장비 자유입력명 (OUT일 때)
+        public Integer peerAssetSeq;   // 상대 장비 seq (링크용)
     }
 
     public static class SimpleAssetVO {

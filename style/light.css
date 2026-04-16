@@ -241,6 +241,10 @@
 [data-theme="light"] .photo-area { background:#f8fafc; border-color:#e2e8f0; }
 [data-theme="light"] .photo-placeholder { color:#94a3b8; }
 
+/* ── asset_detail — 포트맵 방향 chip ── */
+[data-theme="light"] .chip-out { background:#eff2ff; color:#3b6ef5; border-color:#c7d4fb; }
+[data-theme="light"] .chip-in  { background:#ecfdf5; color:#15803d; border-color:#bbf7d0; }
+
 /* ── asset_detail — 도착지 장비 드롭다운 ── */
 [data-theme="light"] .sibling-dropdown { background:#ffffff; border-color:#cbd5e1; box-shadow:0 8px 24px rgba(0,0,0,.1); }
 [data-theme="light"] .sibling-option { color:#1e293b; }
