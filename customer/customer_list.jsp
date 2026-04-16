@@ -264,5 +264,6 @@
 function toggleUserMenu(row){const m=document.getElementById('userMenu');if(!m)return;const o=m.classList.toggle('open');row.classList.toggle('open',o);}
 document.addEventListener('click',function(e){const m=document.getElementById('userMenu'),r=document.querySelector('.user-row');if(m&&r&&!r.contains(e.target)&&!m.contains(e.target)){m.classList.remove('open');r.classList.remove('open');}});
 </script>
+<script src="../js/common.js"></script>
 </body>
 </html>

@@ -805,5 +805,6 @@
     // 초기 사진 액션 버튼 렌더링
     renderPhotoActions();
 </script>
+<script src="../js/common.js"></script>
 </body>
 </html>

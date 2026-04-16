@@ -370,5 +370,6 @@
         <p class="right-title">내부 관리 시스템</p>
     </div>
 
+<script src="js/common.js"></script>
 </body>
 </html>
