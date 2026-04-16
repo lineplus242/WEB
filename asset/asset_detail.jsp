@@ -192,6 +192,17 @@
         .empty-row td { text-align: center; padding: 48px; color: #3d4251; }
         .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 
+        /* IP 주소 */
+        .ip-list { display: flex; flex-direction: column; gap: 8px; }
+        .ip-item { display: inline-flex; align-items: center; gap: 8px; }
+        .ip-type { font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 5px; font-family: 'Pretendard', system-ui, sans-serif; white-space: nowrap; flex-shrink: 0; }
+        .ip-type-mgmt    { background: rgba(90,154,245,0.12);  color: #5a9af5; }
+        .ip-type-service { background: rgba(61,214,200,0.12);  color: #3dd6c8; }
+        .ip-type-ha      { background: rgba(155,106,245,0.12); color: #9b6af5; }
+        .ip-type-bmc     { background: rgba(212,160,23,0.12);  color: #d4a017; }
+        .ip-type-default { background: rgba(90,154,245,0.1);   color: #6b9af5; }
+        .ip-addr { font-family: 'DM Mono', monospace; font-size: 12.5px; color: #a1a1aa; letter-spacing: 0.02em; }
+
         /* 계정 정보 */
         .account-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #161820; }
         .account-row:last-child { border-bottom: none; }
@@ -472,13 +483,17 @@
                                             var el = document.getElementById('ipDisplay');
                                             if (!el) return;
                                             if (items && Array.isArray(items)) {
-                                                el.innerHTML = items.map(function(it){
-                                                    return '<span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">'
-                                                        + '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#1a1c22;color:#6b9af5;border:1px solid #252830">' + it.type + '</span>'
-                                                        + '<span style="font-family:\'DM Mono\',monospace;font-size:12px">' + it.addr + '</span></span>';
-                                                }).join('');
+                                                el.innerHTML = '<div class="ip-list">' + items.map(function(it){
+                                                    var k = it.type ? it.type.toLowerCase() : '';
+                                                    var cls = 'ip-type-default';
+                                                    if (k === 'mgmt' || k === 'management') cls = 'ip-type-mgmt';
+                                                    else if (k === 'service') cls = 'ip-type-service';
+                                                    else if (k === 'ha')      cls = 'ip-type-ha';
+                                                    else if (k === 'bmc')     cls = 'ip-type-bmc';
+                                                    return '<div class="ip-item"><span class="ip-type ' + cls + '">' + it.type + '</span><span class="ip-addr">' + it.addr + '</span></div>';
+                                                }).join('') + '</div>';
                                             } else {
-                                                el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:12px">' + raw.replace(/,/g, '<br>') + '</span>';
+                                                el.innerHTML = '<div class="ip-list">' + raw.split(',').map(function(a){ return '<div class="ip-item"><span class="ip-addr">' + a.trim() + '</span></div>'; }).join('') + '</div>';
                                             }
                                         })();
                                         </script>
