@@ -119,6 +119,11 @@
         .filter-btn:hover { color: #c8cad0; }
         .filter-btn.active { background: #1a1e2e; color: #6b9af5; }
 
+        /* 전체접기/펼치기 버튼 */
+        .fold-bar { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 10px; }
+        .fold-btn { padding: 5px 12px; font-size: 11px; font-weight: 500; border: 1px solid #252830; background: none; color: #6b7280; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.12s, color 0.12s; }
+        .fold-btn:hover { background: #161820; color: #c8cad0; }
+
         /* 항목 카드 */
         .item-list { display: flex; flex-direction: column; gap: 8px; }
         .item-card { background: #131519; border: 1px solid #1e2025; border-radius: 10px; overflow: hidden; border-left: 3px solid transparent; transition: border-color 0.12s; }
@@ -127,9 +132,12 @@
         .border-manual { border-left-color: #f5a623; }
         .border-na    { border-left-color: #4b5161; }
 
-        .item-top { padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; }
-        .item-code { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: #6b9af5; background: #1a1e2e; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; margin-top: 1px; }
-        .item-title { flex: 1; font-size: 14px; color: #e8e9eb; font-weight: 500; line-height: 1.4; }
+        .item-top { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+        .item-top:hover { background: rgba(255,255,255,0.02); }
+        .item-code { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: #6b9af5; background: #1a1e2e; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; }
+        .item-title { flex: 1; font-size: 13px; color: #e8e9eb; font-weight: 500; line-height: 1.4; }
+        .item-chevron { width: 14px; height: 14px; color: #3d4251; flex-shrink: 0; transition: transform 0.18s; }
+        .item-card.open .item-chevron { transform: rotate(180deg); }
 
         .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 500; white-space: nowrap; }
         .chip-g  { background: rgba(34,201,122,0.12); color: #22c97a; }
@@ -140,19 +148,23 @@
         .modified-badge { font-size: 10px; background: rgba(59,110,245,0.15); color: #6b9af5; padding: 2px 6px; border-radius: 4px; }
         .memo-icon { color: #f5a623; opacity: 0.8; }
 
+        /* 접기/펼치기 콘텐츠 */
+        .item-body { display: none; }
+        .item-card.open .item-body { display: block; }
+
         .item-evidence { padding: 0 16px 12px; }
         .evidence-pre { background: #0b0c0f; border: 1px solid #1a1c22; border-radius: 8px; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 11.5px; color: #9ca3af; white-space: pre-wrap; word-break: break-all; line-height: 1.6; max-height: 240px; overflow-y: auto; }
 
         /* 인라인 편집 */
         .item-edit { padding: 10px 16px 14px; border-top: 1px solid #1a1c22; background: #0f1014; }
         .edit-row { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
-        .edit-field { flex: 1; min-width: 140px; }
+        .edit-field-status { flex: 0 0 120px; }
         .edit-label { font-size: 10px; font-weight: 500; color: #4b5161; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
         .edit-select { background: #0e0f11; border: 1px solid #252830; border-radius: 7px; padding: 7px 10px; font-size: 12px; color: #e8e9eb; font-family: 'DM Sans', sans-serif; width: 100%; }
         .edit-select:focus { outline: none; border-color: #3b6ef5; }
-        .edit-textarea { background: #0e0f11; border: 1px solid #252830; border-radius: 7px; padding: 7px 10px; font-size: 12px; color: #c8cad0; font-family: 'DM Sans', sans-serif; width: 100%; min-height: 60px; resize: vertical; }
+        .edit-textarea { background: #0e0f11; border: 1px solid #252830; border-radius: 7px; padding: 7px 10px; font-size: 12px; color: #c8cad0; font-family: 'DM Sans', sans-serif; width: 100%; height: 34px; min-height: 34px; max-height: 200px; resize: none; overflow-y: hidden; line-height: 1.5; }
         .edit-textarea:focus { outline: none; border-color: #3b6ef5; }
-        .edit-memo { flex: 2; min-width: 200px; }
+        .edit-memo { flex: 1; min-width: 180px; }
         .edit-actions { display: flex; gap: 6px; align-items: flex-end; padding-bottom: 1px; }
         .btn-save { padding: 7px 14px; background: #3b6ef5; color: #fff; border: none; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.12s; }
         .btn-save:hover { background: #2d5ce0; }
@@ -188,10 +200,13 @@
         [data-theme="light"] .filter-bar { background: #f3f4f6; border-color: #e5e7eb; }
         [data-theme="light"] .filter-btn.active { background: #fff; }
         [data-theme="light"] .item-card { background: #fff; border-color: #e5e7eb; }
+        [data-theme="light"] .item-top:hover { background: rgba(0,0,0,0.02); }
         [data-theme="light"] .item-title { color: #111827; }
         [data-theme="light"] .evidence-pre { background: #f9fafb; border-color: #e5e7eb; color: #4b5563; }
         [data-theme="light"] .item-edit { background: #f9fafb; border-color: #e5e7eb; }
         [data-theme="light"] .edit-select, [data-theme="light"] .edit-textarea { background: #fff; border-color: #e5e7eb; color: #111827; }
+        [data-theme="light"] .fold-btn { border-color: #e5e7eb; }
+        [data-theme="light"] .fold-btn:hover { background: #f3f4f6; }
         [data-theme="light"] .server-tabs { border-color: #e5e7eb; }
         [data-theme="light"] .server-tab { color: #9ca3af; }
         [data-theme="light"] .server-tab.active { color: #3b6ef5; }
@@ -353,6 +368,12 @@
             <button class="filter-btn" onclick="filter('수동점검', this)">수동점검 (<%= currentScan.manualCount %>)</button>
         </div>
 
+        <!-- 전체접기/펼치기 -->
+        <div class="fold-bar">
+            <button class="fold-btn" onclick="foldAll()">전체 접기</button>
+            <button class="fold-btn" onclick="expandAll()">전체 펼치기</button>
+        </div>
+
         <!-- 항목 목록 -->
         <div class="item-list" id="itemList">
             <% for (ScanItemVO item : items) {
@@ -360,46 +381,45 @@
                boolean hasMemo    = !item.memo.isEmpty();
             %>
             <div class="item-card <%= borderClass(item.result) %>" data-result="<%= item.result %>" id="card_<%= item.itemId %>">
-                <div class="item-top">
+                <div class="item-top" onclick="toggleCard(this.closest('.item-card'))">
                     <span class="item-code"><%= nvl(item.iCode) %></span>
-                    <div style="flex:1;">
-                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <span class="item-title"><%= nvl(item.iTitle) %></span>
-                        </div>
-                    </div>
+                    <span class="item-title"><%= nvl(item.iTitle) %></span>
                     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                         <% if (hasMemo) { %>
-                        <svg class="memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        <svg class="memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                         <% } %>
                         <% if (isModified) { %>
                         <span class="modified-badge">수정됨</span>
                         <% } %>
                         <span class="chip <%= resultClass(item.result) %>" id="chip_<%= item.itemId %>"><%= nvl(item.result) %></span>
                     </div>
+                    <svg class="item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <% if (!item.evidence.isEmpty()) { %>
-                <div class="item-evidence">
-                    <pre class="evidence-pre"><%= item.evidence.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;") %></pre>
-                </div>
-                <% } %>
-                <!-- 인라인 편집 -->
-                <div class="item-edit">
-                    <div class="edit-row">
-                        <div class="edit-field">
-                            <div class="edit-label">결과 상태</div>
-                            <select class="edit-select" id="sel_<%= item.itemId %>">
-                                <option value="양호"    <%= "양호".equals(item.result)    ? "selected" : "" %>>양호</option>
-                                <option value="취약"    <%= "취약".equals(item.result)    ? "selected" : "" %>>취약</option>
-                                <option value="수동점검" <%= "수동점검".equals(item.result) ? "selected" : "" %>>수동점검</option>
-                                <option value="N/A"    <%= "N/A".equals(item.result)     ? "selected" : "" %>>N/A</option>
-                            </select>
-                        </div>
-                        <div class="edit-field edit-memo">
-                            <div class="edit-label">메모</div>
-                            <textarea class="edit-textarea" id="memo_<%= item.itemId %>" placeholder="담당자 메모, 조치사항 등"><%= nvl(item.memo).replace("<","&lt;").replace(">","&gt;") %></textarea>
-                        </div>
-                        <div class="edit-actions">
-                            <button class="btn-save" onclick="saveItem(<%= item.itemId %>)">저장</button>
+                <div class="item-body">
+                    <% if (!item.evidence.isEmpty()) { %>
+                    <div class="item-evidence">
+                        <pre class="evidence-pre"><%= item.evidence.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;") %></pre>
+                    </div>
+                    <% } %>
+                    <!-- 인라인 편집 -->
+                    <div class="item-edit">
+                        <div class="edit-row">
+                            <div class="edit-field-status">
+                                <div class="edit-label">결과 상태</div>
+                                <select class="edit-select" id="sel_<%= item.itemId %>">
+                                    <option value="양호"    <%= "양호".equals(item.result)    ? "selected" : "" %>>양호</option>
+                                    <option value="취약"    <%= "취약".equals(item.result)    ? "selected" : "" %>>취약</option>
+                                    <option value="수동점검" <%= "수동점검".equals(item.result) ? "selected" : "" %>>수동점검</option>
+                                    <option value="N/A"    <%= "N/A".equals(item.result)     ? "selected" : "" %>>N/A</option>
+                                </select>
+                            </div>
+                            <div class="edit-memo">
+                                <div class="edit-label">메모</div>
+                                <textarea class="edit-textarea" id="memo_<%= item.itemId %>" placeholder="담당자 메모, 조치사항 등" oninput="autoResize(this)"><%= nvl(item.memo).replace("<","&lt;").replace(">","&gt;") %></textarea>
+                            </div>
+                            <div class="edit-actions">
+                                <button class="btn-save" onclick="saveItem(<%= item.itemId %>)">저장</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -470,6 +490,20 @@ function borderClass(r) {
     return 'border-manual';
 }
 
+function toggleCard(card) {
+    card.classList.toggle('open');
+}
+function foldAll() {
+    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('open'));
+}
+function expandAll() {
+    document.querySelectorAll('.item-card').forEach(c => c.classList.add('open'));
+}
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+}
+
 function showToast(msg, type) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -493,6 +527,10 @@ function setTheme(t) {
     const t = localStorage.getItem('theme') || 'dark';
     document.getElementById('btnDark').classList.toggle('active',  t !== 'light');
     document.getElementById('btnLight').classList.toggle('active', t === 'light');
+    // 메모 내용 있는 textarea 초기 높이 조정
+    document.querySelectorAll('.edit-textarea').forEach(el => {
+        if (el.value.trim()) autoResize(el);
+    });
 })();
 </script>
 </body>

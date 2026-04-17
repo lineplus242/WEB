@@ -76,7 +76,8 @@
         .btn-primary:hover { background: #2d5ce0; }
         .btn-danger { background: transparent; color: #e05656; border: 1px solid #3d1515; }
         .btn-danger:hover { background: #2a1015; }
-        .btn-sm { padding: 5px 12px; font-size: 12px; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; white-space: nowrap; }
+        .action-cell { white-space: nowrap; }
 
         .section-title { font-size: 12px; font-weight: 500; color: #4b5161; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 28px; }
         .section-title:first-child { margin-top: 0; }
@@ -283,7 +284,7 @@
                         <th>배치명</th>
                         <th>서버 수</th>
                         <th>업로드 일시</th>
-                        <th style="width:120px">액션</th>
+                        <th style="width:120px">관리</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -292,8 +293,8 @@
                         <td><strong style="color:#e8e9eb"><%= nvl(b.batchName) %></strong></td>
                         <td><span class="chip chip-blue"><%= b.serverCount %>개 서버</span></td>
                         <td style="color:#6b7280;font-size:12px;"><%= shortDate(b.createdAt) %></td>
-                        <td>
-                            <div style="display:flex;gap:6px;">
+                        <td class="action-cell">
+                            <div style="display:flex;gap:6px;flex-wrap:nowrap;">
                                 <a href="../SecurityScan?action=detail&batchId=<%= b.batchId %>" class="btn btn-sm" style="background:#1a1e2e;color:#6b9af5;text-decoration:none;">보기</a>
                                 <button class="btn btn-sm btn-danger" onclick="deleteBatch(<%= b.batchId %>, '<%= nvl(b.batchName).replace("'","&#39;") %>')">삭제</button>
                             </div>
@@ -325,7 +326,7 @@
                         <th>양호</th>
                         <th>취약</th>
                         <th>수동점검</th>
-                        <th style="width:120px">액션</th>
+                        <th style="width:120px">관리</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -338,8 +339,8 @@
                         <td class="count-cell ok-num"><%= s.okCount %></td>
                         <td class="count-cell vuln-num"><%= s.vulnCount %></td>
                         <td class="count-cell manual-num"><%= s.manualCount %></td>
-                        <td>
-                            <div style="display:flex;gap:6px;">
+                        <td class="action-cell">
+                            <div style="display:flex;gap:6px;flex-wrap:nowrap;">
                                 <a href="../SecurityScan?action=detail&scanId=<%= s.scanId %>" class="btn btn-sm" style="background:#1a1e2e;color:#6b9af5;text-decoration:none;">보기</a>
                                 <button class="btn btn-sm btn-danger" onclick="deleteScan(<%= s.scanId %>, '<%= nvl(s.serverLabel).replace("'","&#39;") %>')">삭제</button>
                             </div>
