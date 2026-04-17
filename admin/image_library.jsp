@@ -143,6 +143,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
             사용자 관리
         </a>
+        
+        <a href="../SecurityScan?action=list" class="sb-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            보안점검
+        </a>
         <div class="sb-section">계정</div>
         <a href="../UserServlet?action=changePw" class="sb-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -278,7 +283,10 @@
         if (q)   url += '&q='        + encodeURIComponent(q);
         if (cat) url += '&category=' + encodeURIComponent(cat);
 
-        fetch(url).then(r => r.json()).then(data => {
+        fetch(url).then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }).then(data => {
             const grid  = document.getElementById('imgGrid');
             const empty = document.getElementById('emptyState');
             if (!Array.isArray(data) || data.length === 0) {
@@ -288,24 +296,24 @@
             }
             empty.style.display = 'none';
             grid.innerHTML = data.map(img => `
-                <div class="img-card" id="card-${img.imgSeq}">
-                    <img class="img-thumb" src="../${img.filePath}" alt="${esc(img.imgName)}"
+                <div class="img-card" id="card-\${img.imgSeq}">
+                    <img class="img-thumb" src="../\${img.filePath}" alt="\${esc(img.imgName)}"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
-                         onclick="openZoom('../${img.filePath}')">
+                         onclick="openZoom('../\${img.filePath}')">
                     <div class="img-thumb-empty" style="display:none">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                     </div>
                     <div class="img-info">
-                        <div class="img-name" title="${esc(img.imgName)}">${esc(img.imgName)}</div>
+                        <div class="img-name" title="\${esc(img.imgName)}">\${esc(img.imgName)}</div>
                         <div class="img-meta">
-                            <span>${formatSize(img.fileSize)}</span>
-                            <span>${img.createdAt ? img.createdAt.substring(0,10) : ''}</span>
+                            <span>\${formatSize(img.fileSize)}</span>
+                            <span>\${img.createdAt ? img.createdAt.substring(0,10) : ''}</span>
                         </div>
-                        <span class="img-cat">${esc(img.category)}</span>
+                        <span class="img-cat">\${esc(img.category)}</span>
                     </div>
                     <div class="img-footer">
                         <button class="btn btn-danger" style="padding:5px 12px;font-size:12px"
-                                onclick="deleteImg(${img.imgSeq}, '${esc(img.imgName)}')">삭제</button>
+                                onclick="deleteImg(\${img.imgSeq}, '\${esc(img.imgName)}')">삭제</button>
                     </div>
                 </div>
             `).join('');
@@ -365,7 +373,7 @@
         fd.append('imageFile', file);
 
         fetch('../ImageLibraryServlet', { method: 'POST', body: fd })
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(d => {
                 if (d.ok) {
                     closeUploadModal();
@@ -384,7 +392,7 @@
         fd.append('action', 'delete');
         fd.append('imgSeq', imgSeq);
         fetch('../ImageLibraryServlet', { method: 'POST', body: fd })
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(d => {
                 if (d.ok) {
                     document.getElementById('card-' + imgSeq)?.remove();

@@ -159,14 +159,14 @@
         .photo-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; color: #3d4251; }
         .photo-placeholder svg { opacity: 0.4; }
         .photo-placeholder p { font-size: 13px; }
-        .photo-actions { display: flex; align-items: center; gap: 8px; position: relative; }
+        .photo-actions { display: flex; align-items: center; gap: 8px; }
 
-        /* 소스 선택 드롭다운 */
-        .src-dropdown { position: absolute; top: calc(100% + 6px); right: 0; background: #1a1c22; border: 1px solid #252830; border-radius: 10px; padding: 5px; z-index: 300; min-width: 180px; display: none; }
-        .src-dropdown.open { display: block; }
-        .src-dd-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; color: #c8cad0; cursor: pointer; transition: background 0.12s; white-space: nowrap; }
+        /* 소스 선택 모달 */
+        .src-picker-modal { background: #1a1c22; border: 1px solid #252830; border-radius: 12px; padding: 8px; min-width: 220px; }
+        .src-picker-title { font-size: 11px; color: #4b5161; padding: 4px 10px 8px; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid #252830; margin-bottom: 4px; }
+        .src-dd-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 8px; font-size: 13px; color: #c8cad0; cursor: pointer; transition: background 0.12s; white-space: nowrap; width: 100%; border: none; background: none; font-family: 'DM Sans', sans-serif; text-align: left; }
         .src-dd-item:hover { background: #252830; }
-        .src-dd-item svg { width: 15px; height: 15px; flex-shrink: 0; color: #6b9af5; }
+        .src-dd-item svg { width: 16px; height: 16px; flex-shrink: 0; color: #6b9af5; }
 
         /* 라이브러리 picker 모달 */
         .lib-modal { background: #131519; border: 1px solid #252830; border-radius: 14px; width: 760px; max-width: 95vw; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -296,7 +296,12 @@
         사용자 관리
     </a>
     <% } %>
-    <div class="sb-section">계정</div>
+    
+        <a href="../SecurityScan?action=list" class="sb-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            보안점검
+        </a>
+        <div class="sb-section">계정</div>
     <a href="../UserServlet?action=changePw" class="sb-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         비밀번호 변경
@@ -739,6 +744,21 @@
     </div>
 </div>
 
+<!-- ── 소스 선택 모달 ─────────────────────────────────────── -->
+<div class="modal-overlay" id="srcPickerModal">
+    <div class="src-picker-modal">
+        <div class="src-picker-title">업로드 방법 선택</div>
+        <button class="src-dd-item" onclick="pickFromPC()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            내 PC에서 업로드
+        </button>
+        <button class="src-dd-item" onclick="pickFromLibrary()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            서버 라이브러리에서 선택
+        </button>
+    </div>
+</div>
+
 <!-- ── 라이브러리 picker 모달 ────────────────────────────── -->
 <div class="modal-overlay" id="libPickerModal">
     <div class="lib-modal">
@@ -802,50 +822,34 @@
     function renderPhotoActions() {
         const hasPhoto = PHOTO_STATE[currentPhotoTab];
         const actEl = document.getElementById('photoActions');
-        let html = '<button class="btn btn-secondary btn-sm" onclick="toggleSrcDropdown(event, \'' + currentPhotoTab + '\')">'
+        let html = '<button class="btn btn-secondary btn-sm" onclick="openSrcPicker(\'' + currentPhotoTab + '\')">'
                  + (hasPhoto ? '사진 교체' : '+ 사진 업로드')
-                 + '</button>'
-                 + '<div class="src-dropdown" id="srcDropdown">'
-                 + '  <div class="src-dd-item" onclick="pickFromPC()">'
-                 + '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
-                 + '    내 PC에서 업로드'
-                 + '  </div>'
-                 + '  <div class="src-dd-item" onclick="pickFromLibrary()">'
-                 + '    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
-                 + '    서버 라이브러리에서 선택'
-                 + '  </div>'
-                 + '</div>';
+                 + '</button>';
         if (hasPhoto) {
             html += '<button class="btn btn-danger btn-sm" onclick="submitDelete(\'' + currentPhotoTab + '\')">삭제</button>';
         }
         actEl.innerHTML = html;
     }
 
-    let _srcDropSide = 'F';
-    function toggleSrcDropdown(e, side) {
-        e.stopPropagation();
-        _srcDropSide = side;
-        const dd = document.getElementById('srcDropdown');
-        if (!dd) return;
-        dd.classList.toggle('open');
+    let _srcPickerSide = 'F';
+    function openSrcPicker(side) {
+        _srcPickerSide = side;
+        document.getElementById('srcPickerModal').classList.add('open');
     }
-    document.addEventListener('click', function() {
-        const dd = document.getElementById('srcDropdown');
-        if (dd) dd.classList.remove('open');
-    });
+    function closeSrcPicker() {
+        document.getElementById('srcPickerModal').classList.remove('open');
+    }
 
     function pickFromPC() {
-        const dd = document.getElementById('srcDropdown');
-        if (dd) dd.classList.remove('open');
-        document.getElementById('uploadSide').value = _srcDropSide;
+        closeSrcPicker();
+        document.getElementById('uploadSide').value = _srcPickerSide;
         document.getElementById('photoFileInput').value = '';
         document.getElementById('photoFileInput').click();
     }
 
     function pickFromLibrary() {
-        const dd = document.getElementById('srcDropdown');
-        if (dd) dd.classList.remove('open');
-        _libTargetSide = _srcDropSide;
+        closeSrcPicker();
+        _libTargetSide = _srcPickerSide;
         _libSelectedSeq = null;
         document.getElementById('libSearchInput').value = '';
         document.getElementById('libCatFilter').value = '';
@@ -869,7 +873,7 @@
         if (q)   url += '&q='        + encodeURIComponent(q);
         if (cat) url += '&category=' + encodeURIComponent(cat);
 
-        fetch(url).then(r => r.json()).then(data => {
+        fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(data => {
             const grid  = document.getElementById('libGrid');
             const empty = document.getElementById('libEmpty');
             if (!Array.isArray(data) || data.length === 0) {
@@ -877,11 +881,11 @@
             }
             empty.style.display = 'none';
             grid.innerHTML = data.map(img => `
-                <div class="lib-item" id="lib-item-${img.imgSeq}" onclick="selectLibItem(${img.imgSeq}, '${escHtml(img.imgName)}')">
-                    <img src="../${img.filePath}" alt="${escHtml(img.imgName)}"
+                <div class="lib-item" id="lib-item-\${img.imgSeq}" onclick="selectLibItem(\${img.imgSeq}, '\${escHtml(img.imgName)}')">
+                    <img src="../\${img.filePath}" alt="\${escHtml(img.imgName)}"
                          onerror="this.style.background='#1a1c22';this.style.height='100px'">
-                    <div class="lib-item-name" title="${escHtml(img.imgName)}">${escHtml(img.imgName)}</div>
-                    <div class="lib-item-cat"><span>${escHtml(img.category)}</span></div>
+                    <div class="lib-item-name" title="\${escHtml(img.imgName)}">\${escHtml(img.imgName)}</div>
+                    <div class="lib-item-cat"><span>\${escHtml(img.category)}</span></div>
                 </div>
             `).join('');
         }).catch(() => {});
@@ -1046,6 +1050,9 @@
                 if (this.id === 'libPickerModal') { _libSelectedSeq = null; }
             }
         });
+    });
+    document.getElementById('srcPickerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeSrcPicker();
     });
 
     // 초기 사진 액션 버튼 렌더링

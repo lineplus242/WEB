@@ -314,7 +314,12 @@
         사용자 관리
     </a>
     <% } %>
-    <div class="sb-section">계정</div>
+    
+        <a href="../SecurityScan?action=list" class="sb-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            보안점검
+        </a>
+        <div class="sb-section">계정</div>
     <a href="../UserServlet?action=changePw" class="sb-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         비밀번호 변경
@@ -1318,7 +1323,7 @@
                     case 'purchase': cols.push(a.purchaseDt); break;
                     case 'status':   cols.push(statusLabel[a.status] || a.status); break;
                     case 'memo':     cols.push(a.memo); break;
-                }
+            }
             });
             return cols.map(esc).join(',');
         });

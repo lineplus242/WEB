@@ -346,6 +346,10 @@
             사용자 관리
         </a>
         <% } %>
+        <a href="SecurityScan?action=list" class="sb-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            보안점검
+        </a>
 
         <div class="sb-section">계정</div>
 
