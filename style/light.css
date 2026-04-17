@@ -305,3 +305,23 @@
 [data-theme="light"] .account-pw { color:#94a3b8; }
 [data-theme="light"] .pw-toggle { color:#94a3b8; border-color:#e2e8f0; background:#f8fafc; }
 [data-theme="light"] .pw-toggle:hover { color:#3b6ef5; border-color:#3b6ef5; }
+
+/* ── image_library — 툴바 검색 / 필터 ── */
+[data-theme="light"] .search-wrap { background:#ffffff; border-color:#cbd5e1; }
+[data-theme="light"] .search-wrap input { color:#1e293b; }
+[data-theme="light"] .search-wrap input::placeholder { color:#94a3b8; }
+[data-theme="light"] .search-wrap svg { color:#94a3b8; }
+[data-theme="light"] .search-divider { background:#cbd5e1; }
+[data-theme="light"] .cat-filter { background:#ffffff; border-color:#cbd5e1; color:#1e293b; }
+[data-theme="light"] .cat-filter option { background:#ffffff; color:#1e293b; }
+
+/* ── image_library — 카드 / 그리드 ── */
+[data-theme="light"] .img-card { background:#ffffff; border-color:#cbd5e1; }
+[data-theme="light"] .img-card:hover { border-color:#a5b4fc; }
+[data-theme="light"] .img-thumb { background:#f8fafc; }
+[data-theme="light"] .img-thumb-empty { background:#f8fafc; color:#94a3b8; }
+[data-theme="light"] .img-name { color:#1e293b; }
+[data-theme="light"] .img-meta { color:#64748b; }
+[data-theme="light"] .img-cat { background:#eff2ff; color:#3b6ef5; }
+[data-theme="light"] .img-footer { border-color:#e2e8f0; }
+[data-theme="light"] .empty-state { color:#94a3b8; }

@@ -4,6 +4,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import java.io.*;
@@ -19,6 +21,7 @@ import java.util.regex.*;
  *  GET  /SecurityScan?action=list              → 목록 페이지
  *  GET  /SecurityScan?action=detail&scanId=N   → 상세 페이지
  *  GET  /SecurityScan?action=detail&batchId=N  → 배치 상세 (첫 번째 스캔)
+ *  GET  /SecurityScan?action=downloadExcel     → 엑셀 다운로드 (scanId or batchId)
  *  POST /SecurityScan?action=upload            → tar 업로드 (1개 이상)
  *  POST /SecurityScan?action=delete            → 삭제 (scanId 또는 batchId)
  *  POST /SecurityScan?action=updateItem        → 항목 수정 (JSON)
@@ -51,8 +54,9 @@ public class SecurityScanServlet extends HttpServlet {
 
         String action = nvlD(req.getParameter("action"), "list");
         switch (action) {
-            case "detail" -> doDetail(req, resp);
-            default       -> doList(req, resp);
+            case "detail"        -> doDetail(req, resp);
+            case "downloadExcel" -> doDownloadExcel(req, resp);
+            default              -> doList(req, resp);
         }
     }
 
@@ -82,7 +86,6 @@ public class SecurityScanServlet extends HttpServlet {
         List<ScanVO> scans = new ArrayList<>();
         List<BatchVO> batches = new ArrayList<>();
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
-            // 배치 목록
             String bsql = "SELECT b.batch_id, b.batch_name, b.created_at, COUNT(s.scan_id) AS server_count " +
                           "FROM security_scan_batch b LEFT JOIN security_scan s ON s.batch_id=b.batch_id " +
                           "GROUP BY b.batch_id ORDER BY b.created_at DESC";
@@ -97,8 +100,7 @@ public class SecurityScanServlet extends HttpServlet {
                     batches.add(b);
                 }
             }
-            // 개별 스캔 목록 (batch_id IS NULL)
-            String ssql = "SELECT scan_id, server_label, hostname, os_type, scan_date, uploaded_at, " +
+            String ssql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
                           "file_name, total_count, ok_count, vuln_count, manual_count " +
                           "FROM security_scan WHERE batch_id IS NULL ORDER BY uploaded_at DESC";
             try (PreparedStatement ps = conn.prepareStatement(ssql);
@@ -128,8 +130,7 @@ public class SecurityScanServlet extends HttpServlet {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             if (batchIdStr != null) {
                 int batchId = Integer.parseInt(batchIdStr);
-                // 배치 내 모든 스캔
-                String bsql = "SELECT scan_id, server_label, hostname, os_type, scan_date, uploaded_at, " +
+                String bsql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
                               "file_name, total_count, ok_count, vuln_count, manual_count " +
                               "FROM security_scan WHERE batch_id=? ORDER BY scan_id";
                 try (PreparedStatement ps = conn.prepareStatement(bsql)) {
@@ -139,7 +140,6 @@ public class SecurityScanServlet extends HttpServlet {
                     }
                 }
                 if (!tabScans.isEmpty()) {
-                    // 선택된 탭 결정
                     int selectedScanId = scanIdStr != null ? Integer.parseInt(scanIdStr) : tabScans.get(0).scanId;
                     for (ScanVO s : tabScans) {
                         if (s.scanId == selectedScanId) { currentScan = s; break; }
@@ -149,7 +149,7 @@ public class SecurityScanServlet extends HttpServlet {
                 }
             } else if (scanIdStr != null) {
                 int scanId = Integer.parseInt(scanIdStr);
-                String ssql = "SELECT scan_id, server_label, hostname, os_type, scan_date, uploaded_at, " +
+                String ssql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
                               "file_name, total_count, ok_count, vuln_count, manual_count " +
                               "FROM security_scan WHERE scan_id=?";
                 try (PreparedStatement ps = conn.prepareStatement(ssql)) {
@@ -182,7 +182,6 @@ public class SecurityScanServlet extends HttpServlet {
                         }
                     }
                 }
-                // 요약 카운트 재계산 (수정된 result 기준)
                 currentScan.okCount     = 0;
                 currentScan.vulnCount   = 0;
                 currentScan.manualCount = 0;
@@ -212,6 +211,7 @@ public class SecurityScanServlet extends HttpServlet {
 
         String batchName  = nvl(req.getParameter("batchName")).trim();
         String[] labels   = req.getParameterValues("serverLabel");
+        String[] ips      = req.getParameterValues("ipAddress");
         Collection<Part> fileParts = new ArrayList<>();
         for (Part part : req.getParts()) {
             if ("tarFile".equals(part.getName()) && part.getSize() > 0) {
@@ -244,14 +244,13 @@ public class SecurityScanServlet extends HttpServlet {
             for (Part part : fileParts) {
                 String originalName = getFileName(part);
                 String label = (labels != null && idx < labels.length) ? nvl(labels[idx]).trim() : "";
+                String ip    = (ips    != null && idx < ips.length)    ? nvl(ips[idx]).trim()    : "";
                 idx++;
 
-                // tar 저장
                 String savedName = System.currentTimeMillis() + "_" + originalName;
                 File savedFile = new File(UPLOAD_DIR + savedName);
                 part.write(savedFile.getAbsolutePath());
 
-                // 임시 디렉토리에 추출
                 File tmpDir = new File("/tmp/security_scan_" + System.currentTimeMillis());
                 tmpDir.mkdirs();
                 try {
@@ -260,24 +259,20 @@ public class SecurityScanServlet extends HttpServlet {
                     Process p = pb.start();
                     p.waitFor();
 
-                    // XML 파일 찾기
                     File xmlFile = null;
                     for (File f : tmpDir.listFiles()) {
                         if (f.getName().endsWith(".xml")) { xmlFile = f; break; }
                     }
                     if (xmlFile == null) continue;
 
-                    // XML 파싱
                     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
                     dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
                     Document doc = dbf.newDocumentBuilder().parse(xmlFile);
                     doc.getDocumentElement().normalize();
 
-                    // Info 섹션
                     String sysVersion = getTagText(doc, "sVersion");
                     String lastTime   = getTagText(doc, "LastTime");
 
-                    // 호스트명·OS 추출 (파일명: hostname.xml 또는 sVersion에서)
                     String hostname = xmlFile.getName().replace(".xml", "");
                     String osType   = "";
                     if (sysVersion != null && sysVersion.contains("Linux")) osType = "Linux";
@@ -285,7 +280,6 @@ public class SecurityScanServlet extends HttpServlet {
                     else if (sysVersion != null && sysVersion.contains("SunOS")) osType = "SunOS";
                     else if (sysVersion != null && sysVersion.contains("HP-UX")) osType = "HP-UX";
 
-                    // 파일명에서 날짜 추출 (hostname_OS_YYYYMMDD.tar)
                     java.sql.Date scanDate = null;
                     try {
                         String baseName = originalName.replace(".tar", "");
@@ -299,26 +293,25 @@ public class SecurityScanServlet extends HttpServlet {
 
                     if (label.isEmpty()) label = hostname;
 
-                    // security_scan 저장
                     int scanId;
-                    String insertScan = "INSERT INTO security_scan(batch_id, server_label, hostname, os_type, scan_date, " +
-                                       "file_name, sys_version, last_time) VALUES(?,?,?,?,?,?,?,?)";
+                    String insertScan = "INSERT INTO security_scan(batch_id, server_label, hostname, ip_address, os_type, scan_date, " +
+                                       "file_name, sys_version, last_time) VALUES(?,?,?,?,?,?,?,?,?)";
                     try (PreparedStatement ps = conn.prepareStatement(insertScan, Statement.RETURN_GENERATED_KEYS)) {
                         ps.setObject(1, batchId);
                         ps.setString(2, label);
                         ps.setString(3, hostname);
-                        ps.setString(4, osType);
-                        ps.setObject(5, scanDate);
-                        ps.setString(6, originalName);
-                        ps.setString(7, sysVersion != null ? sysVersion.substring(0, Math.min(sysVersion.length(), 65535)) : null);
-                        ps.setString(8, lastTime != null ? lastTime.substring(0, Math.min(lastTime.length(), 100)) : null);
+                        ps.setString(4, ip.isEmpty() ? null : ip);
+                        ps.setString(5, osType);
+                        ps.setObject(6, scanDate);
+                        ps.setString(7, originalName);
+                        ps.setString(8, sysVersion != null ? sysVersion.substring(0, Math.min(sysVersion.length(), 65535)) : null);
+                        ps.setString(9, lastTime != null ? lastTime.substring(0, Math.min(lastTime.length(), 100)) : null);
                         ps.executeUpdate();
                         try (ResultSet rs = ps.getGeneratedKeys()) { scanId = rs.next() ? rs.getInt(1) : -1; }
                     }
                     if (scanId == -1) continue;
                     if (firstScanId == -1) firstScanId = scanId;
 
-                    // 항목 저장
                     NodeList items = doc.getElementsByTagName("Item");
                     int okCount = 0, vulnCount = 0, manualCount = 0;
                     String insertItem = "INSERT INTO security_scan_item(scan_id, i_code, i_title, inspection_code, original_result, result, evidence) " +
@@ -349,7 +342,6 @@ public class SecurityScanServlet extends HttpServlet {
                         ps.executeBatch();
                     }
 
-                    // 카운트 업데이트
                     int total = okCount + vulnCount + manualCount;
                     try (PreparedStatement ps = conn.prepareStatement(
                             "UPDATE security_scan SET total_count=?, ok_count=?, vuln_count=?, manual_count=? WHERE scan_id=?")) {
@@ -358,7 +350,6 @@ public class SecurityScanServlet extends HttpServlet {
                         ps.executeUpdate();
                     }
 
-                    // TXT / REF 파싱
                     File txtFile = null, refFile = null;
                     File[] extracted = tmpDir.listFiles();
                     if (extracted != null) {
@@ -367,6 +358,7 @@ public class SecurityScanServlet extends HttpServlet {
                             else if (f.getName().endsWith(".txt"))  txtFile = f;
                         }
                     }
+
                     Map<String, String> txtMap = txtFile != null ? parseTxtFile(txtFile) : new HashMap<>();
                     Map<String, String> refMap = refFile != null ? parseTxtFile(refFile) : new HashMap<>();
                     if (!txtMap.isEmpty() || !refMap.isEmpty()) {
@@ -393,7 +385,6 @@ public class SecurityScanServlet extends HttpServlet {
                 }
             }
 
-            // 리다이렉트
             if (batchId != null) {
                 resp.sendRedirect("SecurityScan?action=detail&batchId=" + batchId);
             } else if (firstScanId != -1) {
@@ -406,6 +397,172 @@ public class SecurityScanServlet extends HttpServlet {
             req.setAttribute("uploadError", e.getMessage());
             doList(req, resp);
         }
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 엑셀 다운로드 (unix_template.xlsx 템플릿 방식)
+    // ─────────────────────────────────────────────────────
+    private void doDownloadExcel(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        String scanIdStr  = req.getParameter("scanId");
+        String batchIdStr = req.getParameter("batchId");
+
+        List<ScanVO> scans = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            String sql;
+            if (batchIdStr != null) {
+                sql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
+                      "file_name, total_count, ok_count, vuln_count, manual_count " +
+                      "FROM security_scan WHERE batch_id=? ORDER BY scan_id";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, Integer.parseInt(batchIdStr));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) scans.add(mapScan(rs));
+                    }
+                }
+            } else if (scanIdStr != null) {
+                sql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
+                      "file_name, total_count, ok_count, vuln_count, manual_count " +
+                      "FROM security_scan WHERE scan_id=?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, Integer.parseInt(scanIdStr));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) scans.add(mapScan(rs));
+                    }
+                }
+            }
+
+            if (scans.isEmpty()) { resp.sendError(404, "스캔 데이터 없음"); return; }
+
+            InputStream tpl = getServletContext().getResourceAsStream("/WEB-INF/template/unix_template.xlsx");
+            if (tpl == null) { resp.sendError(500, "템플릿 파일 없음"); return; }
+
+            try (XSSFWorkbook wb = new XSSFWorkbook(tpl)) {
+
+                // ── "Ⅲ. 점검대상" 시트 ──────────────────────────
+                // 헤더: B4=연번, C4=서버명, D4=HOSTNAME, E4=IP Address, F4=OS/Version, G4=비고
+                // 데이터: Row5(index4) 부터
+                XSSFSheet indexSheet = wb.getSheet("Ⅲ. 점검대상");
+                if (indexSheet != null) {
+                    // 첫 번째 데이터행 스타일 복사용
+                    Row styleRow = indexSheet.getRow(4);
+                    for (int i = 0; i < scans.size(); i++) {
+                        ScanVO s = scans.get(i);
+                        Row row = (i == 0 && styleRow != null) ? styleRow : indexSheet.createRow(4 + i);
+                        setCell(row, 1, String.valueOf(i + 1));
+                        setCell(row, 2, nvlLabel(s.serverLabel, s.hostname));
+                        setCell(row, 3, s.hostname);
+                        setCell(row, 4, s.ipAddress);
+                        setCell(row, 5, s.osType);
+                        setCell(row, 6, "");
+                    }
+                }
+
+                // ── "template" 시트 (서버별 복제) ────────────────
+                // 서버정보: C4=서버이름, F4=OS/Version, C5=HOSTNAME, C6=IP Address
+                // 항목: Row12(index11)~Row78(index77) → C=순번, D=점검항목, I=현황, K=결과
+                XSSFSheet tmplSheet = wb.getSheet("template");
+                if (tmplSheet != null) {
+                    int tmplIdx = wb.getSheetIndex(tmplSheet);
+                    for (int si = 0; si < scans.size(); si++) {
+                        ScanVO scan = scans.get(si);
+                        XSSFSheet sheet;
+                        if (scans.size() == 1) {
+                            sheet = tmplSheet;
+                        } else {
+                            String sheetName = truncate(nvlLabel(scan.serverLabel, scan.hostname), 31);
+                            sheet = wb.cloneSheet(tmplIdx, sheetName);
+                        }
+
+                        // 서버 정보 셀 채우기 (라벨 옆 값 셀)
+                        setSheetCell(sheet, 3, 2, nvlLabel(scan.serverLabel, scan.hostname)); // C4
+                        setSheetCell(sheet, 3, 5, scan.osType);                               // F4
+                        setSheetCell(sheet, 4, 2, scan.hostname);                             // C5
+                        setSheetCell(sheet, 5, 2, scan.ipAddress);                            // C6
+
+                        // 항목 행 채우기 (Row12~78, 0-based index 11~77)
+                        List<ScanItemVO> items = loadItems(conn, scan.scanId);
+                        int maxRow = 77; // index 77 = row 78
+                        for (int ii = 0; ii < items.size() && (11 + ii) <= maxRow; ii++) {
+                            ScanItemVO item = items.get(ii);
+                            Row row = sheet.getRow(11 + ii);
+                            if (row == null) row = sheet.createRow(11 + ii);
+                            setCell(row, 8, item.result);  // I: 결과
+                            setCell(row, 10, buildEvidence(item.evidence, item.txtEvidence, item.refEvidence)); // K: 현황
+                        }
+                    }
+                    // 배치: 원본 template 시트 삭제
+                    if (scans.size() > 1) {
+                        wb.removeSheetAt(wb.getSheetIndex(wb.getSheet("template")));
+                    }
+                }
+
+                String filename = (batchIdStr != null ? "batch_" + batchIdStr : "scan_" + scanIdStr) + "_result.xlsx";
+                resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                resp.setHeader("Content-Disposition",
+                    "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + java.net.URLEncoder.encode(filename, "UTF-8"));
+                wb.write(resp.getOutputStream());
+            }
+        } catch (Exception e) {
+            resp.sendError(500, "엑셀 생성 오류: " + e.getMessage());
+        }
+    }
+
+    private List<ScanItemVO> loadItems(Connection conn, int scanId) throws SQLException {
+        List<ScanItemVO> list = new ArrayList<>();
+        String sql = "SELECT item_id, i_code, i_title, inspection_code, original_result, result, evidence, txt_evidence, ref_evidence, memo " +
+                     "FROM security_scan_item WHERE scan_id=? ORDER BY item_id";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, scanId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ScanItemVO item = new ScanItemVO();
+                    item.itemId         = rs.getInt("item_id");
+                    item.iCode          = nvl(rs.getString("i_code"));
+                    item.iTitle         = nvl(rs.getString("i_title"));
+                    item.inspectionCode = nvl(rs.getString("inspection_code"));
+                    item.originalResult = nvl(rs.getString("original_result"));
+                    item.result         = nvl(rs.getString("result"));
+                    item.evidence       = nvl(rs.getString("evidence"));
+                    item.txtEvidence    = nvl(rs.getString("txt_evidence"));
+                    item.refEvidence    = nvl(rs.getString("ref_evidence"));
+                    item.memo           = nvl(rs.getString("memo"));
+                    list.add(item);
+                }
+            }
+        }
+        return list;
+    }
+
+    private String buildEvidence(String xml, String txt, String ref) {
+        StringBuilder sb = new StringBuilder();
+        if (!xml.isEmpty()) sb.append("[XML]\n").append(xml);
+        if (!txt.isEmpty()) { if (sb.length() > 0) sb.append("\n\n"); sb.append("[TXT]\n").append(txt); }
+        if (!ref.isEmpty()) { if (sb.length() > 0) sb.append("\n\n"); sb.append("[REF]\n").append(ref); }
+        return sb.toString();
+    }
+
+    private void setCell(Row row, int col, String value) {
+        Cell cell = row.getCell(col);
+        if (cell == null) cell = row.createCell(col);
+        cell.setCellValue(truncate(value != null ? value : "", 32767));
+    }
+
+    private void setSheetCell(XSSFSheet sheet, int rowIdx, int colIdx, String value) {
+        Row row = sheet.getRow(rowIdx);
+        if (row == null) row = sheet.createRow(rowIdx);
+        Cell cell = row.getCell(colIdx);
+        if (cell == null) cell = row.createCell(colIdx);
+        cell.setCellValue(truncate(value != null ? value : "", 32767));
+    }
+
+    private String nvlLabel(String label, String fallback) {
+        return (label != null && !label.isEmpty()) ? label : nvl(fallback);
+    }
+
+    private String truncate(String s, int max) {
+        if (s == null) return "";
+        return s.length() <= max ? s : s.substring(0, max);
     }
 
     // ─────────────────────────────────────────────────────
@@ -451,15 +608,11 @@ public class SecurityScanServlet extends HttpServlet {
                 ps.setInt(3, itemId);
                 ps.executeUpdate();
             }
-            // 스캔 카운트 재계산
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT scan_id FROM security_scan_item WHERE item_id=?")) {
                 ps.setInt(1, itemId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        int scanId = rs.getInt(1);
-                        updateScanCounts(conn, scanId);
-                    }
+                    if (rs.next()) updateScanCounts(conn, rs.getInt(1));
                 }
             }
             resp.getWriter().write("{\"ok\":true}");
@@ -472,9 +625,9 @@ public class SecurityScanServlet extends HttpServlet {
     // 헬퍼
     // ─────────────────────────────────────────────────────
     private void updateScanCounts(Connection conn, int scanId) throws SQLException {
-        String sql = "SELECT result FROM security_scan_item WHERE scan_id=?";
         int ok = 0, vuln = 0, manual = 0;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT result FROM security_scan_item WHERE scan_id=?")) {
             ps.setInt(1, scanId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -505,7 +658,6 @@ public class SecurityScanServlet extends HttpServlet {
                 if (m.find()) {
                     String code = m.group(1);
                     String rest = section.substring(m.end());
-                    // 헤더 라인(제목) 이후 내용만 추출
                     int nl = rest.indexOf('\n');
                     String body = (nl >= 0 ? rest.substring(nl + 1) : "").trim();
                     if (!body.isEmpty()) map.put(code, body);
@@ -528,6 +680,7 @@ public class SecurityScanServlet extends HttpServlet {
         s.scanId      = rs.getInt("scan_id");
         s.serverLabel = nvl(rs.getString("server_label"));
         s.hostname    = nvl(rs.getString("hostname"));
+        s.ipAddress   = nvl(rs.getString("ip_address"));
         s.osType      = nvl(rs.getString("os_type"));
         s.scanDate    = nvl(rs.getString("scan_date"));
         s.uploadedAt  = nvl(rs.getString("uploaded_at"));
@@ -585,7 +738,7 @@ public class SecurityScanServlet extends HttpServlet {
     // ─────────────────────────────────────────────────────
     public static class ScanVO {
         public int    scanId, totalCount, okCount, vulnCount, manualCount;
-        public String serverLabel, hostname, osType, scanDate, uploadedAt, fileName;
+        public String serverLabel, hostname, ipAddress, osType, scanDate, uploadedAt, fileName;
     }
 
     public static class BatchVO {

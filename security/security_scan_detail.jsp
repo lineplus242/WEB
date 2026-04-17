@@ -156,10 +156,15 @@
         .item-body { display: none; }
         .item-card.open .item-body { display: block; }
 
-        .item-evidence { padding: 0 16px 12px; }
         .evidence-pre { background: #0b0c0f; border: 1px solid #1a1c22; border-radius: 8px; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 11.5px; color: #9ca3af; white-space: pre-wrap; word-break: break-all; line-height: 1.6; max-height: 240px; overflow-y: auto; }
-        .extra-evidence { padding: 0 16px 12px; }
-        .extra-evidence-label { font-size: 10px; font-weight: 500; color: #3d4251; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+        .ev-tabs { padding: 0 16px 12px; }
+        .ev-tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
+        .ev-tab-btn { padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; font-family: 'DM Mono', monospace; cursor: pointer; border: 1px solid #252830; background: #0e0f11; color: #4b5161; transition: background 0.12s, color 0.12s; }
+        .ev-tab-btn:hover { background: #161820; color: #c8cad0; }
+        .ev-tab-btn.active { background: #1a1e2e; color: #6b9af5; border-color: #252d44; }
+        .ev-panel { display: none; }
+        .ev-panel.active { display: block; }
+        .ev-empty { font-size: 12px; color: #3d4251; padding: 12px 2px; }
 
         /* 인라인 편집 */
         .item-edit { padding: 10px 16px 14px; border-top: 1px solid #1a1c22; background: #0f1014; }
@@ -209,6 +214,10 @@
         [data-theme="light"] .item-top:hover { background: rgba(0,0,0,0.02); }
         [data-theme="light"] .item-title { color: #111827; }
         [data-theme="light"] .evidence-pre { background: #f9fafb; border-color: #e5e7eb; color: #4b5563; }
+        [data-theme="light"] .ev-tab-btn { background: #f3f4f6; border-color: #e5e7eb; color: #6b7280; }
+        [data-theme="light"] .ev-tab-btn:hover { background: #e5e7eb; color: #374151; }
+        [data-theme="light"] .ev-tab-btn.active { background: #fff; color: #3b6ef5; border-color: #3b6ef5; }
+        [data-theme="light"] .ev-empty { color: #9ca3af; }
         [data-theme="light"] .item-edit { background: #f9fafb; border-color: #e5e7eb; }
         [data-theme="light"] .edit-select, [data-theme="light"] .edit-textarea { background: #fff; border-color: #e5e7eb; color: #111827; }
         [data-theme="light"] .fold-btn { border-color: #e5e7eb; }
@@ -374,10 +383,12 @@
             <button class="filter-btn" onclick="filter('수동점검', this)">수동점검 (<%= currentScan.manualCount %>)</button>
         </div>
 
-        <!-- 전체접기/펼치기 -->
+        <!-- 전체접기/펼치기 + 엑셀 다운로드 -->
         <div class="fold-bar">
             <button class="fold-btn" onclick="foldAll()">전체 접기</button>
             <button class="fold-btn" onclick="expandAll()">전체 펼치기</button>
+            <a href="../SecurityScan?action=downloadExcel&<%= batchId != null ? "batchId=" + batchId : "scanId=" + currentScan.scanId %>"
+               class="fold-btn" style="text-decoration:none; margin-left:auto;">↓ 엑셀 내려받기</a>
         </div>
 
         <!-- 항목 목록 -->
@@ -402,23 +413,34 @@
                     <svg class="item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
                 <div class="item-body">
-                    <% if (!item.evidence.isEmpty()) { %>
-                    <div class="item-evidence">
-                        <pre class="evidence-pre"><%= escHtml(item.evidence) %></pre>
+                    <div class="ev-tabs">
+                        <div class="ev-tab-bar">
+                            <button class="ev-tab-btn active" onclick="switchTab(<%= item.itemId %>, 'xml', this)">XML</button>
+                            <button class="ev-tab-btn"        onclick="switchTab(<%= item.itemId %>, 'txt', this)">TXT</button>
+                            <button class="ev-tab-btn"        onclick="switchTab(<%= item.itemId %>, 'ref', this)">REF</button>
+                        </div>
+                        <div class="ev-panel active" id="ev-xml-<%= item.itemId %>">
+                            <% if (!item.evidence.isEmpty()) { %>
+                            <pre class="evidence-pre"><%= escHtml(item.evidence) %></pre>
+                            <% } else { %>
+                            <div class="ev-empty">데이터가 없습니다</div>
+                            <% } %>
+                        </div>
+                        <div class="ev-panel" id="ev-txt-<%= item.itemId %>">
+                            <% if (!item.txtEvidence.isEmpty()) { %>
+                            <pre class="evidence-pre"><%= escHtml(item.txtEvidence) %></pre>
+                            <% } else { %>
+                            <div class="ev-empty">데이터가 없습니다</div>
+                            <% } %>
+                        </div>
+                        <div class="ev-panel" id="ev-ref-<%= item.itemId %>">
+                            <% if (!item.refEvidence.isEmpty()) { %>
+                            <pre class="evidence-pre"><%= escHtml(item.refEvidence) %></pre>
+                            <% } else { %>
+                            <div class="ev-empty">데이터가 없습니다</div>
+                            <% } %>
+                        </div>
                     </div>
-                    <% } %>
-                    <% if (!item.txtEvidence.isEmpty()) { %>
-                    <div class="extra-evidence">
-                        <div class="extra-evidence-label">스크립트 출력 (TXT)</div>
-                        <pre class="evidence-pre"><%= escHtml(item.txtEvidence) %></pre>
-                    </div>
-                    <% } %>
-                    <% if (!item.refEvidence.isEmpty()) { %>
-                    <div class="extra-evidence">
-                        <div class="extra-evidence-label">참고 자료 (REF)</div>
-                        <pre class="evidence-pre"><%= escHtml(item.refEvidence) %></pre>
-                    </div>
-                    <% } %>
                     <!-- 인라인 편집 -->
                     <div class="item-edit">
                         <div class="edit-row">
@@ -530,14 +552,30 @@ function borderClass(r) {
     return 'border-manual';
 }
 
+function switchTab(itemId, type, btn) {
+    var tabs = btn.closest('.ev-tabs');
+    tabs.querySelectorAll('.ev-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    tabs.querySelectorAll('.ev-panel').forEach(function(p)  { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById('ev-' + type + '-' + itemId);
+    if (panel) panel.classList.add('active');
+}
+
 function toggleCard(card) {
     card.classList.toggle('open');
+    sessionStorage.setItem('scan_open_' + card.id, card.classList.contains('open') ? '1' : '0');
 }
 function foldAll() {
-    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('open'));
+    document.querySelectorAll('.item-card').forEach(c => {
+        c.classList.remove('open');
+        sessionStorage.setItem('scan_open_' + c.id, '0');
+    });
 }
 function expandAll() {
-    document.querySelectorAll('.item-card').forEach(c => c.classList.add('open'));
+    document.querySelectorAll('.item-card').forEach(c => {
+        c.classList.add('open');
+        sessionStorage.setItem('scan_open_' + c.id, '1');
+    });
 }
 function autoResize(el) {
     el.style.height = '0px';
@@ -570,6 +608,14 @@ function setTheme(t) {
     // 메모 내용 있는 textarea 초기 높이 조정
     document.querySelectorAll('.edit-textarea').forEach(el => {
         if (el.value.trim()) autoResize(el);
+    });
+    // 카드 펼침 상태 복원
+    document.querySelectorAll('.item-card').forEach(c => {
+        if (sessionStorage.getItem('scan_open_' + c.id) === '1') {
+            c.classList.add('open');
+            const ta = c.querySelector('.edit-textarea');
+            if (ta && ta.value.trim()) autoResize(ta);
+        }
     });
 })();
 </script>

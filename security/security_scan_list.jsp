@@ -108,7 +108,7 @@
         /* 모달 */
         .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
         .modal-backdrop.open { display: flex; }
-        .modal { background: #131519; border: 1px solid #1e2025; border-radius: 14px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+        .modal { background: #131519; border: 1px solid #1e2025; border-radius: 14px; width: 720px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
         .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; justify-content: space-between; }
         .modal-title { font-size: 15px; font-weight: 500; color: #f2f3f5; }
         .modal-close { background: none; border: none; color: #4b5161; cursor: pointer; padding: 4px; border-radius: 4px; }
@@ -133,13 +133,13 @@
         .server-row-num { font-size: 11px; color: #4b5161; font-weight: 500; }
         .server-row-remove { background: none; border: none; color: #4b5161; cursor: pointer; padding: 2px; border-radius: 4px; }
         .server-row-remove:hover { color: #e05656; }
-        .server-row-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .server-row-fields { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; align-items: end; }
 
         /* 파일 드롭존 */
-        .file-zone { border: 1.5px dashed #252830; border-radius: 8px; padding: 14px; text-align: center; cursor: pointer; transition: border-color 0.12s, background 0.12s; }
+        .file-zone { border: 1.5px dashed #252830; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: border-color 0.12s, background 0.12s; display: flex; align-items: center; gap: 8px; min-width: 0; }
         .file-zone:hover, .file-zone.dragover { border-color: #3b6ef5; background: rgba(59,110,245,0.05); }
-        .file-zone p { font-size: 12px; color: #4b5161; margin-top: 4px; }
-        .file-zone .file-name { font-size: 12px; color: #6b9af5; font-family: 'DM Mono', monospace; margin-top: 4px; }
+        .file-zone p { font-size: 12px; color: #4b5161; white-space: nowrap; }
+        .file-zone .file-name { font-size: 12px; color: #6b9af5; font-family: 'DM Mono', monospace; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
         .file-input { display: none; }
 
         .add-server-btn { width: 100%; padding: 9px; background: none; border: 1.5px dashed #252830; border-radius: 10px; color: #4b5161; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.12s, color 0.12s; }
@@ -439,17 +439,21 @@ function addServerRow() {
         + '<input type="text" class="form-input" name="serverLabel" placeholder="예) 웹서버-01">'
         + '</div>'
         + '<div>'
+        + '<label class="form-label">IP Address</label>'
+        + '<input type="text" class="form-input" name="ipAddress" placeholder="예) 192.168.1.10">'
+        + '</div>'
+        + '<div>'
         + '<label class="form-label">tar 파일</label>'
         + '<div class="file-zone" onclick="this.nextElementSibling.click()" id="zone_' + rowCount + '"'
         + ' ondragover="event.preventDefault();this.classList.add(\'dragover\')"'
         + ' ondragleave="this.classList.remove(\'dragover\')"'
         + ' ondrop="handleDrop(event,this,\'file_' + rowCount + '\')">'
-        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20" style="opacity:0.4"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
-        + '<p>클릭하거나 파일을 드래그</p>'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20" style="opacity:0.4;flex-shrink:0"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+        + '<p id="hint_' + rowCount + '">클릭하거나 파일을 드래그</p>'
         + '<div class="file-name" id="fname_' + rowCount + '"></div>'
         + '</div>'
         + '<input type="file" class="file-input" name="tarFile" id="file_' + rowCount + '" accept=".tar"'
-        + ' onchange="showFileName(this,\'fname_' + rowCount + '\')">'
+        + ' onchange="showFileName(this,\'fname_' + rowCount + '\',\'hint_' + rowCount + '\')">'
         + '</div>'
         + '</div>';
     rows.appendChild(div);
@@ -464,8 +468,10 @@ function removeRow(btn) {
     });
 }
 
-function showFileName(input, fnameId) {
-    document.getElementById(fnameId).textContent = input.files[0] ? input.files[0].name : '';
+function showFileName(input, fnameId, hintId) {
+    const name = input.files[0] ? input.files[0].name : '';
+    document.getElementById(fnameId).textContent = name;
+    if (hintId) document.getElementById(hintId).style.display = name ? 'none' : '';
 }
 
 function handleDrop(event, zone, fileInputId) {
@@ -477,8 +483,10 @@ function handleDrop(event, zone, fileInputId) {
     const dt = new DataTransfer();
     dt.items.add(file);
     input.files = dt.files;
-    const fnameId = zone.id.replace('zone_', 'fname_');
-    document.getElementById(fnameId).textContent = file.name;
+    const num = zone.id.replace('zone_', '');
+    document.getElementById('fname_' + num).textContent = file.name;
+    const hint = document.getElementById('hint_' + num);
+    if (hint) hint.style.display = 'none';
 }
 
 function deleteBatch(id, name) {

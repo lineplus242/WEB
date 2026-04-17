@@ -51,12 +51,13 @@
         .content { padding: 28px; }
 
         /* 툴바 */
-        .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-        .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .search-wrap { position: relative; }
-        .search-wrap input { background: #131519; border: 1px solid #1e2025; border-radius: 8px; padding: 8px 12px 8px 36px; font-size: 13px; color: #e8e9eb; font-family: 'DM Sans', sans-serif; outline: none; width: 220px; transition: border 0.15s; }
-        .search-wrap input:focus { border-color: #3b6ef5; }
-        .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: #4b5161; pointer-events: none; }
+        .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .search-wrap { display: flex; align-items: center; gap: 6px; background: #131519; border: 1px solid #1e2025; border-radius: 8px; padding: 0 12px; transition: border 0.15s; width: 400px; }
+        .search-wrap:focus-within { border-color: #3b6ef5; }
+        .search-wrap input { background: none; border: none; padding: 8px 0; font-size: 13px; color: #e8e9eb; font-family: 'DM Sans', sans-serif; outline: none; flex: 1; min-width: 0; }
+        .search-wrap svg { width: 15px; height: 15px; color: #4b5161; pointer-events: none; flex-shrink: 0; display: block; }
+        .search-divider { width: 1px; height: 14px; background: #2a2d3a; flex-shrink: 0; }
         .cat-filter { background: #131519; border: 1px solid #1e2025; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #c8cad0; font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer; }
         .cat-filter option { background: #131519; }
 
@@ -194,7 +195,8 @@
             <div class="toolbar">
                 <div class="toolbar-left">
                     <div class="search-wrap">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <span class="search-divider"></span>
                         <input type="text" id="searchInput" placeholder="이미지 이름 검색..." oninput="debounceLoad()">
                     </div>
                     <select class="cat-filter" id="catFilter" onchange="loadImages()">
