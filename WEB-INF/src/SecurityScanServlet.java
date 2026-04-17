@@ -11,6 +11,7 @@ import java.nio.file.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * 보안점검 결과 뷰어 서블릿
@@ -160,7 +161,7 @@ public class SecurityScanServlet extends HttpServlet {
             }
 
             if (currentScan != null) {
-                String isql = "SELECT item_id, i_code, i_title, inspection_code, original_result, result, evidence, memo " +
+                String isql = "SELECT item_id, i_code, i_title, inspection_code, original_result, result, evidence, txt_evidence, ref_evidence, memo " +
                               "FROM security_scan_item WHERE scan_id=? ORDER BY item_id";
                 try (PreparedStatement ps = conn.prepareStatement(isql)) {
                     ps.setInt(1, currentScan.scanId);
@@ -174,6 +175,8 @@ public class SecurityScanServlet extends HttpServlet {
                             item.originalResult = nvl(rs.getString("original_result"));
                             item.result         = nvl(rs.getString("result"));
                             item.evidence       = nvl(rs.getString("evidence"));
+                            item.txtEvidence    = nvl(rs.getString("txt_evidence"));
+                            item.refEvidence    = nvl(rs.getString("ref_evidence"));
                             item.memo           = nvl(rs.getString("memo"));
                             items.add(item);
                         }
@@ -354,6 +357,37 @@ public class SecurityScanServlet extends HttpServlet {
                         ps.setInt(4, manualCount); ps.setInt(5, scanId);
                         ps.executeUpdate();
                     }
+
+                    // TXT / REF 파싱
+                    File txtFile = null, refFile = null;
+                    File[] extracted = tmpDir.listFiles();
+                    if (extracted != null) {
+                        for (File f : extracted) {
+                            if (f.getName().endsWith("_REF.txt")) refFile = f;
+                            else if (f.getName().endsWith(".txt"))  txtFile = f;
+                        }
+                    }
+                    Map<String, String> txtMap = txtFile != null ? parseTxtFile(txtFile) : new HashMap<>();
+                    Map<String, String> refMap = refFile != null ? parseTxtFile(refFile) : new HashMap<>();
+                    if (!txtMap.isEmpty() || !refMap.isEmpty()) {
+                        try (PreparedStatement psTxt = conn.prepareStatement(
+                                "UPDATE security_scan_item SET txt_evidence=?, ref_evidence=? WHERE scan_id=? AND i_code=?")) {
+                            for (int i = 0; i < items.getLength(); i++) {
+                                Element el = (Element) items.item(i);
+                                String iCode = getElText(el, "iCode");
+                                String tv = txtMap.containsKey(iCode) ? txtMap.get(iCode) : null;
+                                String rv = refMap.containsKey(iCode) ? refMap.get(iCode) : null;
+                                if (tv != null || rv != null) {
+                                    psTxt.setString(1, tv);
+                                    psTxt.setString(2, rv);
+                                    psTxt.setInt(3, scanId);
+                                    psTxt.setString(4, iCode);
+                                    psTxt.addBatch();
+                                }
+                            }
+                            psTxt.executeBatch();
+                        }
+                    }
                 } finally {
                     deleteDir(tmpDir);
                 }
@@ -460,6 +494,27 @@ public class SecurityScanServlet extends HttpServlet {
         }
     }
 
+    private Map<String, String> parseTxtFile(File f) {
+        Map<String, String> map = new LinkedHashMap<>();
+        try {
+            String content = new String(java.nio.file.Files.readAllBytes(f.toPath()), "UTF-8");
+            String[] sections = content.split("#{20,}");
+            Pattern p = Pattern.compile("\\[(U-\\d+)[^\\]]*\\]");
+            for (String section : sections) {
+                Matcher m = p.matcher(section);
+                if (m.find()) {
+                    String code = m.group(1);
+                    String rest = section.substring(m.end());
+                    // 헤더 라인(제목) 이후 내용만 추출
+                    int nl = rest.indexOf('\n');
+                    String body = (nl >= 0 ? rest.substring(nl + 1) : "").trim();
+                    if (!body.isEmpty()) map.put(code, body);
+                }
+            }
+        } catch (Exception ignored) {}
+        return map;
+    }
+
     private String normalizeResult(String r) {
         if (r == null) return "수동점검";
         if (r.startsWith("양호")) return "양호";
@@ -540,6 +595,6 @@ public class SecurityScanServlet extends HttpServlet {
 
     public static class ScanItemVO {
         public int    itemId;
-        public String iCode, iTitle, inspectionCode, originalResult, result, evidence, memo;
+        public String iCode, iTitle, inspectionCode, originalResult, result, evidence, txtEvidence, refEvidence, memo;
     }
 }

@@ -1,0 +1,1902 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CVCResult>
+	<matchingCODE>CVCM-SULX-001</matchingCODE>
+	<ResultData>
+		<Item>
+			<iCode>U-01</iCode>
+			<iTitle>root 계정 원격 접속 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+TELNET 서비스가 비실행중이고, SSH의 root 원격 접속을 제한하고 있으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-02</iCode>
+			<iTitle>비밀번호 관리정책 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+비밀번호 관리정책 설정 파일을 확인하여 수동점검(REF 파일 참조)]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-03</iCode>
+			<iTitle>계정 잠금 임계값 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+리눅스 배포판, 릴리즈, 아키텍처 확인 후 해당하는 설정 파일을 확인하여 수동점검(REF 파일 참조)]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-04</iCode>
+			<iTitle>비밀번호 파일 보호</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+shadow 파일을 사용하고 있으므로 양호함
+-r-------- 1 root root 1064 Feb  9 09:54 /etc/shadow
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-05</iCode>
+			<iTitle>root 이외의 UID가 '0' 금지</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+root 이외의 UID가 '0'인 계정이 존재하지 않으므로 양호함
+root -> UID=0  GID=0
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-06</iCode>
+			<iTitle>사용자 계정 su 기능 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/pam.d/su에 pam_wheel.so 설정이 있으므로 양호함. wheel 그룹에 적절한 사용자가 포함되어 있는지 확인 필요. /bin/su 파일의 권한 확인 필요(4x50, 소유자 root, 그룹 root 아님)
+#auth		sufficient	pam_wheel.so trust use_uid
+auth		required	pam_wheel.so use_uid
+ 
+wheel:x:10:bumil,secadmin
+ 
+-rwsr-x---. 1 root wheel 32128 Apr 28  2020 /bin/su
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-07</iCode>
+			<iTitle>불필요한 계정 제거</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+/etc/passwd 내용을 참고하여 인터뷰 실시. 불필요한 계정이 존재하지 않으면 양호]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-08</iCode>
+			<iTitle>관리자 그룹에 최소한의 계정 포함</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+관리자 그룹에 불필요한 계정이 등록되어 있는 경우 취약
+root:x:0:root
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-09</iCode>
+			<iTitle>계정이 존재하지 않는 GID 금지</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+구성원이 없는 그룹(그룹에 계정이 설정되어 있으나 실제로 계정이 없음)이 없으므로 양호함
+Group : root
+     root
+Group : wheel
+     bumil
+     secadmin
+Group : mail
+     postfix
+Group : kvm
+     qemu
+Group : bumil
+     bumil
+
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-10</iCode>
+			<iTitle>동일한 UID 금지</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+동일한 UID로 설정된 사용자 계정이 존재하지 않으므로 양호함
+root = 0
+bin = 1
+daemon = 2
+mail = 8
+nobody = 99
+systemd-network = 192
+dbus = 81
+polkitd = 999
+libstoragemgmt = 998
+colord = 997
+rpc = 32
+gluster = 996
+abrt = 173
+setroubleshoot = 994
+rtkit = 172
+radvd = 75
+chrony = 993
+unbound = 992
+qemu = 107
+usbmuxd = 113
+geoclue = 991
+gdm = 42
+saned = 990
+rpcuser = 29
+nfsnobody = 65534
+gnome-initial-setup = 989
+sshd = 74
+avahi = 70
+postfix = 89
+ntp = 38
+tcpdump = 72
+bumil = 1000
+secadmin = 1001
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-11</iCode>
+			<iTitle>사용자 Shell 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/bin/false or /sbin/nologin or noshell로 설정되어 있으므로 양호함
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+nobody:x:99:99:Nobody:/:/sbin/nologin
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-12</iCode>
+			<iTitle>세션 종료 시간 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+TIMEOUT설정이 600이하로 설정되어 있으므로 양호함
+TMOUT=600
+export TMOUT
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-13</iCode>
+			<iTitle>안전한 비밀번호 암호화 알고리즘 사용</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+DGE-anal01_Linux_20260402_REF.txt 참고하여 수동진단]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-14</iCode>
+			<iTitle>root 홈, 패스 디렉터리 권한 및 패스 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+PATH 설정에 '.'이 맨 앞이나 중간에 포함되어 있지 않으므로 양호함
+/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-15</iCode>
+			<iTitle>파일 및 디렉터리 소유자 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+FIND 실행 안함으로 수동진단 필요]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-16</iCode>
+			<iTitle>/etc/passwd 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/passwd 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r--r-- 1 root root 1754 Jul  6  2023 /etc/passwd
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-17</iCode>
+			<iTitle>시스템 시작 스크립트 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+시스템 시작 스크립트에 일반 사용자 쓰기 권한이 제거된 경우 양호함(REF 파일 참조)]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-18</iCode>
+			<iTitle>/etc/shadow 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/shadow 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-r-------- 1 root root 1064 Feb  9 09:54 /etc/shadow
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-19</iCode>
+			<iTitle>/etc/hosts 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/hosts 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw------- 1 root root 923 Jan  6  2022 /etc/hosts
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-20</iCode>
+			<iTitle>/etc/(x)inetd.conf 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/inetd.conf or /etc/xinetd.conf 파일이 존재하지 않으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-21</iCode>
+			<iTitle>/etc/(r)syslog.conf 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/rsyslog.conf 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r-----. 1 root root 3320 Jan 13  2022 /etc/rsyslog.conf
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-22</iCode>
+			<iTitle>/etc/services 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/services 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r--r--. 1 root root 670293 Jun  7  2013 /etc/services
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-23</iCode>
+			<iTitle>SUID,SGID,Stick bit 설정 파일 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+결과 참고하여 수동진단]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-24</iCode>
+			<iTitle>사용자, 시스템 환경변수 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/profile 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r--r-- 1 root root 2083 Aug  3  2025 /etc/profile
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-25</iCode>
+			<iTitle>world writable 파일 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+FIND 실행 안함으로 수동진단 필요]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-26</iCode>
+			<iTitle>/dev에 존재하지 않는 device 파일 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+결과 참고하여 인터뷰 실시, 양호시 출력 내용 없음]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-27</iCode>
+			<iTitle>$HOME/.rhosts, hosts.equiv 사용 금지</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+R (rlogin|rsh|rexec) 서비스가 비실행중이므로 양호함
+#chkconfig --list | egrep 'rlogin|rsh|rexec' #systemctl list-unit-files --type=service 결과 확인
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-28</iCode>
+			<iTitle>접속 IP 및 포트 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>취약</Result>
+			<Evidence>
+<![CDATA[
+Iptables 접속 IP 및 포트 제한 설정이 존재하지 않으므로 취약함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-29</iCode>
+			<iTitle>host.lpd 파일 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/hosts.lpd 파일이 없으므로 양호함
+#ls -alL /etc/hosts.lpd 결과 확인
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-30</iCode>
+			<iTitle>UMASK 설정 관리</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+umask 값 및 profile 설정 참고하여 수동진단
+
+export PATH USER LOGNAME MAIL HOSTNAME HISTSIZE HISTCONTROL
+
+if [ $UID -gt 199 ] && [ "`/usr/bin/id -gn`" = "`/usr/bin/id -un`" ]; then
+    umask 002
+else
+    umask 022
+fi
+
+for i in /etc/profile.d/*.sh /etc/profile.d/sh.local ; do
+--
+unset -f pathmunge
+TMOUT=600
+export TMOUT
+umask=022
+export umask
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-31</iCode>
+			<iTitle>홈 디렉토리 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+홈디렉토리 사용자 및 소유자가 일치하며, 해당 디렉토리 및 파일의 접근권한이 적절하게 부여되어 있어 양호함(root, bin, uucp외)]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-32</iCode>
+			<iTitle>홈 디렉토리로 지정한 디렉토리의 존재 관리</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>취약</Result>
+			<Evidence>
+<![CDATA[
+홈 디렉토리로 지정한 디렉토리 중 존재하지 않는 디렉토리가 있으므로 취약함
+
+gluster->/run/gluster
+gnome-initial-setup->/run/gnome-initial-setup/
+avahi->/var/run/avahi-daemon
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-33</iCode>
+			<iTitle>숨겨진 파일 및 디렉토리 검색 및 제거</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+FIND 실행 안함으로 수동진단 필요]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-34</iCode>
+			<iTitle>Finger 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+finger 파일이 존재하지 않으므로 양호함
+#cat /etc/xinetd.d/finger 파일 확인
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-35</iCode>
+			<iTitle>공유 서비스에 대한 익명 접근 제한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+공유 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-36</iCode>
+			<iTitle>r 계열 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+현재 rsh, rlogin, rexec 서비스가 비실행 중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-37</iCode>
+			<iTitle>crontab 설정파일 권한 설정 미흡</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+REF.txt, txt 파일 모두 참고하여 수동진단 실시
+-rw-r--r--. 1 root root   451 Dec 28  2013 /etc/crontab
+-rwxr-xr-x. 1 root root 53048 May 23  2018 /usr/bin/at
+-rwxr-xr-x. 1 root root 53048 May 23  2018 /usr/bin/at
+-rwxr-x---. 1 root root 57656 Feb 14  2019 /usr/bin/crontab
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-38</iCode>
+			<iTitle>DoS 공격에 취약한 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+echo, discard, daytime, chargen 서비스가 비실행 중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-39</iCode>
+			<iTitle>불필요한 NFS 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+현재 NFS 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-40</iCode>
+			<iTitle>NFS 접근 통제</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+NFS 서비스가 비실행중이므로 양호함
+#ps -ef | egrep mountd|nfs 결과 확인
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-41</iCode>
+			<iTitle>불필요한 automountd 제거</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+automount 데몬이 없으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-42</iCode>
+			<iTitle>불필요한 RPC 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+현재 RPC 서비스가 비실행중이므로 양호함
+
+
+
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-43</iCode>
+			<iTitle>NIS, NIS+ 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+현재 NIS , NIS+ 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-44</iCode>
+			<iTitle>tftp, talk, ntalk 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+현재 tftp, talk, ntalk 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-45</iCode>
+			<iTitle>메일 서비스 버전 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+메일 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-46</iCode>
+			<iTitle>일반 사용자의 메일 서비스 실행 방지</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+메일 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-47</iCode>
+			<iTitle>스팸 메일 릴레이 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+메일 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-48</iCode>
+			<iTitle>expn, vrfy 명령어 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+메일 서비스가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-49</iCode>
+			<iTitle>DNS 보안 버전 패치</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+Name server를 사용하지 않으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-50</iCode>
+			<iTitle>DNS Zone Transfer 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호함</Result>
+			<Evidence>
+<![CDATA[
+Name server를 사용하지 않으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-51</iCode>
+			<iTitle>DNS 서비스의 취약한 동적 업데이트 설정 금지</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호함</Result>
+			<Evidence>
+<![CDATA[
+Name server를 사용하지 않으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-52</iCode>
+			<iTitle>Telnet 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+telnet을 사용하지 않고, ssh를 사용하고 있으므로 양호함
+root       2316      1  0  2025 ?        00:00:00 /usr/sbin/sshd -D
+root     230725   2316  0 16:47 ?        00:00:00 sshd: secadmin [priv]
+secadmin 233463 230725  0 16:49 ?        00:00:00 sshd: secadmin@pts/1
+root     234859   2316  0 16:49 ?        00:00:00 sshd: secadmin [priv]
+secadmin 234861 234859  0 16:49 ?        00:00:00 sshd: secadmin@notty
+secadmin 234862 234861  0 16:49 ?        00:00:00 /usr/libexec/openssh/sftp-server
+root     273180 273037  0  2025 ?        00:00:38 /usr/bin/ssh-agent /bin/sh -c exec -l /bin/bash -c "env GNOME_SHELL_SESSION_MODE=classic gnome-session --session gnome-classic"
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-53</iCode>
+			<iTitle>FTP 서비스 정보 노출 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+U-54 항목에서 FTP가 실행되지 않은 경우 양호]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-54</iCode>
+			<iTitle>암호화되지 않는 FTP 서비스 비활성화</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+현재 ftp 서비스가 비실행중이므로 양호함
+#ps 확인(결과가 없으면 비실행중)
+ 
+#서비스 등록확인(결과가 없으면 서비스 미등록)
+ 
+ 
+# xinetd.d 하위 설정파일 확인
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-55</iCode>
+			<iTitle>FTP 계정 Shell 제한</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+FTP 서비스가 없으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-56</iCode>
+			<iTitle>FTP 서비스 접근 제어 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+FTP 서비스가 없으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-57</iCode>
+			<iTitle>Ftpusers 파일 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+FTP 서비스가 없으므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-58</iCode>
+			<iTitle>불필요한 SNMP 서비스 구동 점검</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+SNMP가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-59</iCode>
+			<iTitle>안전한 SNMP 버전 사용</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+SNMP가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-60</iCode>
+			<iTitle>SNMP Community String 복잡성 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+SNMP가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-61</iCode>
+			<iTitle>SNMP Access Control 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+SNMP가 비실행중이므로 양호함]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-62</iCode>
+			<iTitle>로그인 시 경고 메시지 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+DGE-anal01_Linux_20260402_REF.txt 참고하여 수동진단]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-63</iCode>
+			<iTitle>sudo 명령어 접근 관리</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+/etc/sudoers 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-r--r-----. 1 root root 4328 Mar 25  2020 /etc/sudoers
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-64</iCode>
+			<iTitle>주기적 보안패치 및 벤더 권고사항 적용</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+주기적인 보안패치 여부 인터뷰 확인
+Linux DGE-anal01 3.10.0-1160.el7.x86_64 #1 SMP Tue Aug 18 14:50:17 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
+]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-65</iCode>
+			<iTitle>NTP 및 시각 동기화 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+DGE-anal01_Linux_20260402_REF.txt 참고하여 수동진단]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-66</iCode>
+			<iTitle>정책에 따른 시스템 로깅 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>수동점검</Result>
+			<Evidence>
+<![CDATA[
+로깅 정책 확인, syslog 전체 설정은 REF파일 참조]]>
+			</Evidence>
+		</Item>
+		<Item>
+			<iCode>U-67</iCode>
+			<iTitle>로그 디렉터리 소유자 및 권한 설정</iTitle>
+			<InspectionCode>CVCI-0111</InspectionCode>
+			<Result>양호</Result>
+			<Evidence>
+<![CDATA[
+로그 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-------. 1 root root        0 Aug  3  2025 /var/log/boot.log
+-rw-------  1 root root   102733 Apr  2 16:50 /var/log/cron
+-rw-------  1 root root 71615683 Apr  2 16:53 /var/log/messages
+-rw-------  1 root root     3243 Apr  2 16:51 /var/log/secure
+]]>
+			</Evidence>
+		</Item>
+	</ResultData>
+	<Info>
+		<sVersion>
+			<![CDATA[
+Linux DGE-anal01 3.10.0-1160.el7.x86_64 #1 SMP Tue Aug 18 14:50:17 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
+Host Name : DGE-anal01
+			]]>
+		</sVersion>
+		<Nic>
+			<![CDATA[
+bond0: flags=5187<UP,BROADCAST,RUNNING,MASTER,MULTICAST>  mtu 1500
+        inet 172.16.247.75  netmask 255.255.255.192  broadcast 172.16.247.127
+        inet6 fe80::5e6f:69ff:fe52:81e0  prefixlen 64  scopeid 0x20<link>
+        ether 5c:6f:69:52:81:e0  txqueuelen 1000  (Ethernet)
+        RX packets 79277431744  bytes 103200552554231 (93.8 TiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 81937769489  bytes 107338792180316 (97.6 TiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+cali110cf69ee60: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+cali2eae39b7ec8: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+cali33b2f12c751: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+cali82b72983cea: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+cali89c5fc4c515: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 10515  bytes 631022 (616.2 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 697768  bytes 86523232 (82.5 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+calib311632d288: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 79277431744  bytes 103200552554231 (93.8 TiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 81937769489  bytes 107338792180316 (97.6 TiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+calibddc31390cb: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 14017098105  bytes 96978926747075 (88.2 TiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 13631531484  bytes 100979602970060 (91.8 TiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+calid1d2505e5dc: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+calie0337d2d4e5: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1440
+        inet6 fe80::ecee:eeff:feee:eeee  prefixlen 64  scopeid 0x20<link>
+        ether ee:ee:ee:ee:ee:ee  txqueuelen 0  (Ethernet)
+        RX packets 79277431744  bytes 103200552554231 (93.8 TiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 81937769489  bytes 107338792180316 (97.6 TiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:f7:17:35:52  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+em1: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 34:73:5a:9f:0d:a0  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 125  
+
+em2: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 34:73:5a:9f:0d:a1  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 136  
+
+em3: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 34:73:5a:9f:0d:a2  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 145  
+
+em4: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 34:73:5a:9f:0d:a3  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 146  
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 66956657  bytes 4701796508 (4.3 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 66956657  bytes 4701796508 (4.3 GiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+p1p1: flags=6211<UP,BROADCAST,RUNNING,SLAVE,MULTICAST>  mtu 1500
+        ether 5c:6f:69:52:81:e0  txqueuelen 1000  (Ethernet)
+        RX packets 79277421229  bytes 103200551923209 (93.8 TiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 81937071721  bytes 107338705657084 (97.6 TiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+p1p2: flags=6211<UP,BROADCAST,RUNNING,SLAVE,MULTICAST>  mtu 1500
+        ether 5c:6f:69:52:81:e0  txqueuelen 1000  (Ethernet)
+        RX packets 10515  bytes 631022 (616.2 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 697768  bytes 86523232 (82.5 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+tunl0: flags=193<UP,RUNNING,NOARP>  mtu 1440
+        inet 192.168.30.128  netmask 255.255.255.255
+        tunnel   txqueuelen 1000  (IPIP Tunnel)
+        RX packets 14017098105  bytes 96978926747075 (88.2 TiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 13631531484  bytes 100979602970060 (91.8 TiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+virbr0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 192.168.122.1  netmask 255.255.255.0  broadcast 192.168.122.255
+        ether 52:54:00:32:42:c2  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+virbr0-nic: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 52:54:00:32:42:c2  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+			]]>
+		</Nic>
+		<Processes>
+			<![CDATA[
+UID         PID   PPID  C STIME TTY          TIME CMD
+bumil      6330   6329  0  2025 ?        00:00:00 sh -c /nib/elastic6/bin/elasticsearch
+bumil      6331   6330 30  2025 ?        73-23:11:32 /usr/java/openjdk/bin/java -Xms1g -Xmx1g -XX:+UseG1GC -XX:G1ReservePercent=25 -XX:InitiatingHeapOccupancyPercent=30 -Des.networkaddress.cache.ttl=60 -Des.networkaddress.cache.negative.ttl=10 -XX:+AlwaysPreTouch -Xss1m -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Djna.nosys=true -XX:-OmitStackTraceInFastThrow -XX:+ShowCodeDetailsInExceptionMessages -Dio.netty.noUnsafe=true -Dio.netty.noKeySetOptimization=true -Dio.netty.recycler.maxCapacityPerThread=0 -Dlog4j.shutdownHookEnabled=false -Dlog4j2.disable.jmx=true -Dlog4j2.formatMsgNoLookups=true -Djava.io.tmpdir=/tmp/elasticsearch-2076134911894510181 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=data -XX:ErrorFile=logs/hs_err_pid%p.log -Xlog:gc*,gc+age=trace,safepoint:file=logs/gc.log:utctime,pid,tags:filecount=32,filesize=64m -Djava.locale.providers=COMPAT -XX:UseAVX=2 -Xms31G -Xmx31G -Des.path.home=/nib/elastic6 -Des.path.conf=/nib/elastic6/config -Des.distribution.flavor=default -Des.distribution.type=tar -cp /nib/elastic6/lib/* org.elasticsearch.bootstrap.Elasticsearch
+bumil      6769   6331  0  2025 ?        00:00:00 /nib/elastic6/modules/x-pack-ml/platform/linux-x86_64/bin/controller
+bumil    119673 119653  0  2025 ?        00:00:00 /pause
+bumil    119846 119827  5  2025 ?        6-03:32:31 java -cp /usr/lib/trino/lib/* -server -agentpath:/usr/lib/trino/bin/libjvmkill.so -Xmx8G -XX:+UseG1GC -XX:G1HeapRegionSize=32M -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -XX:-OmitStackTraceInFastThrow -XX:ReservedCodeCacheSize=512M -XX:PerMethodRecompilationCutoff=10000 -XX:PerBytecodeRecompilationCutoff=10000 -Djdk.attach.allowAttachSelf=true -Djdk.nio.maxCachedBufferSize=2000000 -XX:+UnlockDiagnosticVMOptions -XX:GCLockerRetryAllocationCount=80 -Dnode.id=dlh-trino-worker-6fdb47559b-8fsd5 -Dnode.environment=production -Dnode.data-dir=/data/trino -Dplugin.dir=/usr/lib/trino/plugin -Dlog.levels-file=/etc/trino/..2025_12_16_02_06_02.500274580/log.properties -Dconfig=/etc/trino/..2025_12_16_02_06_02.500274580/config.properties io.trino.server.TrinoServer
+colord     7045      1  0  2025 ?        00:00:00 /usr/libexec/colord
+dbus       1839      1  0  2025 ?        02:21:22 /usr/bin/dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation
+libstor+   2021      1  0  2025 ?        00:00:49 /usr/bin/lsmd -d
+nobody     2757      1  0  2025 ?        00:00:00 /usr/sbin/dnsmasq --conf-file=/var/lib/libvirt/dnsmasq/default.conf --leasefile-ro --dhcp-script=/usr/libexec/libvirt_leaseshelper
+ntp        1889      1  0  2025 ?        00:00:17 /usr/sbin/ntpd -u ntp:ntp -g
+polkitd    1893      1  0  2025 ?        00:38:55 /usr/lib/polkit-1/polkitd --no-debug
+postfix    2733   2724  0  2025 ?        00:00:13 qmgr -l -t unix -u
+postfix  230395   2724  0 16:46 ?        00:00:00 pickup -l -t unix -u
+root          1      0  0  2025 ?        03:18:27 /usr/lib/systemd/systemd --switched-root --system --deserialize 22
+root          2      0  0  2025 ?        00:00:10 [kthreadd]
+root          4      2  0  2025 ?        00:00:00 [kworker/0:0H]
+root          6      2  0  2025 ?        00:43:08 [ksoftirqd/0]
+root          7      2  0  2025 ?        00:00:25 [migration/0]
+root          8      2  0  2025 ?        00:00:00 [rcu_bh]
+root          9      2  0  2025 ?        10:16:58 [rcu_sched]
+root         10      2  0  2025 ?        00:00:00 [lru-add-drain]
+root         11      2  0  2025 ?        00:00:38 [watchdog/0]
+root         12      2  0  2025 ?        00:00:48 [watchdog/1]
+root         13      2  0  2025 ?        00:00:18 [migration/1]
+root         14      2  0  2025 ?        00:00:06 [ksoftirqd/1]
+root         16      2  0  2025 ?        00:00:00 [kworker/1:0H]
+root         18      2  0  2025 ?        00:00:28 [watchdog/2]
+root         19      2  0  2025 ?        00:00:19 [migration/2]
+root         20      2  0  2025 ?        00:09:26 [ksoftirqd/2]
+root         22      2  0  2025 ?        00:00:00 [kworker/2:0H]
+root         24      2  0  2025 ?        00:00:42 [watchdog/3]
+root         25      2  0  2025 ?        00:00:16 [migration/3]
+root         26      2  0  2025 ?        00:00:04 [ksoftirqd/3]
+root         28      2  0  2025 ?        00:00:00 [kworker/3:0H]
+root         29      2  0  2025 ?        00:00:28 [watchdog/4]
+root         30      2  0  2025 ?        00:00:21 [migration/4]
+root         31      2  0  2025 ?        00:10:42 [ksoftirqd/4]
+root         33      2  0  2025 ?        00:00:00 [kworker/4:0H]
+root         34      2  0  2025 ?        00:00:42 [watchdog/5]
+root         35      2  0  2025 ?        00:00:22 [migration/5]
+root         36      2  0  2025 ?        00:00:10 [ksoftirqd/5]
+root         38      2  0  2025 ?        00:00:00 [kworker/5:0H]
+root         39      2  0  2025 ?        00:00:28 [watchdog/6]
+root         40      2  0  2025 ?        00:00:22 [migration/6]
+root         41      2  0  2025 ?        00:20:00 [ksoftirqd/6]
+root         43      2  0  2025 ?        00:00:00 [kworker/6:0H]
+root         44      2  0  2025 ?        00:00:41 [watchdog/7]
+root         45      2  0  2025 ?        00:00:20 [migration/7]
+root         46      2  0  2025 ?        00:00:05 [ksoftirqd/7]
+root         48      2  0  2025 ?        00:00:00 [kworker/7:0H]
+root         49      2  0  2025 ?        00:00:28 [watchdog/8]
+root         50      2  0  2025 ?        00:00:19 [migration/8]
+root         51      2  0  2025 ?        00:08:49 [ksoftirqd/8]
+root         53      2  0  2025 ?        00:00:00 [kworker/8:0H]
+root         54      2  0  2025 ?        00:00:41 [watchdog/9]
+root         55      2  0  2025 ?        00:00:17 [migration/9]
+root         56      2  0  2025 ?        00:00:03 [ksoftirqd/9]
+root         58      2  0  2025 ?        00:00:00 [kworker/9:0H]
+root         59      2  0  2025 ?        00:00:29 [watchdog/10]
+root         60      2  0  2025 ?        00:00:18 [migration/10]
+root         61      2  0  2025 ?        00:13:55 [ksoftirqd/10]
+root         63      2  0  2025 ?        00:00:00 [kworker/10:0H]
+root         64      2  0  2025 ?        00:00:37 [watchdog/11]
+root         65      2  0  2025 ?        00:00:16 [migration/11]
+root         66      2  0  2025 ?        00:00:02 [ksoftirqd/11]
+root         68      2  0  2025 ?        00:00:00 [kworker/11:0H]
+root         69      2  0  2025 ?        00:00:29 [watchdog/12]
+root         70      2  0  2025 ?        00:00:16 [migration/12]
+root         71      2  0  2025 ?        00:00:09 [ksoftirqd/12]
+root         73      2  0  2025 ?        00:00:00 [kworker/12:0H]
+root         74      2  0  2025 ?        00:00:37 [watchdog/13]
+root         75      2  0  2025 ?        00:00:15 [migration/13]
+root         76      2  0  2025 ?        00:00:02 [ksoftirqd/13]
+root         78      2  0  2025 ?        00:00:00 [kworker/13:0H]
+root         79      2  0  2025 ?        00:00:29 [watchdog/14]
+root         80      2  0  2025 ?        00:00:20 [migration/14]
+root         81      2  0  2025 ?        00:18:24 [ksoftirqd/14]
+root         83      2  0  2025 ?        00:00:00 [kworker/14:0H]
+root         84      2  0  2025 ?        00:00:38 [watchdog/15]
+root         85      2  0  2025 ?        00:00:15 [migration/15]
+root         86      2  0  2025 ?        00:00:02 [ksoftirqd/15]
+root         88      2  0  2025 ?        00:00:00 [kworker/15:0H]
+root         89      2  0  2025 ?        00:00:26 [watchdog/16]
+root         90      2  0  2025 ?        00:00:19 [migration/16]
+root         91      2  0  2025 ?        00:14:39 [ksoftirqd/16]
+root         93      2  0  2025 ?        00:00:00 [kworker/16:0H]
+root         94      2  0  2025 ?        00:00:37 [watchdog/17]
+root         95      2  0  2025 ?        00:00:15 [migration/17]
+root         96      2  0  2025 ?        00:00:02 [ksoftirqd/17]
+root         98      2  0  2025 ?        00:00:00 [kworker/17:0H]
+root         99      2  0  2025 ?        00:00:28 [watchdog/18]
+root        100      2  0  2025 ?        00:00:19 [migration/18]
+root        101      2  0  2025 ?        00:14:09 [ksoftirqd/18]
+root        103      2  0  2025 ?        00:00:00 [kworker/18:0H]
+root        104      2  0  2025 ?        00:00:38 [watchdog/19]
+root        105      2  0  2025 ?        00:00:15 [migration/19]
+root        106      2  0  2025 ?        00:00:02 [ksoftirqd/19]
+root        108      2  0  2025 ?        00:00:00 [kworker/19:0H]
+root        109      2  0  2025 ?        00:00:27 [watchdog/20]
+root        110      2  0  2025 ?        00:00:21 [migration/20]
+root        111      2  0  2025 ?        00:17:30 [ksoftirqd/20]
+root        113      2  0  2025 ?        00:00:00 [kworker/20:0H]
+root        114      2  0  2025 ?        00:00:38 [watchdog/21]
+root        115      2  0  2025 ?        00:00:14 [migration/21]
+root        116      2  0  2025 ?        00:00:02 [ksoftirqd/21]
+root        118      2  0  2025 ?        00:00:00 [kworker/21:0H]
+root        119      2  0  2025 ?        00:00:27 [watchdog/22]
+root        120      2  0  2025 ?        00:00:21 [migration/22]
+root        121      2  0  2025 ?        00:16:09 [ksoftirqd/22]
+root        123      2  0  2025 ?        00:00:00 [kworker/22:0H]
+root        124      2  0  2025 ?        00:00:38 [watchdog/23]
+root        125      2  0  2025 ?        00:00:14 [migration/23]
+root        126      2  0  2025 ?        00:00:02 [ksoftirqd/23]
+root        128      2  0  2025 ?        00:00:00 [kworker/23:0H]
+root        129      2  0  2025 ?        00:00:26 [watchdog/24]
+root        130      2  0  2025 ?        00:00:18 [migration/24]
+root        131      2  0  2025 ?        00:00:08 [ksoftirqd/24]
+root        133      2  0  2025 ?        00:00:00 [kworker/24:0H]
+root        134      2  0  2025 ?        00:00:38 [watchdog/25]
+root        135      2  0  2025 ?        00:00:14 [migration/25]
+root        136      2  0  2025 ?        00:00:02 [ksoftirqd/25]
+root        138      2  0  2025 ?        00:00:00 [kworker/25:0H]
+root        139      2  0  2025 ?        00:00:28 [watchdog/26]
+root        140      2  0  2025 ?        00:00:20 [migration/26]
+root        141      2  0  2025 ?        00:07:21 [ksoftirqd/26]
+root        143      2  0  2025 ?        00:00:00 [kworker/26:0H]
+root        144      2  0  2025 ?        00:00:38 [watchdog/27]
+root        145      2  0  2025 ?        00:00:14 [migration/27]
+root        146      2  0  2025 ?        00:00:02 [ksoftirqd/27]
+root        148      2  0  2025 ?        00:00:00 [kworker/27:0H]
+root        149      2  0  2025 ?        00:00:28 [watchdog/28]
+root        150      2  0  2025 ?        00:00:22 [migration/28]
+root        151      2  0  2025 ?        00:27:17 [ksoftirqd/28]
+root        153      2  0  2025 ?        00:00:00 [kworker/28:0H]
+root        154      2  0  2025 ?        00:00:38 [watchdog/29]
+root        155      2  0  2025 ?        00:00:14 [migration/29]
+root        156      2  0  2025 ?        00:00:02 [ksoftirqd/29]
+root        158      2  0  2025 ?        00:00:00 [kworker/29:0H]
+root        159      2  0  2025 ?        00:00:28 [watchdog/30]
+root        160      2  0  2025 ?        00:00:18 [migration/30]
+root        161      2  0  2025 ?        00:15:13 [ksoftirqd/30]
+root        163      2  0  2025 ?        00:00:00 [kworker/30:0H]
+root        164      2  0  2025 ?        00:00:39 [watchdog/31]
+root        165      2  0  2025 ?        00:00:13 [migration/31]
+root        166      2  0  2025 ?        00:00:02 [ksoftirqd/31]
+root        168      2  0  2025 ?        00:00:00 [kworker/31:0H]
+root        169      2  0  2025 ?        00:00:28 [watchdog/32]
+root        170      2  0  2025 ?        00:00:17 [migration/32]
+root        171      2  0  2025 ?        00:05:19 [ksoftirqd/32]
+root        173      2  0  2025 ?        00:00:00 [kworker/32:0H]
+root        174      2  0  2025 ?        00:00:38 [watchdog/33]
+root        175      2  0  2025 ?        00:00:13 [migration/33]
+root        176      2  0  2025 ?        00:00:02 [ksoftirqd/33]
+root        178      2  0  2025 ?        00:00:00 [kworker/33:0H]
+root        179      2  0  2025 ?        00:00:28 [watchdog/34]
+root        180      2  0  2025 ?        00:00:18 [migration/34]
+root        181      2  0  2025 ?        00:09:18 [ksoftirqd/34]
+root        183      2  0  2025 ?        00:00:00 [kworker/34:0H]
+root        184      2  0  2025 ?        00:00:39 [watchdog/35]
+root        185      2  0  2025 ?        00:00:13 [migration/35]
+root        186      2  0  2025 ?        00:00:02 [ksoftirqd/35]
+root        188      2  0  2025 ?        00:00:00 [kworker/35:0H]
+root        189      2  0  2025 ?        00:00:27 [watchdog/36]
+root        190      2  0  2025 ?        00:00:16 [migration/36]
+root        191      2  0  2025 ?        00:00:07 [ksoftirqd/36]
+root        193      2  0  2025 ?        00:00:00 [kworker/36:0H]
+root        194      2  0  2025 ?        00:00:39 [watchdog/37]
+root        195      2  0  2025 ?        00:00:12 [migration/37]
+root        196      2  0  2025 ?        00:00:02 [ksoftirqd/37]
+root        198      2  0  2025 ?        00:00:00 [kworker/37:0H]
+root        199      2  0  2025 ?        00:00:27 [watchdog/38]
+root        200      2  0  2025 ?        00:00:16 [migration/38]
+root        201      2  0  2025 ?        00:06:08 [ksoftirqd/38]
+root        203      2  0  2025 ?        00:00:00 [kworker/38:0H]
+root        204      2  0  2025 ?        00:00:39 [watchdog/39]
+root        205      2  0  2025 ?        00:00:13 [migration/39]
+root        206      2  0  2025 ?        00:00:02 [ksoftirqd/39]
+root        208      2  0  2025 ?        00:00:00 [kworker/39:0H]
+root        209      2  0  2025 ?        00:00:29 [watchdog/40]
+root        210      2  0  2025 ?        00:00:07 [migration/40]
+root        211      2  0  2025 ?        00:05:44 [ksoftirqd/40]
+root        212      2  0  2025 ?        00:00:00 [kworker/40:0]
+root        213      2  0  2025 ?        00:00:00 [kworker/40:0H]
+root        214      2  0  2025 ?        00:00:39 [watchdog/41]
+root        215      2  0  2025 ?        00:00:07 [migration/41]
+root        216      2  0  2025 ?        00:00:00 [ksoftirqd/41]
+root        218      2  0  2025 ?        00:00:00 [kworker/41:0H]
+root        219      2  0  2025 ?        00:00:30 [watchdog/42]
+root        220      2  0  2025 ?        00:03:32 [migration/42]
+root        221      2  0  2025 ?        00:08:09 [ksoftirqd/42]
+root        223      2  0  2025 ?        00:00:00 [kworker/42:0H]
+root        224      2  0  2025 ?        00:00:40 [watchdog/43]
+root        225      2  0  2025 ?        00:03:27 [migration/43]
+root        226      2  0  2025 ?        00:00:27 [ksoftirqd/43]
+root        228      2  0  2025 ?        00:00:00 [kworker/43:0H]
+root        229      2  0  2025 ?        00:00:29 [watchdog/44]
+root        230      2  0  2025 ?        00:00:37 [migration/44]
+root        231      2  0  2025 ?        00:06:20 [ksoftirqd/44]
+root        233      2  0  2025 ?        00:00:00 [kworker/44:0H]
+root        234      2  0  2025 ?        00:00:40 [watchdog/45]
+root        235      2  0  2025 ?        00:01:00 [migration/45]
+root        236      2  0  2025 ?        00:00:08 [ksoftirqd/45]
+root        238      2  0  2025 ?        00:00:00 [kworker/45:0H]
+root        239      2  0  2025 ?        00:00:29 [watchdog/46]
+root        240      2  0  2025 ?        00:00:14 [migration/46]
+root        241      2  0  2025 ?        00:00:57 [ksoftirqd/46]
+root        243      2  0  2025 ?        00:00:00 [kworker/46:0H]
+root        244      2  0  2025 ?        00:00:39 [watchdog/47]
+root        245      2  0  2025 ?        00:00:28 [migration/47]
+root        246      2  0  2025 ?        00:00:11 [ksoftirqd/47]
+root        248      2  0  2025 ?        00:00:00 [kworker/47:0H]
+root        249      2  0  2025 ?        00:00:28 [watchdog/48]
+root        250      2  0  2025 ?        00:00:08 [migration/48]
+root        251      2  0  2025 ?        00:00:18 [ksoftirqd/48]
+root        253      2  0  2025 ?        00:00:00 [kworker/48:0H]
+root        254      2  0  2025 ?        00:00:39 [watchdog/49]
+root        255      2  0  2025 ?        00:00:15 [migration/49]
+root        256      2  0  2025 ?        00:00:04 [ksoftirqd/49]
+root        258      2  0  2025 ?        00:00:00 [kworker/49:0H]
+root        259      2  0  2025 ?        00:00:28 [watchdog/50]
+root        260      2  0  2025 ?        00:00:06 [migration/50]
+root        261      2  0  2025 ?        00:00:02 [ksoftirqd/50]
+root        263      2  0  2025 ?        00:00:00 [kworker/50:0H]
+root        264      2  0  2025 ?        00:00:33 [watchdog/51]
+root        265      2  0  2025 ?        00:00:12 [migration/51]
+root        266      2  0  2025 ?        00:00:01 [ksoftirqd/51]
+root        268      2  0  2025 ?        00:00:00 [kworker/51:0H]
+root        269      2  0  2025 ?        00:00:29 [watchdog/52]
+root        270      2  0  2025 ?        00:00:07 [migration/52]
+root        271      2  0  2025 ?        00:04:33 [ksoftirqd/52]
+root        273      2  0  2025 ?        00:00:00 [kworker/52:0H]
+root        274      2  0  2025 ?        00:00:38 [watchdog/53]
+root        275      2  0  2025 ?        00:00:11 [migration/53]
+root        276      2  0  2025 ?        00:00:00 [ksoftirqd/53]
+root        278      2  0  2025 ?        00:00:00 [kworker/53:0H]
+root        279      2  0  2025 ?        00:00:29 [watchdog/54]
+root        280      2  0  2025 ?        00:00:06 [migration/54]
+root        281      2  0  2025 ?        00:01:33 [ksoftirqd/54]
+root        283      2  0  2025 ?        00:00:00 [kworker/54:0H]
+root        284      2  0  2025 ?        00:00:38 [watchdog/55]
+root        285      2  0  2025 ?        00:00:10 [migration/55]
+root        286      2  0  2025 ?        00:00:00 [ksoftirqd/55]
+root        288      2  0  2025 ?        00:00:00 [kworker/55:0H]
+root        289      2  0  2025 ?        00:00:28 [watchdog/56]
+root        290      2  0  2025 ?        00:00:05 [migration/56]
+root        291      2  0  2025 ?        00:00:01 [ksoftirqd/56]
+root        292      2  0  2025 ?        00:00:00 [kworker/56:0]
+root        293      2  0  2025 ?        00:00:00 [kworker/56:0H]
+root        294      2  0  2025 ?        00:00:38 [watchdog/57]
+root        295      2  0  2025 ?        00:00:09 [migration/57]
+root        296      2  0  2025 ?        00:00:00 [ksoftirqd/57]
+root        298      2  0  2025 ?        00:00:00 [kworker/57:0H]
+root        299      2  0  2025 ?        00:00:28 [watchdog/58]
+root        300      2  0  2025 ?        00:00:05 [migration/58]
+root        301      2  0  2025 ?        00:00:01 [ksoftirqd/58]
+root        303      2  0  2025 ?        00:00:00 [kworker/58:0H]
+root        304      2  0  2025 ?        00:00:38 [watchdog/59]
+root        305      2  0  2025 ?        00:00:09 [migration/59]
+root        306      2  0  2025 ?        00:00:00 [ksoftirqd/59]
+root        308      2  0  2025 ?        00:00:00 [kworker/59:0H]
+root        309      2  0  2025 ?        00:00:28 [watchdog/60]
+root        310      2  0  2025 ?        00:00:05 [migration/60]
+root        311      2  0  2025 ?        00:02:17 [ksoftirqd/60]
+root        312      2  0  2025 ?        00:00:00 [kworker/60:0]
+root        313      2  0  2025 ?        00:00:00 [kworker/60:0H]
+root        314      2  0  2025 ?        00:00:39 [watchdog/61]
+root        315      2  0  2025 ?        00:00:08 [migration/61]
+root        316      2  0  2025 ?        00:00:00 [ksoftirqd/61]
+root        318      2  0  2025 ?        00:00:00 [kworker/61:0H]
+root        319      2  0  2025 ?        00:00:30 [watchdog/62]
+root        320      2  0  2025 ?        00:00:06 [migration/62]
+root        321      2  0  2025 ?        00:05:47 [ksoftirqd/62]
+root        323      2  0  2025 ?        00:00:00 [kworker/62:0H]
+root        324      2  0  2025 ?        00:00:39 [watchdog/63]
+root        325      2  0  2025 ?        00:00:08 [migration/63]
+root        326      2  0  2025 ?        00:00:00 [ksoftirqd/63]
+root        328      2  0  2025 ?        00:00:00 [kworker/63:0H]
+root        329      2  0  2025 ?        00:00:28 [watchdog/64]
+root        330      2  0  2025 ?        00:00:05 [migration/64]
+root        331      2  0  2025 ?        00:00:01 [ksoftirqd/64]
+root        332      2  0  2025 ?        00:00:00 [kworker/64:0]
+root        333      2  0  2025 ?        00:00:00 [kworker/64:0H]
+root        334      2  0  2025 ?        00:00:39 [watchdog/65]
+root        335      2  0  2025 ?        00:00:07 [migration/65]
+root        336      2  0  2025 ?        00:00:00 [ksoftirqd/65]
+root        338      2  0  2025 ?        00:00:00 [kworker/65:0H]
+root        339      2  0  2025 ?        00:00:28 [watchdog/66]
+root        340      2  0  2025 ?        00:00:05 [migration/66]
+root        341      2  0  2025 ?        00:00:01 [ksoftirqd/66]
+root        342      2  0  2025 ?        00:00:00 [kworker/66:0]
+root        343      2  0  2025 ?        00:00:00 [kworker/66:0H]
+root        344      2  0  2025 ?        00:00:38 [watchdog/67]
+root        345      2  0  2025 ?        00:00:07 [migration/67]
+root        346      2  0  2025 ?        00:00:00 [ksoftirqd/67]
+root        348      2  0  2025 ?        00:00:00 [kworker/67:0H]
+root        349      2  0  2025 ?        00:00:28 [watchdog/68]
+root        350      2  0  2025 ?        00:00:05 [migration/68]
+root        351      2  0  2025 ?        00:00:01 [ksoftirqd/68]
+root        352      2  0  2025 ?        00:00:00 [kworker/68:0]
+root        353      2  0  2025 ?        00:00:00 [kworker/68:0H]
+root        354      2  0  2025 ?        00:00:39 [watchdog/69]
+root        355      2  0  2025 ?        00:00:07 [migration/69]
+root        356      2  0  2025 ?        00:00:00 [ksoftirqd/69]
+root        358      2  0  2025 ?        00:00:00 [kworker/69:0H]
+root        359      2  0  2025 ?        00:00:29 [watchdog/70]
+root        360      2  0  2025 ?        00:00:05 [migration/70]
+root        361      2  0  2025 ?        00:06:04 [ksoftirqd/70]
+root        362      2  0  2025 ?        00:00:00 [kworker/70:0]
+root        363      2  0  2025 ?        00:00:00 [kworker/70:0H]
+root        364      2  0  2025 ?        00:00:39 [watchdog/71]
+root        365      2  0  2025 ?        00:00:07 [migration/71]
+root        366      2  0  2025 ?        00:00:00 [ksoftirqd/71]
+root        368      2  0  2025 ?        00:00:00 [kworker/71:0H]
+root        369      2  0  2025 ?        00:00:28 [watchdog/72]
+root        370      2  0  2025 ?        00:00:05 [migration/72]
+root        371      2  0  2025 ?        00:00:01 [ksoftirqd/72]
+root        372      2  0  2025 ?        00:00:00 [kworker/72:0]
+root        373      2  0  2025 ?        00:00:00 [kworker/72:0H]
+root        374      2  0  2025 ?        00:00:38 [watchdog/73]
+root        375      2  0  2025 ?        00:00:07 [migration/73]
+root        376      2  0  2025 ?        00:00:00 [ksoftirqd/73]
+root        378      2  0  2025 ?        00:00:00 [kworker/73:0H]
+root        379      2  0  2025 ?        00:00:28 [watchdog/74]
+root        380      2  0  2025 ?        00:00:05 [migration/74]
+root        381      2  0  2025 ?        00:00:01 [ksoftirqd/74]
+root        383      2  0  2025 ?        00:00:00 [kworker/74:0H]
+root        384      2  0  2025 ?        00:00:40 [watchdog/75]
+root        385      2  0  2025 ?        00:00:07 [migration/75]
+root        386      2  0  2025 ?        00:00:00 [ksoftirqd/75]
+root        388      2  0  2025 ?        00:00:00 [kworker/75:0H]
+root        389      2  0  2025 ?        00:00:30 [watchdog/76]
+root        390      2  0  2025 ?        00:00:05 [migration/76]
+root        391      2  0  2025 ?        00:00:01 [ksoftirqd/76]
+root        392      2  0  2025 ?        00:00:00 [kworker/76:0]
+root        393      2  0  2025 ?        00:00:00 [kworker/76:0H]
+root        394      2  0  2025 ?        00:00:43 [watchdog/77]
+root        395      2  0  2025 ?        00:00:08 [migration/77]
+root        396      2  0  2025 ?        00:00:00 [ksoftirqd/77]
+root        398      2  0  2025 ?        00:00:00 [kworker/77:0H]
+root        399      2  0  2025 ?        00:00:29 [watchdog/78]
+root        400      2  0  2025 ?        00:00:06 [migration/78]
+root        401      2  0  2025 ?        00:00:01 [ksoftirqd/78]
+root        402      2  0  2025 ?        00:00:00 [kworker/78:0]
+root        403      2  0  2025 ?        00:00:00 [kworker/78:0H]
+root        404      2  0  2025 ?        00:00:39 [watchdog/79]
+root        405      2  0  2025 ?        00:00:14 [migration/79]
+root        406      2  0  2025 ?        00:00:00 [ksoftirqd/79]
+root        408      2  0  2025 ?        00:00:00 [kworker/79:0H]
+root        411      2  0  2025 ?        00:00:00 [kdevtmpfs]
+root        412      2  0  2025 ?        00:00:00 [netns]
+root        413      2  0  2025 ?        00:00:46 [khungtaskd]
+root        414      2  0  2025 ?        00:00:00 [writeback]
+root        415      2  0  2025 ?        00:00:00 [kintegrityd]
+root        416      2  0  2025 ?        00:00:00 [bioset]
+root        417      2  0  2025 ?        00:00:00 [bioset]
+root        418      2  0  2025 ?        00:00:00 [bioset]
+root        419      2  0  2025 ?        00:00:00 [kblockd]
+root        421      2  0  2025 ?        00:00:00 [md]
+root        422      2  0  2025 ?        00:00:00 [edac-poller]
+root        423      2  0  2025 ?        00:00:00 [watchdogd]
+root        431      2  0  2025 ?        00:34:45 [kswapd0]
+root        432      2  0  2025 ?        00:04:25 [kswapd1]
+root        433      2  0  2025 ?        00:00:00 [ksmd]
+root        434      2  0  2025 ?        00:00:42 [khugepaged]
+root        435      2  0  2025 ?        00:00:00 [crypto]
+root        443      2  0  2025 ?        00:00:00 [kthrotld]
+root        445      2  0  2025 ?        00:00:00 [kmpath_rdacd]
+root        446      2  0  2025 ?        00:00:00 [kaluad]
+root        449      2  0  2025 ?        00:01:55 [kworker/46:1]
+root        450      2  0  2025 ?        00:00:00 [kpsmoused]
+root        452      2  0  2025 ?        00:00:00 [ipv6_addrconf]
+root        465      2  0  2025 ?        00:00:00 [deferwq]
+root        508      2  0  2025 ?        00:00:04 [kauditd]
+root        534      2  0  2025 ?        00:02:29 [kworker/9:1]
+root        601      2  0 Mar13 ?        00:00:00 [kworker/67:0]
+root        707      2  0  2025 ?        00:00:00 [nfit]
+root        734      2  0  2025 ?        00:00:00 [scsi_eh_0]
+root        735      2  0  2025 ?        00:00:00 [scsi_tmf_0]
+root        742      2  0  2025 ?        00:00:00 [ata_sff]
+root        750      2  0  2025 ?        00:00:00 [scsi_eh_1]
+root        751      2  0  2025 ?        00:00:00 [scsi_tmf_1]
+root        752      2  0  2025 ?        00:00:00 [scsi_eh_2]
+root        753      2  0  2025 ?        00:00:00 [scsi_tmf_2]
+root        754      2  0  2025 ?        00:00:00 [scsi_eh_3]
+root        755      2  0  2025 ?        00:00:00 [scsi_tmf_3]
+root        756      2  0  2025 ?        00:00:00 [scsi_eh_4]
+root        757      2  0  2025 ?        00:00:00 [scsi_tmf_4]
+root        758      2  0  2025 ?        00:00:00 [scsi_eh_5]
+root        759      2  0  2025 ?        00:00:00 [scsi_tmf_5]
+root        760      2  0  2025 ?        00:00:00 [scsi_eh_6]
+root        761      2  0  2025 ?        00:00:00 [scsi_tmf_6]
+root        769      2  0  2025 ?        00:00:00 [scsi_eh_7]
+root        770      2  0  2025 ?        00:00:00 [scsi_tmf_7]
+root        771      2  0  2025 ?        00:00:00 [scsi_eh_8]
+root        772      2  0  2025 ?        00:00:00 [scsi_tmf_8]
+root        773      2  0  2025 ?        00:00:00 [scsi_eh_9]
+root        774      2  0  2025 ?        00:00:00 [scsi_tmf_9]
+root        776      2  0  2025 ?        00:00:00 [scsi_eh_10]
+root        777      2  0  2025 ?        00:00:00 [scsi_tmf_10]
+root        778      2  0  2025 ?        00:00:00 [scsi_eh_11]
+root        779      2  0  2025 ?        00:00:00 [scsi_tmf_11]
+root        781      2  0  2025 ?        00:00:00 [scsi_eh_12]
+root        782      2  0  2025 ?        00:00:00 [scsi_tmf_12]
+root        783      2  0  2025 ?        00:00:00 [scsi_eh_13]
+root        784      2  0  2025 ?        00:00:00 [scsi_tmf_13]
+root        785      2  0  2025 ?        00:00:00 [scsi_eh_14]
+root        786      2  0  2025 ?        00:00:00 [scsi_tmf_14]
+root        793      2  0  2025 ?        00:00:00 [ttm_swap]
+root        798      2  0  2025 ?        00:00:00 [bnxt_pf_wq]
+root        807      2  0  2025 ?        00:00:00 [poll_megasas0_s]
+root        813      2  0  2025 ?        00:01:17 [kworker/40:1]
+root        831      2  0  2025 ?        00:01:45 [kworker/56:1]
+root        869      2  0  2025 ?        00:03:51 [kworker/3:1]
+root        871      2  0  2025 ?        00:06:16 [kworker/14:1]
+root        876      2  0  2025 ?        00:06:37 [kworker/20:1]
+root        877      2  0  2025 ?        00:06:13 [kworker/22:1]
+root        882      2  0  2025 ?        00:06:30 [kworker/30:1]
+root        883      2  0  2025 ?        00:06:35 [kworker/28:1]
+root        886      2  0  2025 ?        00:05:21 [kworker/32:1]
+root        888      2  0  2025 ?        00:05:40 [kworker/34:1]
+root        891      2  0  2025 ?        00:04:25 [kworker/36:1]
+root        894      2  0  2025 ?        00:04:45 [kworker/38:1]
+root        896      2  0  2025 ?        00:03:02 [kworker/48:1]
+root        901      2  0  2025 ?        00:01:16 [kworker/60:1]
+root        902      2  0  2025 ?        00:01:18 [kworker/58:1]
+root        903      2  0  2025 ?        00:01:51 [kworker/62:1]
+root        905      2  0  2025 ?        00:02:05 [kworker/70:1]
+root        908      2  0  2025 ?        00:00:54 [kworker/76:1]
+root       1057      2  0  2025 ?        00:00:00 [kdmflush]
+root       1058      2  0  2025 ?        00:00:00 [bioset]
+root       1075      2  0  2025 ?        00:00:00 [bioset]
+root       1076      2  0  2025 ?        00:00:00 [xfsalloc]
+root       1077      2  0  2025 ?        00:00:00 [xfs_mru_cache]
+root       1078      2  0  2025 ?        00:00:00 [xfs-buf/dm-0]
+root       1079      2  0  2025 ?        00:00:00 [xfs-data/dm-0]
+root       1080      2  0  2025 ?        00:00:00 [xfs-conv/dm-0]
+root       1081      2  0  2025 ?        00:00:00 [xfs-cil/dm-0]
+root       1082      2  0  2025 ?        00:00:00 [xfs-reclaim/dm-]
+root       1083      2  0  2025 ?        00:00:00 [xfs-log/dm-0]
+root       1084      2  0  2025 ?        00:00:00 [xfs-eofblocks/d]
+root       1085      2  0  2025 ?        01:21:37 [xfsaild/dm-0]
+root       1086      2  0  2025 ?        00:00:05 [kworker/12:1H]
+root       1172      1  0  2025 ?        02:14:12 /usr/lib/systemd/systemd-journald
+root       1173      2  0  2025 ?        00:01:01 [kworker/64:1]
+root       1174      2  0  2025 ?        00:00:35 [kworker/67:1]
+root       1176      2  0  2025 ?        00:01:00 [kworker/66:1]
+root       1177      2  0  2025 ?        00:00:56 [kworker/68:1]
+root       1178      2  0  2025 ?        00:01:00 [kworker/69:1]
+root       1179      2  0  2025 ?        00:00:56 [kworker/72:1]
+root       1182      2  0  2025 ?        00:00:55 [kworker/78:1]
+root       1198      1  0  2025 ?        00:00:00 /usr/sbin/lvmetad -f
+root       1214      1  0  2025 ?        00:00:02 /usr/lib/systemd/systemd-udevd
+root       1219      2  0  2025 ?        00:00:06 [kworker/18:1H]
+root       1224      2  0  2025 ?        00:00:05 [kworker/8:1H]
+root       1406      2  0  2025 ?        00:00:00 [irq/147-mei_me]
+root       1436      2  0  2025 ?        00:01:54 [kworker/23:2]
+root       1465      2  0  2025 ?        00:00:59 [kworker/0:1H]
+root       1474      2  0  2025 ?        00:00:00 [kvm-irqfd-clean]
+root       1475      2  0  2025 ?        00:00:00 [xfs-buf/sdb2]
+root       1476      2  0  2025 ?        00:00:00 [xfs-data/sdb2]
+root       1477      2  0  2025 ?        00:00:00 [xfs-conv/sdb2]
+root       1478      2  0  2025 ?        00:00:00 [xfs-cil/sdb2]
+root       1479      2  0  2025 ?        00:00:00 [xfs-reclaim/sdb]
+root       1480      2  0  2025 ?        00:00:00 [xfs-log/sdb2]
+root       1481      2  0  2025 ?        00:00:00 [xfs-eofblocks/s]
+root       1482      2  0  2025 ?        00:00:00 [xfsaild/sdb2]
+root       1579      2  0  2025 ?        00:00:00 [kdmflush]
+root       1580      2  0  2025 ?        00:00:00 [bioset]
+root       1601      2  0  2025 ?        01:30:03 [jbd2/dm-1-8]
+root       1603      2  0  2025 ?        00:00:00 [ext4-rsv-conver]
+root       1615      2  0  2025 ?        00:00:00 [ib-comp-wq]
+root       1616      2  0  2025 ?        00:00:00 [kworker/u611:0]
+root       1617      2  0  2025 ?        00:00:00 [kworker/u612:0]
+root       1618      2  0  2025 ?        00:00:00 [kworker/u613:0]
+root       1619      2  0  2025 ?        00:00:00 [ib-comp-unb-wq]
+root       1620      2  0  2025 ?        00:00:00 [ib_mcast]
+root       1621      2  0  2025 ?        00:00:00 [ib_nl_sa_wq]
+root       1624      2  0  2025 ?        00:00:00 [bnxt_re]
+root       1747      2  0  2025 ?        00:00:00 [rdma_cm]
+root       1775      1  0  2025 ?        00:00:26 /sbin/auditd
+root       1777   1775  0  2025 ?        00:00:45 /sbin/audispd
+root       1779   1777  0  2025 ?        00:00:11 /usr/sbin/sedispatch
+root       1781      2  0  2025 ?        00:00:00 [srp_remove]
+root       1786      2  0  2025 ?        00:00:00 [rpciod]
+root       1787      2  0  2025 ?        00:00:00 [xprtiod]
+root       1789      2  0  2025 ?        00:00:00 [target_completi]
+root       1790      2  0  2025 ?        00:00:00 [tmr-rd_mcp]
+root       1791      2  0  2025 ?        00:00:00 [xcopy_wq]
+root       1796      2  0  2025 ?        00:00:00 [iscsi_eh]
+root       1826      2  0  2025 ?        00:00:00 [xprtrdma_receiv]
+root       1834      1  0  2025 ?        01:40:48 /usr/sbin/irqbalance --foreground
+root       1848      1  0  2025 ?        00:00:11 /usr/sbin/smartd -n -q never
+root       1862      1  0  2025 ?        00:51:36 /usr/libexec/udisks2/udisksd
+root       1882      1  0  2025 ?        00:00:00 /usr/sbin/gssproxy -D
+root       1911      2  0  2025 ?        00:00:27 [kworker/45:1H]
+root       1912      1  0  2025 ?        00:22:47 /usr/lib/systemd/systemd-logind
+root       1931      1  0  2025 ?        01:07:25 /sbin/rngd -f
+root       1936      2  0  2025 ?        00:00:00 [kworker/52:1H]
+root       1947      1  0  2025 ?        00:17:29 /usr/local/secuve/TOSSuite/bin/ScvWatch
+root       1960      2  0  2025 ?        00:00:06 [kworker/4:1H]
+root       1967      1  0  2025 ?        00:13:50 /usr/lib/systemd/systemd-machined
+root       1985      1  0  2025 ?        00:34:17 /usr/libexec/accounts-daemon
+root       1989      2  0  2025 ?        00:00:00 [kworker/54:1H]
+root       2052      1  0  2025 ?        00:00:00 /usr/sbin/mcelog --ignorenodev --daemon --syslog
+root       2122      2  0  2025 ?        00:00:00 [bond0]
+root       2134      1  0  2025 ?        00:39:15 /bin/bash /usr/sbin/ksmtuned
+root       2201      2  0  2025 ?        00:00:00 [kworker/65:1H]
+root       2237      2  0  2025 ?        00:00:00 [kworker/50:1H]
+root       2314      1  3  2025 ?        8-19:41:20 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/kubelet/config.yaml --network-plugin=cni --pod-infra-container-image=nct-private-repo:5502/k8s.gcr.io/pause:3.2
+root       2316      1  0  2025 ?        00:00:00 /usr/sbin/sshd -D
+root       2323      1  0  2025 ?        00:00:05 /usr/sbin/cupsd -f
+root       2328      1  0  2025 ?        00:27:12 /usr/bin/python2 -Es /usr/sbin/tuned -l -P
+root       2332      1  0  2025 ?        01:22:08 /usr/sbin/rsyslogd -n
+root       2333      1  0  2025 ?        00:00:00 /usr/bin/rhsmcertd
+root       2338      1  2  2025 ?        6-00:12:34 /usr/bin/containerd
+root       2385      1  0  2025 ?        00:00:00 rhnsd
+root       2389      1  0  2025 ?        00:00:00 /usr/sbin/libvirtd
+root       2545      2  0  2025 ?        00:00:01 [kworker/11:1H]
+root       2603      1  0  2025 ?        00:00:27 /usr/sbin/crond -n
+root       2617      1  1  2025 ?        3-12:34:12 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+root       2724      1  0  2025 ?        00:00:45 /usr/libexec/postfix/master -w
+root       2742      2  0  2025 ?        00:00:02 [kworker/17:1H]
+root       2758   2757  0  2025 ?        00:00:00 /usr/sbin/dnsmasq --conf-file=/var/lib/libvirt/dnsmasq/default.conf --leasefile-ro --dhcp-script=/usr/libexec/libvirt_leaseshelper
+root       2774      2  0  2025 ?        00:00:00 [kworker/47:1H]
+root       2775      2  0  2025 ?        00:00:05 [kworker/6:1H]
+root       2781      2  0  2025 ?        00:00:02 [kworker/1:1H]
+root       2850      2  0  2025 ?        00:00:02 [kworker/21:1H]
+root       2887      2  0  2025 ?        00:00:01 [kworker/25:1H]
+root       2913      2  0  2025 ?        00:00:05 [kworker/34:1H]
+root       3271      2  0  2025 ?        00:00:00 [kworker/43:1H]
+root       3333      2  0  2025 ?        00:00:01 [kworker/31:1H]
+root       3402      2  0  2025 ?        00:00:01 [kworker/13:1H]
+root       3403      2  0  2025 ?        00:00:01 [kworker/19:1H]
+root       3406      2  0  2025 ?        00:00:01 [kworker/39:1H]
+root       3407      2  0  2025 ?        00:00:01 [kworker/35:1H]
+root       3408      2  0  2025 ?        00:00:01 [kworker/7:1H]
+root       3502      2  0  2025 ?        00:00:01 [kworker/37:1H]
+root       3538      2  0  2025 ?        00:00:01 [kworker/3:1H]
+root       3609      2  0  2025 ?        00:00:02 [kworker/23:1H]
+root       3610      2  0  2025 ?        00:00:05 [kworker/24:1H]
+root       3622      2  0  2025 ?        00:00:05 [kworker/10:1H]
+root       3645   2338  0  2025 ?        00:08:52 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/1b21b1c738bc0595a04867f6d940efe6c33d47ea47ec2f48b5cf2b7fa96ed539 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root       3704   3645  0  2025 ?        00:00:00 /pause
+root       3902   2338  0  2025 ?        00:11:27 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/51e406f5f732e07ba3833c47ce21f9b48b9722ae192cdcda335b91b4149ce7c3 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root       3925   3902  0  2025 ?        1-02:01:35 /speaker --port=7472 --config=config
+root       4045      2  0  2025 ?        00:00:06 [kworker/2:1H]
+root       4304      1  0  2025 ?        00:01:44 /usr/local/secuve/TOSSuite/bin/ScvRP
+root       4677      2  0  2025 ?        00:00:02 [kworker/15:1H]
+root       4710      2  0  2025 ?        00:00:01 [kworker/27:1H]
+root       4735      2  0  2025 ?        00:00:01 [kworker/33:1H]
+root       4767      2  0  2025 ?        00:00:02 [kworker/5:1H]
+root       4866      2  0  2025 ?        00:00:02 [kworker/9:1H]
+root       5077      2  0  2025 ?        00:00:01 [kworker/29:1H]
+root       5080      2  0  2025 ?        00:00:06 [kworker/14:1H]
+root       5081      2  0  2025 ?        00:00:05 [kworker/22:1H]
+root       5082      2  0  2025 ?        00:00:05 [kworker/30:1H]
+root       5083      2  0  2025 ?        00:00:05 [kworker/36:1H]
+root       5604      2  0  2025 ?        00:00:05 [kworker/38:1H]
+root       5647   2338  0  2025 ?        00:08:54 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/6065a71812333ccd963d5e21919e41cac3e123b94bc919bfdb26c6c16725a926 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root       5704   5647  0  2025 ?        00:00:00 /pause
+root       6060   2338  0  2025 ?        00:09:21 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/d967670eced0fed9d933a086e75320e18ac3f6db255f56695b9562c06c1b8ff7 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root       6079   6060  0  2025 ?        00:00:00 sh -c /nib/entryPoint.sh && /nib/start.sh
+root       6316      2  0  2025 ?        00:00:05 [kworker/16:1H]
+root       6327   6079  0  2025 ?        00:00:00 bash /nib/start.sh
+root       6329   6327  0  2025 ?        00:00:00 su elastic -c /nib/elastic6/bin/elasticsearch
+root       6459      1  0  2025 ?        00:00:00 /usr/sbin/gdm
+root       6473   6459  0  2025 tty1     00:09:54 /usr/bin/X :0 -background none -noreset -audit 4 -verbose -auth /run/gdm/auth-for-gdm-9KUtw3/database -seat seat0 -nolisten tcp vt1
+root       6733      1  0  2025 ?        00:00:15 /usr/libexec/upowerd
+root       6957      1  0  2025 ?        00:00:22 /usr/libexec/boltd
+root       6962      1  0  2025 ?        02:12:45 /usr/libexec/packagekitd
+root       7017      1  0  2025 ?        00:01:17 /usr/sbin/wpa_supplicant -u -f /var/log/wpa_supplicant.log -c /etc/wpa_supplicant/wpa_supplicant.conf -P /var/run/wpa_supplicant.pid
+root       7591      2  0  2025 ?        00:00:06 [kworker/20:1H]
+root       8590      2  0  2025 ?        00:00:06 [kworker/28:1H]
+root       8720      1  0  2025 ?        00:00:00 /usr/libexec/gnome-terminal-server
+root       8726   8720  0  2025 ?        00:00:00 gnome-pty-helper
+root       8727   8720  0  2025 pts/0    00:00:00 bash
+root       9029      2  0  2025 ?        00:00:00 [kworker/66:1H]
+root       9100      2  0  2025 ?        00:02:39 [kworker/50:0]
+root      11432      2  0  2025 ?        00:00:00 [kworker/46:1H]
+root      12817      2  0  2025 ?        00:00:00 [kworker/70:1H]
+root      14250      2  0  2025 ?        00:00:00 [kworker/75:1H]
+root      14811      2  0  2025 ?        00:00:05 [kworker/32:1H]
+root      16373      2  0  2025 ?        00:01:19 [kworker/47:2]
+root      17323      2  0  2025 ?        00:00:05 [kworker/26:1H]
+root      22619      2  0  2025 ?        00:00:31 [kworker/57:0]
+root      22867      2  0  2025 ?        00:00:00 [kworker/60:1H]
+root      24997      2  0  2025 ?        00:00:00 [kworker/44:1H]
+root      25456      2  0 Jan13 ?        00:00:11 [kworker/65:2]
+root      26959      2  0 Mar10 ?        00:00:00 [kworker/4:1]
+root      26974      2  0 Feb08 ?        00:01:10 [kworker/24:2]
+root      27069      2  0 10:50 ?        00:00:00 [kworker/43:0]
+root      30156      2  0  2025 ?        00:00:19 [kworker/71:0]
+root      33052      2  0  2025 ?        00:00:00 [kworker/51:1H]
+root      36093      2  0  2025 ?        00:00:00 [kworker/56:1H]
+root      39893      2  0  2025 ?        00:01:00 [kworker/19:2]
+root      39984      2  0 Mar23 ?        00:00:00 [kworker/1:1]
+root      42142      2  0 11:00 ?        00:00:01 [kworker/0:1]
+root      42598      2  0  2025 ?        00:00:00 [kworker/34:0]
+root      43071      2  0  2025 ?        00:01:19 [kworker/25:0]
+root      43433      2  0 Mar19 ?        00:00:00 [kworker/32:2]
+root      44599      2  0  2025 ?        00:00:00 [kworker/48:1H]
+root      44702      2  0  2025 ?        00:00:21 [kworker/75:2]
+root      45179      2  0  2025 ?        00:00:50 [kworker/53:0]
+root      50854      2  0 Feb27 ?        00:00:00 [kworker/27:0]
+root      51810      2  0 Apr01 ?        00:00:00 [kworker/35:0]
+root      52055      2  0  2025 ?        00:00:00 [kworker/42:1H]
+root      52382      2  0  2025 ?        00:00:00 [kworker/40:1H]
+root      54977      2  0 Mar11 ?        00:00:00 [kworker/3:0]
+root      57361      2  0 Mar22 ?        00:00:00 [kworker/21:1]
+root      57748      2  0 Apr01 ?        00:00:00 [kworker/29:2]
+root      61133      2  0 Mar07 ?        00:00:00 [kworker/5:1]
+root      61363      2  0  2025 ?        00:00:00 [kworker/59:1H]
+root      62088      2  0  2025 ?        00:00:35 [kworker/55:1]
+root      64335      2  0  2025 ?        00:03:36 [kworker/44:0]
+root      64440      2  0  2025 ?        00:00:55 [kworker/39:2]
+root      64806      2  0  2025 ?        00:00:00 [kworker/58:0]
+root      67469      2  0  2025 ?        00:00:00 [kworker/57:1H]
+root      74824      2  0  2025 ?        00:04:40 [kworker/42:0]
+root      79313      2  0 Mar20 ?        00:00:00 [kworker/24:0]
+root      80454      2  0 Apr01 ?        00:00:00 [kworker/12:0]
+root      82990      2  0  2025 ?        00:00:00 [kworker/67:1H]
+root      84561      2  0  2025 ?        00:04:54 [kworker/43:1]
+root      85045      2  0  2025 ?        00:02:35 [kworker/54:2]
+root      85556      2  0  2025 ?        00:00:00 [kworker/73:1H]
+root      89754      2  0  2025 ?        00:00:00 [kworker/79:1H]
+root      90657      2  0  2025 ?        00:00:24 [kworker/41:0]
+root      91082      2  0 Apr01 ?        00:00:01 [kworker/2:1]
+root      91575      2  0  2025 ?        00:01:04 [kworker/21:0]
+root      92303      2  0  2025 ?        00:00:00 [kworker/46:2]
+root      93695   2338  0  2025 ?        00:04:10 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/cdd44e24c836d4ce1a5da6c1c5b823d41d5a92c20a16a174045b9b99499b2478 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root      93741  93695  0  2025 ?        00:00:00 /pause
+root      93755      2  0 Jan27 ?        00:00:00 [kworker/63:2]
+root      94592   2338  0  2025 ?        00:04:19 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/59f1b19c1a57c5ead34cac0ff4a2c80e3a81c8680c4719a05574b2d3affdef15 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root      94601      2  0  2025 ?        00:02:01 [kworker/7:2]
+root      94612  94592  0  2025 ?        00:00:00 clickhouse-watchd --config-file=/etc/clickhouse-server/config.xml
+root      94635  94612  3  2025 ?        3-11:43:57 clickhouse-server --config-file=/etc/clickhouse-server/config.xml
+root      97404      2  0 Mar18 ?        00:00:00 [kworker/41:1]
+root      98877  94592  0  2025 pts/0    00:00:00 bash
+root      98917      2  0  2025 ?        00:00:00 [kworker/49:1H]
+root      98988  98877  0  2025 pts/0    00:00:00 clickhouse-client
+root     103133      2  0  2025 ?        00:05:47 [kworker/18:2]
+root     103479      2  0  2025 ?        00:00:53 [kworker/35:1]
+root     105031   2338  0  2025 ?        00:03:42 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/c070e0811e3fdf1e73880183d2289e1b66802301d415d2fa01956e16fa15dc89 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     105051 105031  0  2025 ?        00:00:00 /pause
+root     105067      1  0  2025 ?        00:12:05 /usr/local/secuve/TOSSuite/bin/ScvLog
+root     105096      1  0  2025 ?        00:02:18 /usr/local/secuve/TOSSuite/bin/ScvFTPTrack
+root     105233      1  0  2025 ?        00:57:15 /usr/local/secuve/TOSSuite/bin/ScvAgent
+root     106418      2  0 Mar19 ?        00:00:00 [kworker/16:1]
+root     107422   2338  0  2025 ?        00:03:57 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/4cddda96bd40bc5c79f8a6b8e2cbc6841075448c2bf08be77518c68c2994e27b -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     107441 107422  0  2025 ?        02:30:22 /home/dlh_save_ch
+root     115080      2  0 Mar15 ?        00:00:00 [kworker/73:0]
+root     116846      2  0 Mar09 ?        00:00:00 [kworker/38:0]
+root     117572   2338  0  2025 ?        00:04:03 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/ad075a7e7bcf8ecccd52b0941da7fefadb38c9f2c01bea89c3d29782f709c6a6 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     117592 117572  0  2025 ?        00:00:00 /pause
+root     117805   2338  0  2025 ?        00:03:56 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/6fe90e6bbd53522fe401fc6f81859b4438707360eee514b8a2e942d299ca4f7a -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     117824 117805  5  2025 ?        6-01:03:12 minio server --console-address :9001 http://dlh-minio-{0...7}.ci-dlh-minio.default.svc.cluster.local/data
+root     119653   2338  0  2025 ?        00:03:42 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/dba2e238aa0ecd99baafc6dbb594771b5ba9646d9903ca162ddf5a7511fbf3f1 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     119776      2  0  2025 ?        00:00:00 [kworker/62:2]
+root     119827   2338  0  2025 ?        00:04:07 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/1ce7c6a3513d332b023e09440a2686e7dafa5d20b4f083b2a603fd3b9c489d4f -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     120176      2  0  2025 ?        00:00:00 [kworker/28:0]
+root     124487      2  0  2025 ?        00:01:10 [kworker/15:0]
+root     125174      2  0 Mar31 ?        00:00:00 [kworker/61:1]
+root     126721      2  0  2025 ?        00:05:13 [kworker/8:1]
+root     128896      2  0  2025 ?        00:02:53 [kworker/51:0]
+root     129659      2  0 Jan22 ?        00:00:00 [kworker/71:1]
+root     132259      2  0 Mar27 ?        00:00:00 [kworker/7:0]
+root     132288      2  0  2025 ?        00:01:32 [kworker/31:1]
+root     136246      2  0  2025 ?        00:01:11 [kworker/1:0]
+root     136875      2  0 Mar06 ?        00:00:00 [kworker/53:2]
+root     138535      2  0  2025 ?        00:00:00 [kworker/61:1H]
+root     140326      2  0  2025 ?        00:00:00 [kworker/52:2]
+root     144429      2  0  2025 ?        00:00:00 [kworker/71:1H]
+root     144841      2  0  2025 ?        00:00:00 [kworker/54:1]
+root     146922      2  0  2025 ?        00:00:28 [kworker/63:1]
+root     147692      2  0 Apr01 ?        00:00:00 [kworker/42:2]
+root     149922      2  0 Jan05 ?        00:00:00 [kworker/30:0]
+root     150374      2  0 Mar21 ?        00:00:00 [kworker/65:0]
+root     154862      2  0 Feb09 ?        00:00:00 [kworker/20:0]
+root     155081      2  0  2025 ?        00:02:51 [kworker/52:0]
+root     156532      2  0  2025 ?        00:00:00 [kworker/68:1H]
+root     157058      2  0 Apr01 ?        00:00:00 [kworker/u609:0]
+root     159772   2338  0  2025 ?        00:03:51 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/110586d6a4b42983314375c1ad6fb87359abbb43fdb801e199890702069bd953 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     159792 159772  0  2025 ?        00:00:00 /pause
+root     159925      2  0  2025 ?        00:00:00 [kworker/26:2]
+root     159953   2338  0  2025 ?        00:04:13 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/5c90e95ff28426bf76886f8166cd3f49f2bc9076852d6c3fc8fb0b3ee5634e2c -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     159972 159953  0  2025 ?        00:02:20 bash /home/entryPoint.sh
+root     160383 159972  0  2025 ?        00:00:00 /bin/bash ./run_1.sh
+root     160439 160383  0  2025 ?        00:25:11 kubectl exec -ti dlh-spark-master-0 -- spark-submit --master spark://ci-dlh-spark-master:7077 --conf spark.ui.enabled=true --conf spark.ui.port=4040 --conf spark.ENV_RAW_SAVE_CYCLE=60 --conf spark.cores.max=10 --conf spark.executor.cores=2 --conf spark.executor.memory=2G --conf spark.driver.cores=1 --conf spark.driver.memory=2G --conf spark.driver.extraJavaOptions=-Dlog4j.configurationFile=/opt/bitnami/spark/conf/log4j2_1.properties --class com.nct.dlh.RawDataIns jars/keris_dlh_2.12-1.0.0.jar
+root     161081      2  0  2025 ?        00:02:40 [kworker/37:0]
+root     161261      2  0  2025 ?        00:00:00 [kworker/14:0]
+root     161360   2338  0  2025 ?        00:04:01 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/5791b61f7320bbd590d78acebe8f18889c109772ac7eaa983937753b9afa5cbe -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     161379 161360  0  2025 ?        00:00:00 /pause
+root     161518   2338  0  2025 ?        00:04:20 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/dddf846c256ec148bbc21e754c24e82854c1509c50fcb5a48ec15a2958cc27b5 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     161537 161518  0  2025 ?        00:02:16 bash /home/entryPoint.sh
+root     162055   2338  0  2025 ?        00:03:52 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/ca3e29eddfa31478ac6181492611e5346b2b059deaf6579d68846bc1ff3a1824 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     162075 162055  0  2025 ?        00:00:00 /pause
+root     162215      2  0  2025 ?        00:00:00 [kworker/48:0]
+root     162237   2338  0  2025 ?        00:07:36 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/0eab14559997998b46cb99abf2060c1cbc7311a0b5481afa19e0558e50872a7c -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     162361 162237  0  2025 ?        00:02:20 bash /home/entryPoint.sh
+root     162565      2  0  2025 ?        00:00:00 [kworker/53:1H]
+root     162870 162361  0  2025 ?        00:00:00 /bin/bash ./run_2.sh
+root     162924 162870  0  2025 ?        00:30:55 kubectl exec -ti dlh-spark-master-0 -- spark-submit --conf spark.ui.port=4040 --master spark://ci-dlh-spark-master:7077 --conf spark.ui.enabled=true --conf spark.ui.port=4041 --conf spark.ENV_TF_SAVE_CYCLE=300 --conf spark.ENV_TF_THREAD_POOL=10 --conf spark.ENV_TF_MAP_PARTI= --conf spark.cores.max=100 --conf spark.executor.cores=10 --conf spark.executor.memory=4G --conf spark.driver.cores=1 --conf spark.driver.memory=6G --conf spark.driver.extraJavaOptions=-Dlog4j.configurationFile=/opt/bitnami/spark/conf/log4j2_2.properties --conf spark.executor.extraJavaOptions=-XX:+UseG1GC --class com.nct.dlh.TransformDataIns jars/keris_dlh_2.12-1.0.0.jar
+root     166291      2  0 Feb25 ?        00:00:19 [kworker/17:1]
+root     170549      2  0  2025 ?        00:00:00 [kworker/58:1H]
+root     173298      2  0  2025 ?        00:02:40 [kworker/4:0]
+root     175685      2  0 Mar05 ?        00:00:00 [kworker/36:2]
+root     175909      2  0  2025 ?        00:00:19 [kworker/79:0]
+root     176015      2  0  2025 ?        00:01:26 [kworker/13:0]
+root     176572      2  0 Mar24 ?        00:00:04 [kworker/29:0]
+root     177795      2  0 Mar22 ?        00:00:00 [kworker/37:2]
+root     178809      2  0 Apr01 ?        00:00:00 [kworker/59:0]
+root     186458      2  0  2025 ?        00:02:13 [kworker/5:0]
+root     186730      2  0 Mar27 ?        00:00:00 [kworker/23:1]
+root     188115      2  0 Mar29 ?        00:00:00 [kworker/47:1]
+root     191066      2  0  2025 ?        00:00:00 [kworker/69:1H]
+root     191766      2  0  2025 ?        00:00:24 [kworker/77:2]
+root     192429      2  0 Mar18 ?        00:00:00 [kworker/75:0]
+root     196247   2338  0  2025 ?        00:09:14 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/6ff35943cdb34b4a44743372a2b2a7196ba694e28c07904c8f56f375c1ee3780 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     196266 196247  0  2025 ?        00:00:00 /pause
+root     196556   2338  0  2025 ?        04:09:10 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/a6c93b1a45639b4544b43ba2110dae5ee2a20936f0de6de1b926eae835182b81 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     196575 196556  0  2025 ?        00:02:45 /usr/local/bin/runsvdir -P /etc/service/enabled
+root     196648 196575  0  2025 ?        00:00:01 runsv felix
+root     196649 196575  0  2025 ?        00:00:00 runsv bird6
+root     196650 196575  0  2025 ?        00:00:00 runsv allocate-tunnel-addrs
+root     196651 196575  0  2025 ?        00:00:00 runsv monitor-addresses
+root     196652 196575  0  2025 ?        00:00:00 runsv confd
+root     196653 196575  0  2025 ?        00:00:01 runsv bird
+root     196654 196648  2  2025 ?        5-07:03:42 calico-node -felix
+root     196656 196651  0  2025 ?        00:53:07 calico-node -monitor-addresses
+root     196657 196650  0  2025 ?        00:36:48 calico-node -allocate-tunnel-addrs
+root     196658 196652  0  2025 ?        01:07:45 calico-node -confd
+root     196813 196649  0  2025 ?        06:51:00 bird6 -R -s /var/run/calico/bird6.ctl -d -c /etc/calico/confd/config/bird6.cfg
+root     196814 196653  0  2025 ?        07:06:18 bird -R -s /var/run/calico/bird.ctl -d -c /etc/calico/confd/config/bird.cfg
+root     196869   2338  0  2025 ?        00:09:21 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/2bab417ee637cad13c03698d480c2d1a256eea119feb56b942f978f1224cca41 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     196888 196869  0  2025 ?        00:00:00 /pause
+root     196923   2338  0  2025 ?        00:09:05 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/19bcfcafad23b1a02f2564e38c769b740cf4a4d92389679d036dab6972fda38c -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     196942 196923  0  2025 ?        01:31:49 /usr/local/bin/kube-proxy --config=/var/lib/kube-proxy/config.conf --hostname-override=dge-anal01
+root     197223      2  0  2025 ?        00:00:00 [kworker/64:1H]
+root     198886      2  0 Mar29 ?        00:00:00 [kworker/19:0]
+root     200104      2  0 Mar30 ?        00:00:00 [kworker/13:2]
+root     200934      2  0  2025 ?        00:00:00 [kworker/78:1H]
+root     200962      2  0 16:26 ?        00:00:00 [kworker/0:0]
+root     205069      2  0 16:29 ?        00:00:00 [kworker/45:0]
+root     208058      2  0 Mar21 ?        00:00:00 [kworker/17:0]
+root     216734      2  0 Mar10 ?        00:00:00 [kworker/50:1]
+root     217906      2  0 Mar29 ?        00:00:00 [kworker/79:1]
+root     219476      2  0 16:39 ?        00:00:00 [kworker/u608:1]
+root     220018      2  0 16:39 ?        00:00:00 [kworker/45:1]
+root     222023      2  0  2025 ?        00:00:00 [kworker/41:1H]
+root     222536      2  0 Mar24 ?        00:00:00 [kworker/11:2]
+root     226860      2  0 16:44 ?        00:00:00 [kworker/u608:0]
+root     228105      2  0 16:45 ?        00:00:00 [kworker/45:2]
+root     228436      2  0 16:45 ?        00:00:00 [kworker/u610:1]
+root     228957      2  0  2025 ?        00:04:15 [kworker/26:0]
+root     229774      2  0  2025 ?        00:05:36 [kworker/12:1]
+root     230370      2  0 16:46 ?        00:00:00 [kworker/18:0]
+root     230373      2  0 16:46 ?        00:00:00 [kworker/31:0]
+root     230725   2316  0 16:47 ?        00:00:00 sshd: secadmin [priv]
+root     231555   2338  0  2025 ?        00:08:57 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/e20e5aa3cfa87282e9d4044cc2be0a9a4947c16d33744b0e2de162bb11fc81c8 -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     231608 231555  0  2025 ?        00:00:00 /pause
+root     231737   2338  0  2025 ?        00:08:54 containerd-shim -namespace moby -workdir /var/lib/containerd/io.containerd.runtime.v1.linux/moby/f4bfb3ca0ecb25addecc301ee3903fc4593b742fe4746752641d407715a9deda -address /run/containerd/containerd.sock -containerd-binary /usr/bin/containerd -runtime-root /var/run/docker/runtime-runc -systemd-cgroup
+root     231757 231737  0  2025 ?        00:00:00 npm run start
+root     231798 231757  0  2025 ?        04:18:21 node --experimental-worker index.js
+root     232461      2  0  2025 ?        00:00:00 [kworker/77:1H]
+root     232904      2  0 Feb01 ?        00:00:00 [kworker/22:2]
+root     233472 233464  0 16:49 pts/1    00:00:00 /usr/local/secuve/TOSSuite/bin/ScvTrack
+root     234256 233477  0 16:49 pts/2    00:00:00 su -
+root     234409 234256  0 16:49 pts/2    00:00:00 -bash
+root     234859   2316  0 16:49 ?        00:00:00 sshd: secadmin [priv]
+root     234899      2  0 16:49 ?        00:00:00 [kworker/u608:2]
+root     238220   2134  0 16:52 ?        00:00:00 sleep 60
+root     238424 159972  0 16:52 ?        00:00:00 sleep 60
+root     238425 162361  0 16:52 ?        00:00:00 sleep 60
+root     238506 161537  0 16:52 ?        00:00:00 sleep 60
+root     239215 234409  3 16:52 pts/2    00:00:00 /bin/sh ./unix_2026.sh
+root     241180      2  0  2025 ?        00:11:08 [kworker/6:2]
+root     243237 239215  0 16:53 pts/2    00:00:00 ps -ef
+root     243238 239215  0 16:53 pts/2    00:00:00 sort
+root     244593      2  0 Mar24 ?        00:00:00 [kworker/8:0]
+root     244702      2  0 Mar24 ?        00:00:00 [kworker/69:0]
+root     247962      2  0  2025 ?        00:00:38 [kworker/61:2]
+root     250631      2  0  2025 ?        00:00:00 [kworker/62:1H]
+root     253340      2  0 Mar07 ?        00:00:12 [kworker/27:2]
+root     254629      2  0 Mar16 ?        00:00:00 [kworker/33:1]
+root     254642      2  0  2025 ?        00:01:42 [kworker/33:0]
+root     254734      2  0  2025 ?        00:00:31 [kworker/74:2]
+root     255109      2  0 Jan16 ?        00:00:00 [kworker/57:1]
+root     255915      2  0  2025 ?        00:00:59 [kworker/49:2]
+root     256065      2  0  2025 ?        00:01:01 [kworker/11:1]
+root     258891      2  0 Mar27 ?        00:00:00 [kworker/10:1]
+root     258914      2  0 Mar29 ?        00:00:00 [kworker/25:2]
+root     259257      2  0  2025 ?        00:06:11 [kworker/10:0]
+root     265309      2  0  2025 ?        00:00:18 [kworker/73:2]
+root     268907      2  0 Apr01 ?        00:00:00 [kworker/77:1]
+root     269246      2  0  2025 ?        00:00:00 [kworker/74:1H]
+root     269929 161537  0 Feb28 ?        00:00:00 /bin/bash ./run_3.sh
+root     269958 269929  0 Feb28 ?        00:07:44 kubectl exec -ti dlh-spark-master-0 -- spark-submit --master spark://ci-dlh-spark-master:7077 --conf spark.ui.enabled=true --conf spark.ui.port=4042 --conf spark.cores.max=1 --conf spark.executor.cores=1 --conf spark.executor.memory=512m --conf spark.driver.cores=1 --conf spark.driver.memory=1G --conf spark.driver.extraJavaOptions=-Dlog4j.configurationFile=/opt/bitnami/spark/conf/log4j2_3.properties --conf spark.executor.extraJavaOptions=-XX:+UseG1GC --class com.nct.dlh.TableAction jars/keris_dlh_2.12-1.0.0.jar
+root     270817      2  0 Feb17 ?        00:00:00 [kworker/55:2]
+root     272780   6459  0  2025 ?        00:00:00 gdm-session-worker [pam/gdm-password]
+root     272820      2  0 Mar14 ?        00:00:00 [kworker/39:1]
+root     273016      1  0  2025 ?        00:00:00 /usr/bin/gnome-keyring-daemon --daemonize --login
+root     273037 272780  0  2025 ?        00:00:13 /usr/libexec/gnome-session-binary --session gnome-classic
+root     273046      1  0  2025 ?        00:00:00 dbus-launch --sh-syntax --exit-with-session
+root     273047      1  0  2025 ?        00:00:00 /usr/bin/dbus-daemon --fork --print-pid 5 --print-address 7 --session
+root     273089      1  0  2025 ?        00:00:00 /usr/libexec/imsettings-daemon
+root     273093      1  0  2025 ?        00:00:00 /usr/libexec/gvfsd
+root     273098      1  0  2025 ?        00:00:02 /usr/libexec/gvfsd-fuse /run/user/0/gvfs -f -o big_writes
+root     273180 273037  0  2025 ?        00:00:38 /usr/bin/ssh-agent /bin/sh -c exec -l /bin/bash -c "env GNOME_SHELL_SESSION_MODE=classic gnome-session --session gnome-classic"
+root     273201      1  0  2025 ?        00:00:00 /usr/libexec/at-spi-bus-launcher
+root     273206 273201  0  2025 ?        00:00:00 /usr/bin/dbus-daemon --config-file=/usr/share/defaults/at-spi2/accessibility.conf --nofork --print-address 3
+root     273208      1  0  2025 ?        00:00:00 /usr/libexec/at-spi2-registryd --use-gnome-session
+root     273237 273037  0  2025 ?        02:04:32 /usr/bin/gnome-shell
+root     273389 273237  0  2025 ?        00:01:49 ibus-daemon --xim --panel disable
+root     273393 273389  0  2025 ?        00:00:00 /usr/libexec/ibus-dconf
+root     273395      1  0  2025 ?        00:00:00 /usr/libexec/ibus-x11 --kill-daemon
+root     273398      1  0  2025 ?        00:00:00 /usr/libexec/ibus-portal
+root     273409      1  0  2025 ?        00:00:00 /usr/libexec/xdg-permission-store
+root     273414      1  0  2025 ?        00:00:00 /usr/libexec/gnome-shell-calendar-server
+root     273419      1  0  2025 ?        00:00:00 /usr/libexec/evolution-source-registry
+root     273425      1  0  2025 ?        00:00:00 /usr/libexec/goa-daemon
+root     273430      1  0  2025 ?        00:10:17 /usr/libexec/mission-control-5
+root     273440      1  0  2025 ?        09:48:58 /usr/libexec/gvfs-udisks2-volume-monitor
+root     273454      1  0  2025 ?        00:05:37 /usr/libexec/goa-identity-service
+root     273462      1  0  2025 ?        00:00:00 /usr/libexec/gvfs-afc-volume-monitor
+root     273469      1  0  2025 ?        00:00:00 /usr/libexec/gvfs-mtp-volume-monitor
+root     273476      1  0  2025 ?        00:00:00 /usr/libexec/gvfs-goa-volume-monitor
+root     273481      1  0  2025 ?        00:00:00 /usr/libexec/gvfs-gphoto2-volume-monitor
+root     273485 273037  0  2025 ?        00:00:15 /usr/libexec/gsd-power
+root     273486 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-print-notifications
+root     273488 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-rfkill
+root     273489 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-screensaver-proxy
+root     273492 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-sharing
+root     273497 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-smartcard
+root     273499 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-account
+root     273504 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-xsettings
+root     273510 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-wacom
+root     273512 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-sound
+root     273519 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-a11y-settings
+root     273520 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-clipboard
+root     273524 273037  0  2025 ?        08:57:13 /usr/libexec/gsd-color
+root     273529 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-datetime
+root     273530 273037  0  2025 ?        04:54:44 /usr/libexec/gsd-housekeeping
+root     273531 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-keyboard
+root     273532 273037  0  2025 ?        00:00:09 /usr/libexec/gsd-media-keys
+root     273536 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-mouse
+root     273551      1  0  2025 ?        00:00:10 /usr/bin/pulseaudio --start
+root     273557      1  0  2025 ?        00:00:00 /usr/libexec/gsd-printer
+root     273587 273037  0  2025 ?        00:00:00 nautilus-desktop --force
+root     273590 273093  0  2025 ?        01:06:56 /usr/libexec/gvfsd-trash --spawner :1.4 /org/gtk/gvfs/exec_spaw/0
+root     273605 273037  0  2025 ?        00:00:00 /usr/libexec/gsd-disk-utility-notify
+root     273614 273037  0  2025 ?        00:03:20 /usr/bin/gnome-software --gapplication-service
+root     273615      1  0  2025 ?        00:00:00 /usr/libexec/tracker-store
+root     273624 273037  0  2025 ?        00:00:00 rhsm-icon
+root     273633 273037  0  2025 ?        00:00:00 /usr/libexec/tracker-extract
+root     273636      1  0  2025 ?        00:00:00 /usr/libexec/evolution-calendar-factory
+root     273637 273037  0  2025 ?        00:00:00 /usr/libexec/tracker-miner-apps
+root     273638 273037  0  2025 ?        00:00:00 /usr/libexec/tracker-miner-fs
+root     273641 273037  0  2025 ?        00:00:00 /usr/libexec/tracker-miner-user-guides
+root     273648 273037  0  2025 ?        00:00:00 abrt-applet
+root     273689      1  0  2025 ?        00:00:18 /usr/libexec/gconfd-2
+root     273697 273636  0  2025 ?        00:00:00 /usr/libexec/evolution-calendar-factory-subprocess --factory all --bus-name org.gnome.evolution.dataserver.Subprocess.Backend.Calendarx273636x2 --own-path /org/gnome/evolution/dataserver/Subprocess/Backend/Calendar/273636/2
+root     273719      1  0  2025 ?        00:00:00 /usr/libexec/dconf-service
+root     273727      1  0  2025 ?        00:00:00 /usr/libexec/evolution-addressbook-factory
+root     273737 273727  0  2025 ?        00:00:00 /usr/libexec/evolution-addressbook-factory-subprocess --factory all --bus-name org.gnome.evolution.dataserver.Subprocess.Backend.AddressBookx273727x2 --own-path /org/gnome/evolution/dataserver/Subprocess/Backend/AddressBook/273727/2
+root     273754 273389  0  2025 ?        00:00:00 /usr/libexec/ibus-engine-simple
+root     273760      1  0  2025 ?        00:03:46 /usr/libexec/fwupd/fwupd
+root     273769 273093  0  2025 ?        00:00:00 /usr/libexec/gvfsd-burn --spawner :1.4 /org/gtk/gvfs/exec_spaw/1
+root     274885      1  0  2025 ?        00:00:00 /usr/libexec/gvfsd-metadata
+root     275556 273093  0  2025 ?        00:00:00 /usr/libexec/gvfsd-network --spawner :1.4 /org/gtk/gvfs/exec_spaw/2
+root     275582 273093  0  2025 ?        00:06:52 /usr/libexec/gvfsd-dnssd --spawner :1.4 /org/gtk/gvfs/exec_spaw/4
+root     276396      2  0 Mar15 ?        00:00:00 [kworker/6:0]
+root     276582      2  0 Mar27 ?        00:00:00 [kworker/49:1]
+root     280099      2  0 10:09 ?        00:00:03 [kworker/u609:1]
+root     282173      2  0 Mar22 ?        00:00:00 [kworker/51:1]
+root     285462      2  0  2025 ?        00:00:00 [kworker/55:1H]
+root     285782      2  0 Jan25 ?        00:00:00 [kworker/74:1]
+root     292349      2  0  2025 ?        00:00:00 [kworker/76:1H]
+root     293225      2  0 Mar16 ?        00:00:00 [kworker/44:1]
+root     293933      2  0  2025 ?        00:00:00 [kworker/63:1H]
+root     294053      2  0 06:43 ?        00:00:00 [kworker/2:0]
+root     295610      2  0  2025 ?        00:04:56 [kworker/16:2]
+root     295697      2  0 Mar18 ?        00:00:00 [kworker/9:2]
+root     298319      2  0 Mar25 ?        00:00:00 [kworker/15:2]
+root     300233      2  0 Mar24 ?        00:00:22 [kworker/u610:2]
+root     309188      2  0  2025 ?        00:00:00 [kworker/72:1H]
+root     309853      2  0  2025 ?        00:00:40 [kworker/59:2]
+rpc        1830      1  0  2025 ?        00:00:29 /sbin/rpcbind -w
+rtkit      1888      1  0  2025 ?        00:05:37 /usr/libexec/rtkit-daemon
+secadmin 233463 230725  0 16:49 ?        00:00:00 sshd: secadmin@pts/1
+secadmin 233464 233463  0 16:49 pts/1    00:00:00 -bash
+secadmin 233477 233472  0 16:49 pts/2    00:00:00 -bash
+secadmin 234861 234859  0 16:49 ?        00:00:00 sshd: secadmin@notty
+secadmin 234862 234861  0 16:49 ?        00:00:00 /usr/libexec/openssh/sftp-server
+			]]>
+		</Processes>
+		<LastTime>
+			<![CDATA[
+------------------------------------------------[TIME] 2026-04-02 16:53:01
+			]]>
+		</LastTime>
+	</Info>
+</CVCResult>

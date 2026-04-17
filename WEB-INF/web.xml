@@ -14,7 +14,7 @@
 
     <!-- 세션 유지 시간 (분) -->
     <session-config>
-        <session-timeout>30</session-timeout>
+        <session-timeout>60</session-timeout>
     </session-config>
 
     <!-- 에러 페이지 -->

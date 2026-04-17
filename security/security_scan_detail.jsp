@@ -32,6 +32,10 @@
         if (s == null) return "";
         return s.replace("\\","\\\\").replace("'","\\'").replace("\r","").replace("\n","\\n");
     }
+    String escHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
+    }
 %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -154,6 +158,8 @@
 
         .item-evidence { padding: 0 16px 12px; }
         .evidence-pre { background: #0b0c0f; border: 1px solid #1a1c22; border-radius: 8px; padding: 12px 14px; font-family: 'DM Mono', monospace; font-size: 11.5px; color: #9ca3af; white-space: pre-wrap; word-break: break-all; line-height: 1.6; max-height: 240px; overflow-y: auto; }
+        .extra-evidence { padding: 0 16px 12px; }
+        .extra-evidence-label { font-size: 10px; font-weight: 500; color: #3d4251; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
 
         /* 인라인 편집 */
         .item-edit { padding: 10px 16px 14px; border-top: 1px solid #1a1c22; background: #0f1014; }
@@ -165,7 +171,7 @@
         .edit-textarea { background: #0e0f11; border: 1px solid #252830; border-radius: 7px; padding: 7px 10px; font-size: 12px; color: #c8cad0; font-family: 'DM Sans', sans-serif; width: 100%; height: 34px; min-height: 34px; max-height: 200px; resize: none; overflow-y: hidden; line-height: 1.5; }
         .edit-textarea:focus { outline: none; border-color: #3b6ef5; }
         .edit-memo { flex: 1; min-width: 180px; }
-        .edit-actions { display: flex; gap: 6px; align-items: flex-end; padding-bottom: 1px; }
+        .edit-actions { display: flex; gap: 6px; align-items: flex-end; align-self: flex-end; }
         .btn-save { padding: 7px 14px; background: #3b6ef5; color: #fff; border: none; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.12s; }
         .btn-save:hover { background: #2d5ce0; }
         .btn-cancel { padding: 7px 14px; background: #1e2025; color: #6b7280; border: none; border-radius: 7px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.12s; }
@@ -337,24 +343,24 @@
             <div class="stat-card stat-ok">
                 <div>
                     <div class="stat-label">양호</div>
-                    <div class="stat-num"><%= currentScan.okCount %></div>
-                    <div class="stat-pct"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.okCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
+                    <div class="stat-num" id="cnt-ok"><%= currentScan.okCount %></div>
+                    <div class="stat-pct" id="pct-ok"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.okCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
                 </div>
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#22c97a" stroke-width="1.5" width="36" height="36"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
             <div class="stat-card stat-vuln">
                 <div>
                     <div class="stat-label">취약</div>
-                    <div class="stat-num"><%= currentScan.vulnCount %></div>
-                    <div class="stat-pct"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.vulnCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
+                    <div class="stat-num" id="cnt-vuln"><%= currentScan.vulnCount %></div>
+                    <div class="stat-pct" id="pct-vuln"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.vulnCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
                 </div>
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#e05656" stroke-width="1.5" width="36" height="36"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
             <div class="stat-card stat-manual">
                 <div>
                     <div class="stat-label">수동점검</div>
-                    <div class="stat-num"><%= currentScan.manualCount %></div>
-                    <div class="stat-pct"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.manualCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
+                    <div class="stat-num" id="cnt-manual"><%= currentScan.manualCount %></div>
+                    <div class="stat-pct" id="pct-manual"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.manualCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
                 </div>
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.5" width="36" height="36"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
@@ -398,7 +404,19 @@
                 <div class="item-body">
                     <% if (!item.evidence.isEmpty()) { %>
                     <div class="item-evidence">
-                        <pre class="evidence-pre"><%= item.evidence.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;") %></pre>
+                        <pre class="evidence-pre"><%= escHtml(item.evidence) %></pre>
+                    </div>
+                    <% } %>
+                    <% if (!item.txtEvidence.isEmpty()) { %>
+                    <div class="extra-evidence">
+                        <div class="extra-evidence-label">스크립트 출력 (TXT)</div>
+                        <pre class="evidence-pre"><%= escHtml(item.txtEvidence) %></pre>
+                    </div>
+                    <% } %>
+                    <% if (!item.refEvidence.isEmpty()) { %>
+                    <div class="extra-evidence">
+                        <div class="extra-evidence-label">참고 자료 (REF)</div>
+                        <pre class="evidence-pre"><%= escHtml(item.refEvidence) %></pre>
                     </div>
                     <% } %>
                     <!-- 인라인 편집 -->
@@ -449,6 +467,23 @@ function filter(val, btn) {
     });
 }
 
+var counts = {
+    ok:     <%= currentScan != null ? currentScan.okCount : 0 %>,
+    vuln:   <%= currentScan != null ? currentScan.vulnCount : 0 %>,
+    manual: <%= currentScan != null ? currentScan.manualCount : 0 %>,
+    total:  <%= currentScan != null ? currentScan.totalCount : 0 %>
+};
+function resultKey(r) { return r === '양호' ? 'ok' : r === '취약' ? 'vuln' : r === '수동점검' ? 'manual' : null; }
+function updateStatCards() {
+    var t = counts.total || 1;
+    document.getElementById('cnt-ok').textContent     = counts.ok;
+    document.getElementById('cnt-vuln').textContent   = counts.vuln;
+    document.getElementById('cnt-manual').textContent = counts.manual;
+    document.getElementById('pct-ok').textContent     = Math.round(counts.ok     / t * 100) + '% / ' + counts.total + '건';
+    document.getElementById('pct-vuln').textContent   = Math.round(counts.vuln   / t * 100) + '% / ' + counts.total + '건';
+    document.getElementById('pct-manual').textContent = Math.round(counts.manual / t * 100) + '% / ' + counts.total + '건';
+}
+
 function saveItem(itemId) {
     const result = document.getElementById('sel_'  + itemId).value;
     const memo   = document.getElementById('memo_' + itemId).value;
@@ -463,6 +498,11 @@ function saveItem(itemId) {
         if (data.ok) {
             const card  = document.getElementById('card_' + itemId);
             const chip  = document.getElementById('chip_' + itemId);
+            var oldKey = resultKey(card.dataset.result);
+            var newKey = resultKey(result);
+            if (oldKey) counts[oldKey]--;
+            if (newKey) counts[newKey]++;
+            updateStatCards();
             // 칩 업데이트
             chip.textContent = result;
             chip.className = 'chip ' + resultClass(result);
@@ -500,8 +540,8 @@ function expandAll() {
     document.querySelectorAll('.item-card').forEach(c => c.classList.add('open'));
 }
 function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+    el.style.height = '0px';
+    el.style.height = Math.min(Math.max(el.scrollHeight, 34), 200) + 'px';
 }
 
 function showToast(msg, type) {

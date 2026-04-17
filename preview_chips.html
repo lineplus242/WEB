@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Badge 디자인 미리보기</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Pretendard', system-ui, sans-serif;
+            background: #09090b;
+            color: #e4e4e7;
+            padding: 48px 40px;
+            min-height: 100vh;
+        }
+
+        h1 { font-size: 18px; font-weight: 600; color: #f4f4f5; margin-bottom: 8px; }
+        .page-sub { font-size: 13px; color: #52525b; margin-bottom: 48px; }
+
+        .section { margin-bottom: 48px; }
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #52525b;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .group-label {
+            font-size: 11px;
+            color: #3f3f46;
+            width: 52px;
+            flex-shrink: 0;
+        }
+
+        /* ──────────────────────────────────────
+           현재 (Before)
+        ────────────────────────────────────── */
+        .before .chip {
+            font-size: 10px; padding: 3px 9px; border-radius: 4px;
+            font-family: 'DM Mono', monospace; font-weight: 500; white-space: nowrap;
+        }
+        .before .chip-g      { background: #0d2a1a; color: #22c97a; border: 1px solid #0f3d25; }
+        .before .chip-r      { background: #2a0d0d; color: #e05656; border: 1px solid #3d0f0f; }
+        .before .chip-y      { background: #2a200d; color: #d4a017; border: 1px solid #3d2e0f; }
+        .before .chip-blue   { background: #0d1a2e; color: #5a9af5; border: 1px solid #0f2544; }
+        .before .chip-purple { background: #1a0d2e; color: #9b6af5; border: 1px solid #280f44; }
+        .before .chip-teal   { background: #0d2229; color: #3dd6c8; border: 1px solid #0f3540; }
+
+        /* ──────────────────────────────────────
+           안 A — Dot Indicator Pill
+        ────────────────────────────────────── */
+        .a .chip {
+            border-radius: 99px; padding: 4px 11px; font-size: 11px; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 6px;
+            border: none; white-space: nowrap;
+        }
+        .a .chip::before {
+            content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+        }
+        .a .chip-g      { background: rgba(34,201,122,0.1);  color: #22c97a; }
+        .a .chip-g::before  { background: #22c97a; box-shadow: 0 0 5px #22c97a88; }
+        .a .chip-r      { background: rgba(224,86,86,0.1);   color: #e05656; }
+        .a .chip-r::before  { background: #e05656; }
+        .a .chip-y      { background: rgba(212,160,23,0.1);  color: #d4a017; }
+        .a .chip-y::before  { background: #d4a017; }
+        /* 유형 — 점 대신 작은 사각형으로 차별화 */
+        .a .chip-blue   { background: rgba(90,154,245,0.1);  color: #5a9af5; }
+        .a .chip-blue::before   { background: #5a9af5; border-radius: 2px; }
+        .a .chip-purple { background: rgba(155,106,245,0.1); color: #9b6af5; }
+        .a .chip-purple::before { background: #9b6af5; border-radius: 2px; }
+        .a .chip-teal   { background: rgba(61,214,200,0.1);  color: #3dd6c8; }
+        .a .chip-teal::before   { background: #3dd6c8; border-radius: 2px; }
+
+        /* ──────────────────────────────────────
+           안 B — Solid Bold
+        ────────────────────────────────────── */
+        .b .chip {
+            border-radius: 6px; padding: 4px 10px; font-size: 11px;
+            font-weight: 600; border: none; white-space: nowrap;
+        }
+        .b .chip-g      { background: #16a34a; color: #fff; }
+        .b .chip-r      { background: #dc2626; color: #fff; }
+        .b .chip-y      { background: #b45309; color: #fff; }
+        .b .chip-blue   { background: #2563eb; color: #fff; }
+        .b .chip-purple { background: #7c3aed; color: #fff; }
+        .b .chip-teal   { background: #0d9488; color: #fff; }
+
+        /* ──────────────────────────────────────
+           안 C — Outlined Ghost
+        ────────────────────────────────────── */
+        .c .chip {
+            border-radius: 5px; padding: 3px 9px; font-size: 11px;
+            font-weight: 500; background: transparent; white-space: nowrap;
+        }
+        .c .chip-g      { color: #22c97a; border: 1.5px solid #22c97a44; }
+        .c .chip-r      { color: #e05656; border: 1.5px solid #e0565644; }
+        .c .chip-y      { color: #d4a017; border: 1.5px solid #d4a01744; }
+        .c .chip-blue   { color: #5a9af5; border: 1.5px solid #5a9af544; }
+        .c .chip-purple { color: #9b6af5; border: 1.5px solid #9b6af544; }
+        .c .chip-teal   { color: #3dd6c8; border: 1.5px solid #3dd6c844; }
+
+        /* ──────────────────────────────────────
+           테이블 미리보기
+        ────────────────────────────────────── */
+        .table-preview {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        .table-preview th {
+            text-align: left;
+            padding: 9px 14px;
+            font-size: 10.5px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #52525b;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .table-preview td {
+            padding: 11px 14px;
+            color: #d4d4d8;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .table-preview tr:hover td { background: rgba(255,255,255,0.02); }
+    </style>
+</head>
+<body>
+
+    <h1>Badge / Chip 디자인 미리보기</h1>
+    <p class="page-sub">고객사 · IT자산 목록에 사용되는 상태 및 유형 뱃지</p>
+
+    <!-- ── BEFORE ── -->
+    <div class="section before">
+        <div class="section-title">현재 (Before)</div>
+        <div class="row">
+            <span class="group-label">상태</span>
+            <span class="chip chip-g">활성</span>
+            <span class="chip chip-r">비활성</span>
+            <span class="chip chip-y">대기</span>
+        </div>
+        <div class="row">
+            <span class="group-label">유형</span>
+            <span class="chip chip-blue">서버</span>
+            <span class="chip chip-purple">스토리지</span>
+            <span class="chip chip-teal">네트워크</span>
+        </div>
+    </div>
+
+    <!-- ── 안 A ── -->
+    <div class="section a">
+        <div class="section-title">안 A — Dot Indicator Pill</div>
+        <div class="row">
+            <span class="group-label">상태</span>
+            <span class="chip chip-g">활성</span>
+            <span class="chip chip-r">비활성</span>
+            <span class="chip chip-y">대기</span>
+        </div>
+        <div class="row">
+            <span class="group-label">유형</span>
+            <span class="chip chip-blue">서버</span>
+            <span class="chip chip-purple">스토리지</span>
+            <span class="chip chip-teal">네트워크</span>
+        </div>
+        <!-- 테이블 맥락 미리보기 -->
+        <table class="table-preview">
+            <thead>
+                <tr>
+                    <th>고객사명</th>
+                    <th>담당자</th>
+                    <th>유형</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>삼성전자</td>
+                    <td>김철수</td>
+                    <td><span class="chip chip-blue">서버</span></td>
+                    <td><span class="chip chip-g">활성</span></td>
+                </tr>
+                <tr>
+                    <td>LG CNS</td>
+                    <td>박지영</td>
+                    <td><span class="chip chip-teal">네트워크</span></td>
+                    <td><span class="chip chip-y">대기</span></td>
+                </tr>
+                <tr>
+                    <td>현대오토에버</td>
+                    <td>이민준</td>
+                    <td><span class="chip chip-purple">스토리지</span></td>
+                    <td><span class="chip chip-r">비활성</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── 안 B ── -->
+    <div class="section b">
+        <div class="section-title">안 B — Solid Bold</div>
+        <div class="row">
+            <span class="group-label">상태</span>
+            <span class="chip chip-g">활성</span>
+            <span class="chip chip-r">비활성</span>
+            <span class="chip chip-y">대기</span>
+        </div>
+        <div class="row">
+            <span class="group-label">유형</span>
+            <span class="chip chip-blue">서버</span>
+            <span class="chip chip-purple">스토리지</span>
+            <span class="chip chip-teal">네트워크</span>
+        </div>
+        <table class="table-preview">
+            <thead>
+                <tr>
+                    <th>고객사명</th>
+                    <th>담당자</th>
+                    <th>유형</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>삼성전자</td>
+                    <td>김철수</td>
+                    <td><span class="chip chip-blue">서버</span></td>
+                    <td><span class="chip chip-g">활성</span></td>
+                </tr>
+                <tr>
+                    <td>LG CNS</td>
+                    <td>박지영</td>
+                    <td><span class="chip chip-teal">네트워크</span></td>
+                    <td><span class="chip chip-y">대기</span></td>
+                </tr>
+                <tr>
+                    <td>현대오토에버</td>
+                    <td>이민준</td>
+                    <td><span class="chip chip-purple">스토리지</span></td>
+                    <td><span class="chip chip-r">비활성</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── 안 C ── -->
+    <div class="section c">
+        <div class="section-title">안 C — Outlined Ghost</div>
+        <div class="row">
+            <span class="group-label">상태</span>
+            <span class="chip chip-g">활성</span>
+            <span class="chip chip-r">비활성</span>
+            <span class="chip chip-y">대기</span>
+        </div>
+        <div class="row">
+            <span class="group-label">유형</span>
+            <span class="chip chip-blue">서버</span>
+            <span class="chip chip-purple">스토리지</span>
+            <span class="chip chip-teal">네트워크</span>
+        </div>
+        <table class="table-preview">
+            <thead>
+                <tr>
+                    <th>고객사명</th>
+                    <th>담당자</th>
+                    <th>유형</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>삼성전자</td>
+                    <td>김철수</td>
+                    <td><span class="chip chip-blue">서버</span></td>
+                    <td><span class="chip chip-g">활성</span></td>
+                </tr>
+                <tr>
+                    <td>LG CNS</td>
+                    <td>박지영</td>
+                    <td><span class="chip chip-teal">네트워크</span></td>
+                    <td><span class="chip chip-y">대기</span></td>
+                </tr>
+                <tr>
+                    <td>현대오토에버</td>
+                    <td>이민준</td>
+                    <td><span class="chip chip-purple">스토리지</span></td>
+                    <td><span class="chip chip-r">비활성</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

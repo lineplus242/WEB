@@ -2,7 +2,34 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(git push *)",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"SHOW TABLES;\")",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"DESCRIBE tb_asset_photo;\")",
+      "Bash(systemctl restart *)",
+      "Bash(systemctl is-active *)",
+      "Read(//var/log/tomcat/**)",
+      "Read(//opt/tomcat/logs/**)",
+      "Bash(journalctl -u tomcat -n 20 --no-pager)",
+      "Bash(journalctl -u tomcat -n 50 --no-pager)",
+      "Bash(awk '{print $1}')",
+      "Bash(chown -R tomcat:tomcat /var/lib/tomcat/webapps/app/upload/library)",
+      "Bash(chmod 775 /var/lib/tomcat/webapps/app/upload/library)",
+      "Bash(chown -R tomcat:tomcat /var/lib/tomcat/webapps/app/admin)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8080/app/ImageLibraryServlet?action=listForPicker\" -H \"Cookie: JSESSIONID=test\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(curl -s -o /tmp/test_resp.html -w \"%{http_code}\" \"http://localhost:8080/app/AssetDetailServlet?assetSeq=1\" -b \"JSESSIONID=anything\")",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /tmp/lib_resp.html -w \"%{http_code}\" \"http://localhost:8080/app/admin/image_library.jsp\" -b \"JSESSIONID=anything\")",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"SELECT user_id, role FROM tb_user LIMIT 5;\")",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"DESCRIBE tb_image_library; DESCRIBE tb_asset_photo;\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/app/ImageLibraryServlet?action=list)",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"SELECT asset_seq, asset_name FROM tb_asset WHERE asset_seq=54 OR asset_name LIKE '%<%' OR asset_name LIKE '%\\\\n%' OR asset_name LIKE '%''%';\")",
+      "Bash(mysql -u root '-pwkd11!#Eod' admin_db -e ' *)",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"SHOW COLUMNS FROM tb_rack_unit;\")",
+      "Bash(journalctl -u tomcat --since \"10 seconds ago\")",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"SELECT UNHEX\\(password\\) FROM tb_user WHERE role='ADMIN';\")",
+      "Bash(mysql -u root -pwkd11\\\\!\\\\#Eod admin_db -e \"SELECT ip_addr, account_info, memo FROM tb_asset WHERE asset_seq=54;\")"
     ]
   }
 }

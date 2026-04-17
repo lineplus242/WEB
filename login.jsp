@@ -146,7 +146,7 @@
             align-items: center;
             gap: 10px;
             width: 100%;
-            max-width: 580px;
+            max-width: 440px;
             margin-bottom: 56px;
             opacity: 0;
             animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
@@ -180,7 +180,7 @@
         /* ── 폼 영역 ── */
         .form-wrap {
             width: 100%;
-            max-width: 580px;
+            max-width: 440px;
         }
 
         .heading-area {

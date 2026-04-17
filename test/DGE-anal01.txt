@@ -1,0 +1,1205 @@
+ 
+ 
+######################################################################
+ 
+[U-01] root 계정 원격 접속 제한
+# /etc/securetty 내용
+console
+vc/1
+vc/2
+vc/3
+vc/4
+vc/5
+vc/6
+vc/7
+vc/8
+vc/9
+vc/10
+vc/11
+tty1
+tty2
+tty3
+tty4
+tty5
+tty6
+tty7
+tty8
+tty9
+tty10
+tty11
+ttyS0
+ttysclp0
+sclp_line0
+3270/tty1
+hvc0
+hvc1
+hvc2
+hvc3
+hvc4
+hvc5
+hvc6
+hvc7
+hvsi0
+hvsi1
+hvsi2
+xvc0
+ 
+# /etc/pam.d/remote
+password	required	/lib64/security/libScvPAM_password.so.1
+account	required	/lib64/security/libScvAuth.so.1
+account	required	/lib64/security/libScvPAM_account.so.1
+session	required	/lib64/security/libScvPAM_session.so.1
+#%PAM-1.0
+auth       required     pam_securetty.so
+auth       substack     password-auth
+auth       include      postlogin
+account    required     pam_nologin.so
+account    include      password-auth
+##SECUVE Comment:password   include      password-auth
+# pam_selinux.so close should be the first session rule
+session    required     pam_selinux.so close
+session    required     pam_loginuid.so
+# pam_selinux.so open should only be followed by sessions to be executed in the user context
+session    required     pam_selinux.so open
+session    required     pam_namespace.so
+session    optional     pam_keyinit.so force revoke
+session    include      password-auth
+session    include      postlogin
+
+[ssh 프로세스 구동여부확인]
+root       2316      1  0  2025 ?        00:00:00 /usr/sbin/sshd -D
+root     230725   2316  0 16:47 ?        00:00:00 sshd: secadmin [priv]
+secadmin 233463 230725  0 16:49 ?        00:00:00 sshd: secadmin@pts/1
+root     234859   2316  0 16:49 ?        00:00:00 sshd: secadmin [priv]
+secadmin 234861 234859  0 16:49 ?        00:00:00 sshd: secadmin@notty
+ 
+#SSH root 원격접속 차단여부 /etc/ssh/sshd_config 확인
+PermitRootLogin no
+ 
+ 
+[#TELNET_SERVICE 상태] 
+disabled
+ 
+<RESULT>양호
+TELNET 서비스가 비실행중이고, SSH의 root 원격 접속을 제한하고 있으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-02] 비밀번호 관리정책 설정
+ 
+<RESULT>수동점검
+비밀번호 관리정책 설정 파일을 확인하여 수동점검(REF 파일 참조)<END>
+ 
+ 
+######################################################################
+ 
+[U-03] 계정 잠금 임계값 설정
+ 
+※red-hat 계열 6.0 미만 system-auth 설정 확인, 6.0 이상 password-auth 설정 확인, 8.0 이상 authselect 설정 확인
+※x86(32비트)는 pam_tally.so 모듈, x86_64(64비트)는 pam_tally2.so 모듈 설정확인
+ 
+#Linux release 확인
+Red Hat Enterprise Linux Server release 7.9 (Maipo)
+#시스템 아키텍처 확인
+x86_64
+ 
+#cat /etc/pam.d/system-auth (Redhat 계열)
+auth        required      pam_tally2.so onerr=fail deny=5 unlock_time=1200
+account     required      pam_tally2.so
+ 
+#cat /etc/pam.d/password-auth (Redhat 계열)
+ 
+/etc/security/faillock.conf 파일이 존재하지 않음
+ 
+<RESULT>수동점검
+리눅스 배포판, 릴리즈, 아키텍처 확인 후 해당하는 설정 파일을 확인하여 수동점검(REF 파일 참조)<END>
+ 
+ 
+######################################################################
+ 
+[U-04] 비밀번호 파일 보호
+ 
+<RESULT>양호
+shadow 파일을 사용하고 있으므로 양호함
+-r-------- 1 root root 1064 Feb  9 09:54 /etc/shadow
+<END>
+ 
+ 
+######################################################################
+ 
+[U-05] root 이외의 UID가 '0' 금지
+ 
+<RESULT>양호
+root 이외의 UID가 '0'인 계정이 존재하지 않으므로 양호함
+root -> UID=0  GID=0
+<END>
+ 
+ 
+######################################################################
+ 
+[U-06] 사용자 계정 su 기능 제한
+ 
+※x86(32비트)는 /lib 디렉터리 하위 모듈, x86_64(64비트)는 /lib64 디렉터리 하위 모듈 설정확인
+ 
+#Linux release 확인
+Red Hat Enterprise Linux Server release 7.9 (Maipo)
+#시스템 아키텍처 확인
+x86_64
+ 
+※ pam.d/su에 pam_wheel.so로 su 사용을 제한할 경우 'use_uid' 라인만 설정
+※ 다음라인에 debug group=wheel 설정 시 취약, use_uid 라인에 추가시엔 양호
+※ auth requited는 use_uid를 포함하는 라인 '하나만' 설정
+ 
+ 
+<RESULT>양호
+/etc/pam.d/su에 pam_wheel.so 설정이 있으므로 양호함. wheel 그룹에 적절한 사용자가 포함되어 있는지 확인 필요. /bin/su 파일의 권한 확인 필요(4x50, 소유자 root, 그룹 root 아님)
+#auth		sufficient	pam_wheel.so trust use_uid
+auth		required	pam_wheel.so use_uid
+ 
+wheel:x:10:bumil,secadmin
+ 
+-rwsr-x---. 1 root wheel 32128 Apr 28  2020 /bin/su
+<END>
+ 
+ 
+######################################################################
+ 
+[U-07] 불필요한 계정 제거
+#cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+nobody:x:99:99:Nobody:/:/sbin/nologin
+systemd-network:x:192:192:systemd Network Management:/:/sbin/nologin
+dbus:x:81:81:System message bus:/:/sbin/nologin
+polkitd:x:999:998:User for polkitd:/:/sbin/nologin
+libstoragemgmt:x:998:995:daemon account for libstoragemgmt:/var/run/lsm:/sbin/nologin
+colord:x:997:994:User for colord:/var/lib/colord:/sbin/nologin
+rpc:x:32:32:Rpcbind Daemon:/var/lib/rpcbind:/sbin/nologin
+gluster:x:996:993:GlusterFS daemons:/run/gluster:/sbin/nologin
+abrt:x:173:173::/etc/abrt:/sbin/nologin
+setroubleshoot:x:994:991::/var/lib/setroubleshoot:/sbin/nologin
+rtkit:x:172:172:RealtimeKit:/proc:/sbin/nologin
+radvd:x:75:75:radvd user:/:/sbin/nologin
+chrony:x:993:990::/var/lib/chrony:/sbin/nologin
+unbound:x:992:989:Unbound DNS resolver:/etc/unbound:/sbin/nologin
+qemu:x:107:107:qemu user:/:/sbin/nologin
+usbmuxd:x:113:113:usbmuxd user:/:/sbin/nologin
+geoclue:x:991:987:User for geoclue:/var/lib/geoclue:/sbin/nologin
+gdm:x:42:42::/var/lib/gdm:/sbin/nologin
+saned:x:990:984:SANE scanner daemon user:/usr/share/sane:/sbin/nologin
+rpcuser:x:29:29:RPC Service User:/var/lib/nfs:/sbin/nologin
+nfsnobody:x:65534:65534:Anonymous NFS User:/var/lib/nfs:/sbin/nologin
+gnome-initial-setup:x:989:983::/run/gnome-initial-setup/:/sbin/nologin
+sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin
+avahi:x:70:70:Avahi mDNS/DNS-SD Stack:/var/run/avahi-daemon:/sbin/nologin
+postfix:x:89:89::/var/spool/postfix:/sbin/nologin
+ntp:x:38:38::/etc/ntp:/sbin/nologin
+tcpdump:x:72:72::/:/sbin/nologin
+bumil:x:1000:1000:bumil:/home/bumil:/bin/bash
+secadmin:x:1001:1001::/home/secadmin:/bin/bash
+ 
+<RESULT>수동점검
+/etc/passwd 내용을 참고하여 인터뷰 실시. 불필요한 계정이 존재하지 않으면 양호<END>
+ 
+ 
+######################################################################
+ 
+[U-08] 관리자 그룹에 최소한의 계정 포함
+ 
+<RESULT>수동점검
+관리자 그룹에 불필요한 계정이 등록되어 있는 경우 취약
+root:x:0:root
+<END>
+ 
+ 
+######################################################################
+ 
+[U-09] 계정이 존재하지 않는 GID 금지
+ 
+<RESULT>양호
+구성원이 없는 그룹(그룹에 계정이 설정되어 있으나 실제로 계정이 없음)이 없으므로 양호함
+Group : root
+     root
+Group : wheel
+     bumil
+     secadmin
+Group : mail
+     postfix
+Group : kvm
+     qemu
+Group : bumil
+     bumil
+
+<END>
+ 
+ 
+######################################################################
+ 
+[U-10] 동일한 UID 금지
+ 
+<RESULT>양호
+동일한 UID로 설정된 사용자 계정이 존재하지 않으므로 양호함
+root = 0
+bin = 1
+daemon = 2
+mail = 8
+nobody = 99
+systemd-network = 192
+dbus = 81
+polkitd = 999
+libstoragemgmt = 998
+colord = 997
+rpc = 32
+gluster = 996
+abrt = 173
+setroubleshoot = 994
+rtkit = 172
+radvd = 75
+chrony = 993
+unbound = 992
+qemu = 107
+usbmuxd = 113
+geoclue = 991
+gdm = 42
+saned = 990
+rpcuser = 29
+nfsnobody = 65534
+gnome-initial-setup = 989
+sshd = 74
+avahi = 70
+postfix = 89
+ntp = 38
+tcpdump = 72
+bumil = 1000
+secadmin = 1001
+<END>
+ 
+ 
+######################################################################
+ 
+[U-11] 사용자 Shell 점검
+ 
+<RESULT>양호
+/bin/false or /sbin/nologin or noshell로 설정되어 있으므로 양호함
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+nobody:x:99:99:Nobody:/:/sbin/nologin
+<END>
+ 
+ 
+######################################################################
+ 
+[U-12] 세션 종료 시간 설정
+ 
+<RESULT>양호
+TIMEOUT설정이 600이하로 설정되어 있으므로 양호함
+TMOUT=600
+export TMOUT
+<END>
+ 
+ 
+######################################################################
+ 
+[U-13] 안전한 비밀번호 암호화 알고리즘 사용
+ 
+<RESULT>수동점검
+DGE-anal01_Linux_20260402_REF.txt 참고하여 수동진단<END>
+ 
+ 
+######################################################################
+ 
+[U-14] root 홈, 패스 디렉터리 권한 및 패스 설정
+ 
+<RESULT>양호
+PATH 설정에 '.'이 맨 앞이나 중간에 포함되어 있지 않으므로 양호함
+/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+<END>
+ 
+ 
+######################################################################
+ 
+[U-15] 파일 및 디렉터리 소유자 설정
+ 
+<RESULT>수동점검
+FIND 실행 안함으로 수동진단 필요<END>
+ 
+ 
+######################################################################
+ 
+[U-16] /etc/passwd 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/passwd 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r--r-- 1 root root 1754 Jul  6  2023 /etc/passwd
+<END>
+ 
+ 
+######################################################################
+ 
+[U-17] 시스템 시작 스크립트 권한 설정
+ 
+<RESULT>수동점검
+시스템 시작 스크립트에 일반 사용자 쓰기 권한이 제거된 경우 양호함(REF 파일 참조)<END>
+ 
+ 
+######################################################################
+ 
+[U-18] /etc/shadow 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/shadow 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-r-------- 1 root root 1064 Feb  9 09:54 /etc/shadow
+<END>
+ 
+ 
+######################################################################
+ 
+[U-19] /etc/hosts 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/hosts 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw------- 1 root root 923 Jan  6  2022 /etc/hosts
+<END>
+ 
+ 
+######################################################################
+ 
+[U-20] /etc/(x)inetd.conf 파일 소유자 및 권한 설정
+ 
+ls: cannot access /etc/xinetd.d/*: No such file or directory
+ 
+<RESULT>양호
+/etc/inetd.conf or /etc/xinetd.conf 파일이 존재하지 않으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-21] /etc/(r)syslog.conf 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/rsyslog.conf 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r-----. 1 root root 3320 Jan 13  2022 /etc/rsyslog.conf
+<END>
+ 
+ 
+######################################################################
+ 
+[U-22] /etc/services 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/services 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r--r--. 1 root root 670293 Jun  7  2013 /etc/services
+<END>
+ 
+ 
+######################################################################
+ 
+[U-23] SUID,SGID,Stick bit 설정 파일 점검
+#find /sbin/dump /usr/bin/lpq-lpd /usr/bin/newgrp /sbin/restore /usr/bin/lpr /usr/sbin/lpc /sbin/unix_chkpwd /usr/bin/lpr-lpd /usr/sbin/lpc-lpd /usr/bin/at /usr/bin/lprm /usr/sbin/traceroute /usr/bin/lpq /usr/bin/lprm-lpd  -user root -type f \( -perm -04000 -o -perm -02000 \) -exec ls -al {} \;
+find: '/sbin/dump': No such file or directory
+find: '/usr/bin/lpq-lpd': No such file or directory
+find: '/sbin/restore': No such file or directory
+find: '/usr/bin/lpr-lpd': No such file or directory
+find: '/usr/sbin/lpc-lpd': No such file or directory
+find: '/usr/sbin/traceroute': No such file or directory
+find: '/usr/bin/lprm-lpd': No such file or directory
+ 
+<RESULT>수동점검
+결과 참고하여 수동진단<END>
+ 
+ 
+######################################################################
+ 
+[U-24] 사용자, 시스템 환경변수 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/profile 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-r--r-- 1 root root 2083 Aug  3  2025 /etc/profile
+<END>
+ 
+ 
+######################################################################
+ 
+[U-25] world writable 파일 점검
+ 
+<RESULT>수동점검
+FIND 실행 안함으로 수동진단 필요<END>
+ 
+ 
+######################################################################
+ 
+[U-26] /dev에 존재하지 않는 device 파일 점검
+#find /dev -type f -exec ls -l {} \;
+ 
+<RESULT>수동점검
+결과 참고하여 인터뷰 실시, 양호시 출력 내용 없음<END>
+ 
+ 
+######################################################################
+ 
+[U-27] $HOME/.rhosts, hosts.equiv 사용 금지
+ 
+<RESULT>양호
+R (rlogin|rsh|rexec) 서비스가 비실행중이므로 양호함
+#chkconfig --list | egrep 'rlogin|rsh|rexec' #systemctl list-unit-files --type=service 결과 확인
+<END>
+ 
+ 
+######################################################################
+ 
+[U-28] 접속 IP 및 포트 제한
+1) 방화벽 서비스 설치 여부 확인
+2) hosts.allow 파일의 설정내용
+#
+# hosts.allow	This file contains access rules which are used to
+#		allow or deny connections to network services that
+#		either use the tcp_wrappers library or that have been
+#		started through a tcp_wrappers-enabled xinetd.
+#
+#		See 'man 5 hosts_options' and 'man 5 hosts_access'
+#		for information on rule syntax.
+#		See 'man tcpd' for information on tcp_wrappers
+#
+ALL:ALL
+ 
+3) hosts.deny 파일의 설정내용
+#
+# hosts.deny	This file contains access rules which are used to
+#		deny connections to network services that either use
+#		the tcp_wrappers library or that have been
+#		started through a tcp_wrappers-enabled xinetd.
+#
+#		The rules in this file can also be set up in
+#		/etc/hosts.allow with a 'deny' option instead.
+#
+#		See 'man 5 hosts_options' and 'man 5 hosts_access'
+#		for information on rule syntax.
+#		See 'man tcpd' for information on tcp_wrappers
+#
+ALL:ALL
+4) sysconfig.iptables 파일의 설정내용
+/etc/sysconfig.iptables 파일이 존재하지 않음
+5) Firewall 서비스의 설정내용
+FirewallD is not running
+ 
+<RESULT>취약
+Iptables 접속 IP 및 포트 제한 설정이 존재하지 않으므로 취약함<END>
+ 
+ 
+######################################################################
+ 
+[U-29] host.lpd 파일 소유자 및 권한 설정
+ 
+<RESULT>양호
+/etc/hosts.lpd 파일이 없으므로 양호함
+#ls -alL /etc/hosts.lpd 결과 확인
+<END>
+ 
+ 
+######################################################################
+ 
+[U-30] UMASK 설정 관리
+
+umask 명령어 실행결과
+0022
+
+<RESULT>수동점검
+umask 값 및 profile 설정 참고하여 수동진단
+
+export PATH USER LOGNAME MAIL HOSTNAME HISTSIZE HISTCONTROL
+
+if [ $UID -gt 199 ] && [ "`/usr/bin/id -gn`" = "`/usr/bin/id -un`" ]; then
+    umask 002
+else
+    umask 022
+fi
+
+for i in /etc/profile.d/*.sh /etc/profile.d/sh.local ; do
+--
+unset -f pathmunge
+TMOUT=600
+export TMOUT
+umask=022
+export umask
+<END>
+ 
+ 
+######################################################################
+ 
+[U-31] 홈 디렉토리 소유자 및 권한 설정
+
+# 사용자와 홈디렉토리의 소유자 비교
+
+홈 dir[계정] : dir 소유자 형식 : 권한(other 사용자에 쓰기 권한 부여시 출력)
+========================================================================
+
+/root[root] : root :  
+/bin[bin] : root :  
+/sbin[daemon] : root :  
+/var/spool/mail[mail] : root :  
+/[nobody] : root :  
+/[systemd-network] : root :  
+/[dbus] : root :  
+/[polkitd] : root :  
+/var/run/lsm[libstoragemgmt] : root :  
+/var/lib/colord[colord] : colord :  
+/var/lib/rpcbind[rpc] : rpc :  
+/etc/abrt[abrt] : root :  
+/var/lib/setroubleshoot[setroubleshoot] : setroubleshoot :  
+/proc[rtkit] : root :  
+/[radvd] : root :  
+/var/lib/chrony[chrony] : chrony :  
+/etc/unbound[unbound] : root :  
+/[qemu] : root :  
+/[usbmuxd] : root :  
+/var/lib/geoclue[geoclue] : geoclue :  
+/var/lib/gdm[gdm] : gdm :  
+/usr/share/sane[saned] : root :  
+/var/lib/nfs[rpcuser] : root :  
+/var/lib/nfs[nfsnobody] : root :  
+/var/empty/sshd[sshd] : root :  
+/var/spool/postfix[postfix] : root :  
+/etc/ntp[ntp] : root :  
+/[tcpdump] : root :  
+/home/bumil[bumil] : bumil :  
+/home/secadmin[secadmin] : secadmin :  
+ 
+# /etc/passwd 의 홈디렉토리 권한
+
+<RESULT>양호
+홈디렉토리 사용자 및 소유자가 일치하며, 해당 디렉토리 및 파일의 접근권한이 적절하게 부여되어 있어 양호함(root, bin, uucp외)<END>
+ 
+ 
+######################################################################
+ 
+[U-32] 홈 디렉토리로 지정한 디렉토리의 존재 관리
+계정 -> 홈dir 형식
+root->/root 
+bin->/bin 
+daemon->/sbin 
+mail->/var/spool/mail 
+nobody->/ 
+systemd-network->/ 
+dbus->/ 
+polkitd->/ 
+libstoragemgmt->/var/run/lsm 
+colord->/var/lib/colord 
+rpc->/var/lib/rpcbind 
+gluster->/run/gluster [없음]
+abrt->/etc/abrt 
+setroubleshoot->/var/lib/setroubleshoot 
+rtkit->/proc 
+radvd->/ 
+chrony->/var/lib/chrony 
+unbound->/etc/unbound 
+qemu->/ 
+usbmuxd->/ 
+geoclue->/var/lib/geoclue 
+gdm->/var/lib/gdm 
+saned->/usr/share/sane 
+rpcuser->/var/lib/nfs 
+nfsnobody->/var/lib/nfs 
+gnome-initial-setup->/run/gnome-initial-setup/ [없음]
+sshd->/var/empty/sshd 
+avahi->/var/run/avahi-daemon [없음]
+postfix->/var/spool/postfix 
+ntp->/etc/ntp 
+tcpdump->/ 
+bumil->/home/bumil 
+secadmin->/home/secadmin 
+ 
+<RESULT>취약
+홈 디렉토리로 지정한 디렉토리 중 존재하지 않는 디렉토리가 있으므로 취약함
+
+gluster->/run/gluster
+gnome-initial-setup->/run/gnome-initial-setup/
+avahi->/var/run/avahi-daemon
+<END>
+ 
+ 
+######################################################################
+ 
+[U-33] 숨겨진 파일 및 디렉토리 검색 및 제거
+ 
+<RESULT>수동점검
+FIND 실행 안함으로 수동진단 필요<END>
+ 
+ 
+######################################################################
+ 
+[U-34] Finger 서비스 비활성화
+ 
+<RESULT>양호
+finger 파일이 존재하지 않으므로 양호함
+#cat /etc/xinetd.d/finger 파일 확인
+<END>
+ 
+ 
+######################################################################
+ 
+[U-35] 공유 서비스에 대한 익명 접근 제한 설정
+
+<RESULT>양호
+공유 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-36] r 계열 서비스 비활성화
+#ls -alL /etc/xinetd.d | egrep rsh|rlogin|rexec
+ 
+ 
+<RESULT>양호
+현재 rsh, rlogin, rexec 서비스가 비실행 중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-37] crontab 설정파일 권한 설정 미흡
+<RESULT>수동점검
+REF.txt, txt 파일 모두 참고하여 수동진단 실시
+-rw-r--r--. 1 root root   451 Dec 28  2013 /etc/crontab
+-rwxr-xr-x. 1 root root 53048 May 23  2018 /usr/bin/at
+-rwxr-xr-x. 1 root root 53048 May 23  2018 /usr/bin/at
+-rwxr-x---. 1 root root 57656 Feb 14  2019 /usr/bin/crontab
+<END>
+ 
+ 
+######################################################################
+ 
+[U-38] DoS 공격에 취약한 서비스 비활성화
+#ls -alL /etc/xinetd.d | egrep echo|discard|daytime|chargen 
+ 
+#cat /etc/xinetd.d/echo | grep disable 
+ 
+#cat /etc/xinetd.d/discard | grep disable 
+ 
+#cat /etc/xinetd.d/daytime | grep disable 
+ 
+#cat /etc/xinetd.d/chargen | grep disable 
+ 
+<RESULT>양호
+echo, discard, daytime, chargen 서비스가 비실행 중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-39] 불필요한 NFS 서비스 비활성화
+root     242719 239215  0 16:52 pts/2    00:00:00 grep -E mountd|nfs
+ 
+<RESULT>양호
+현재 NFS 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-40] NFS 접근 통제
+#cat /etc/exports
+#ls -al /etc/exports
+-rw-r--r--. 1 root root 0 Jun  7  2013 /etc/exports
+ 
+<RESULT>양호
+NFS 서비스가 비실행중이므로 양호함
+#ps -ef | egrep mountd|nfs 결과 확인
+<END>
+ 
+ 
+######################################################################
+ 
+[U-41] 불필요한 automountd 제거
+ 
+<RESULT>양호
+automount 데몬이 없으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-42] 불필요한 RPC 서비스 비활성화
+ 
+<RESULT>양호
+현재 RPC 서비스가 비실행중이므로 양호함
+
+
+
+<END>
+ 
+ 
+######################################################################
+ 
+[U-43] NIS, NIS+ 점검
+#ps -ef | egrep ypserv|ypbind|ypxfrd|rpc.yppasswdd|rpc.ypupdated
+ 
+<RESULT>양호
+현재 NIS , NIS+ 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-44] tftp, talk, ntalk 서비스 비활성화
+#chkconfig --list | egrep tftp|talk|ntalk
+#systemctl list-unit-files --type=service | egrep tftp|talk|ntalk
+ 
+<RESULT>양호
+현재 tftp, talk, ntalk 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-45] 메일 서비스 버전 점검
+ 
+ 
+<RESULT>양호
+메일 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-46] 일반 사용자의 메일 서비스 실행 방지
+ 
+<RESULT>양호
+메일 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-47] 스팸 메일 릴레이 제한
+ 
+<RESULT>양호
+메일 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-48] expn, vrfy 명령어 제한
+ 
+<RESULT>양호
+메일 서비스가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-49] DNS 보안 버전 패치
+ 
+<RESULT>양호
+Name server를 사용하지 않으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-50] DNS Zone Transfer 설정
+ 
+<RESULT>양호함
+Name server를 사용하지 않으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-51] DNS 서비스의 취약한 동적 업데이트 설정 금지
+ 
+<RESULT>양호함
+Name server를 사용하지 않으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-52] Telnet 서비스 비활성화
+
+<RESULT>양호
+telnet을 사용하지 않고, ssh를 사용하고 있으므로 양호함
+root       2316      1  0  2025 ?        00:00:00 /usr/sbin/sshd -D
+root     230725   2316  0 16:47 ?        00:00:00 sshd: secadmin [priv]
+secadmin 233463 230725  0 16:49 ?        00:00:00 sshd: secadmin@pts/1
+root     234859   2316  0 16:49 ?        00:00:00 sshd: secadmin [priv]
+secadmin 234861 234859  0 16:49 ?        00:00:00 sshd: secadmin@notty
+secadmin 234862 234861  0 16:49 ?        00:00:00 /usr/libexec/openssh/sftp-server
+root     273180 273037  0  2025 ?        00:00:38 /usr/bin/ssh-agent /bin/sh -c exec -l /bin/bash -c "env GNOME_SHELL_SESSION_MODE=classic gnome-session --session gnome-classic"
+<END>
+ 
+ 
+######################################################################
+ 
+[U-53] FTP 서비스 정보 노출 제한
+ 
+<RESULT>수동점검
+U-54 항목에서 FTP가 실행되지 않은 경우 양호<END>
+ 
+ 
+######################################################################
+ 
+[U-54] 암호화되지 않는 FTP 서비스 비활성화
+ 
+<RESULT>양호
+현재 ftp 서비스가 비실행중이므로 양호함
+#ps 확인(결과가 없으면 비실행중)
+ 
+#서비스 등록확인(결과가 없으면 서비스 미등록)
+ 
+ 
+# xinetd.d 하위 설정파일 확인
+<END>
+ 
+ 
+######################################################################
+ 
+[U-55] FTP 계정 Shell 제한
+ 
+<RESULT>양호
+FTP 서비스가 없으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-56] FTP 서비스 접근 제어 설정
+ 
+<RESULT>양호
+FTP 서비스가 없으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-57] Ftpusers 파일 설정
+ 
+<RESULT>양호
+FTP 서비스가 없으므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-58] 불필요한 SNMP 서비스 구동 점검
+ 
+<RESULT>양호
+SNMP가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-59] 안전한 SNMP 버전 사용
+ 
+<RESULT>양호
+SNMP가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-60] SNMP Community String 복잡성 설정
+
+<RESULT>양호
+SNMP가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-61] SNMP Access Control 설정
+
+<RESULT>양호
+SNMP가 비실행중이므로 양호함<END>
+ 
+ 
+######################################################################
+ 
+[U-62] 로그인 시 경고 메시지 설정
+#cat /etc/motd
+Daegu Metropolitan Office Of Education
+---------------------------------------------------
+#cat /etc/issue.net
+Daegu Metropolitan Office Of Education
+---------------------------------------------------
+ 
+<RESULT>수동점검
+DGE-anal01_Linux_20260402_REF.txt 참고하여 수동진단<END>
+ 
+ 
+######################################################################
+ 
+[U-63] sudo 명령어 접근 관리
+ 
+<RESULT>양호
+/etc/sudoers 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-r--r-----. 1 root root 4328 Mar 25  2020 /etc/sudoers
+<END>
+ 
+ 
+######################################################################
+ 
+[U-64] 주기적 보안패치 및 벤더 권고사항 적용
+#패키지 설치 및 패치 상세는 ref 파일 참조 확인
+
+#uname -a 확인
+Linux DGE-anal01 3.10.0-1160.el7.x86_64 #1 SMP Tue Aug 18 14:50:17 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
+#OS버전확인 /etc/redhat-release 
+Red Hat Enterprise Linux Server release 7.9 (Maipo)
+ 
+<RESULT>수동점검
+주기적인 보안패치 여부 인터뷰 확인
+Linux DGE-anal01 3.10.0-1160.el7.x86_64 #1 SMP Tue Aug 18 14:50:17 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
+<END>
+ 
+ 
+######################################################################
+ 
+[U-65] NTP 및 시각 동기화 설정
+#NTP 설정 및 현재 동기화된 서버는 ref 파일 참조 확인
+
+#Redhat 계열 리눅스는 RHEL 8 버전부터 Chrony 서비스로 변경됨
+ 
+ 
+<RESULT>수동점검
+DGE-anal01_Linux_20260402_REF.txt 참고하여 수동진단<END>
+ 
+ 
+######################################################################
+ 
+[U-66] 정책에 따른 시스템 로깅 설정
+#cat /etc/rsyslog.conf | egrep 'info|notice|warn|err'
+ 
+# For more information see /usr/share/doc/rsyslog-*/rsyslog_conf.html
+# Log anything (except mail) of level info or higher.
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+# Save news errors of level crit and higher in a special file.
+authpriv.info	/var/log/sulog
+*.notice	/var/log/messages
+ 
+<RESULT>수동점검
+로깅 정책 확인, syslog 전체 설정은 REF파일 참조<END>
+ 
+ 
+######################################################################
+ 
+[U-67] 로그 디렉터리 소유자 및 권한 설정
+#ls -alL /var/log
+total 3586976
+drwxr-xr-x. 22 root   root        8192 Apr  1 03:33 .
+drwxr-xr-x. 22 root   root        4096 Aug 24  2023 ..
+-rw-r--r--   1 root   root       58572 Nov 25 14:14 Xorg.0.log
+-rw-r--r--   1 root   root       36328 Aug  1  2025 Xorg.0.log.old
+-rw-r--r--.  1 root   root       18926 Dec 19  2021 Xorg.9.log
+drwxr-xr-x.  2 root   root         232 Dec 19  2021 anaconda
+drwx------.  2 root   root          99 Mar 29 18:11 audit
+-rw-------.  1 root   root           0 Aug  3  2025 boot.log
+-rw-------   1 root   root       36394 Dec 31  2021 boot.log-20211231
+-rw-------   1 root   root       23638 Jan  9  2022 boot.log-20220109
+-rw-------   1 root   root       71988 Jun  6  2022 boot.log-20220606
+-rw-------   1 root   root       23884 Dec 17  2022 boot.log-20221217
+-rw-------   1 root   root       24775 Jan 28  2024 boot.log-20240128
+-rw-------   1 root   root       27657 Aug  4  2024 boot.log-20240804
+-rw-------   1 root   root       22950 Aug  3  2025 boot.log-20250803
+-rw-------   1 root   utmp           0 Apr  1 03:33 btmp
+-rw-------   1 root   utmp           0 Mar  1 03:30 btmp-20260401
+drwxr-xr-x   3 root   root          17 Dec 29  2021 calico
+drwxr-xr-x.  2 chrony chrony         6 Jan 11  2019 chrony
+drwxr-xr-x   2 root   root        4096 Dec 16 11:30 containers
+-rw-------   1 root   root      102733 Apr  2 16:50 cron
+-rw-------   1 root   root      158581 Aug 24  2025 cron-20250824
+-rw-------   1 root   root      158467 Aug 31  2025 cron-20250831
+-rw-------   1 root   root      158612 Sep  7  2025 cron-20250907
+-rw-------   1 root   root      158431 Sep 14  2025 cron-20250914
+-rw-------   1 root   root      158463 Sep 21  2025 cron-20250921
+-rw-------   1 root   root      158298 Sep 28  2025 cron-20250928
+-rw-------   1 root   root      158272 Oct  5 03:14 cron-20251005
+-rw-------   1 root   root      158523 Oct 12 03:22 cron-20251012
+-rw-------   1 root   root      158921 Oct 19 03:49 cron-20251019
+-rw-------   1 root   root      158108 Oct 26 03:34 cron-20251026
+-rw-------   1 root   root      158342 Nov  2 03:35 cron-20251102
+-rw-------   1 root   root      158324 Nov  9 03:41 cron-20251109
+-rw-------   1 root   root      160815 Nov 16 03:28 cron-20251116
+-rw-------   1 root   root      158367 Nov 23 03:16 cron-20251123
+-rw-------   1 root   root      158413 Nov 30 03:47 cron-20251130
+-rw-------   1 root   root      158290 Dec  7 03:39 cron-20251207
+-rw-------   1 root   root      158179 Dec 14 03:43 cron-20251214
+-rw-------   1 root   root      158615 Dec 21 03:17 cron-20251221
+-rw-------   1 root   root      158256 Dec 28 03:18 cron-20251228
+-rw-------   1 root   root      158517 Jan  4 03:23 cron-20260104
+-rw-------   1 root   root      158291 Jan 11 03:22 cron-20260111
+-rw-------   1 root   root      158511 Jan 18 03:23 cron-20260118
+-rw-------   1 root   root      158141 Jan 25 03:12 cron-20260125
+-rw-------   1 root   root      158749 Feb  1 03:44 cron-20260201
+-rw-------   1 root   root      158163 Feb  8 03:24 cron-20260208
+-rw-------   1 root   root      158837 Feb 15 03:43 cron-20260215
+-rw-------   1 root   root      158254 Feb 22 03:44 cron-20260222
+-rw-------   1 root   root      158275 Mar  1 03:30 cron-20260301
+-rw-------   1 root   root      158249 Mar  8 03:20 cron-20260308
+-rw-------   1 root   root      158609 Mar 15 03:07 cron-20260315
+-rw-------   1 root   root      158443 Mar 22 03:23 cron-20260322
+-rw-------   1 root   root      158433 Mar 29 03:43 cron-20260329
+drwxr-xr-x.  2      4 sys         4096 Mar 29 03:43 cups
+-rw-r--r--   1 root   root      160464 Aug  3  2025 dmesg
+-rw-r--r--   1 root   root      160509 Aug  4  2024 dmesg.old
+-rw-r-----.  1 root   root         186 Dec 19  2021 firewalld
+drwx--x--x.  2 root   gdm          202 Aug  3  2025 gdm
+drwxr-xr-x.  2 root   root           6 May 29  2020 glusterfs
+-rw-r--r--.  1 root   root         193 Dec 19  2021 grubby_prune_debug
+-rw-r--r--.  1 root   root      292584 Apr  2 16:49 lastlog
+drwx------.  3 root   root          18 Dec 19  2021 libvirt
+-rw-------   1 root   root           0 Mar 29 03:43 maillog
+-rw-------   1 root   root           0 Aug 17  2025 maillog-20250824
+-rw-------   1 root   root           0 Aug 24  2025 maillog-20250831
+-rw-------   1 root   root           0 Aug 31  2025 maillog-20250907
+-rw-------   1 root   root           0 Sep  7  2025 maillog-20250914
+-rw-------   1 root   root           0 Sep 14  2025 maillog-20250921
+-rw-------   1 root   root           0 Sep 21  2025 maillog-20250928
+-rw-------   1 root   root           0 Sep 28  2025 maillog-20251005
+-rw-------   1 root   root           0 Oct  5 03:14 maillog-20251012
+-rw-------   1 root   root           0 Oct 12 03:22 maillog-20251019
+-rw-------   1 root   root           0 Oct 19 03:49 maillog-20251026
+-rw-------   1 root   root           0 Oct 26 03:34 maillog-20251102
+-rw-------   1 root   root           0 Nov  2 03:35 maillog-20251109
+-rw-------   1 root   root           0 Nov  9 03:41 maillog-20251116
+-rw-------   1 root   root           0 Nov 16 03:28 maillog-20251123
+-rw-------   1 root   root           0 Nov 23 03:16 maillog-20251130
+-rw-------   1 root   root           0 Nov 30 03:47 maillog-20251207
+-rw-------   1 root   root           0 Dec  7 03:39 maillog-20251214
+-rw-------   1 root   root           0 Dec 14 03:43 maillog-20251221
+-rw-------   1 root   root           0 Dec 21 03:17 maillog-20251228
+-rw-------   1 root   root           0 Dec 28 03:18 maillog-20260104
+-rw-------   1 root   root           0 Jan  4 03:23 maillog-20260111
+-rw-------   1 root   root           0 Jan 11 03:22 maillog-20260118
+-rw-------   1 root   root           0 Jan 18 03:23 maillog-20260125
+-rw-------   1 root   root           0 Jan 25 03:12 maillog-20260201
+-rw-------   1 root   root           0 Feb  1 03:44 maillog-20260208
+-rw-------   1 root   root           0 Feb  8 03:24 maillog-20260215
+-rw-------   1 root   root           0 Feb 15 03:43 maillog-20260222
+-rw-------   1 root   root           0 Feb 22 03:44 maillog-20260301
+-rw-------   1 root   root           0 Mar  1 03:30 maillog-20260308
+-rw-------   1 root   root           0 Mar  8 03:20 maillog-20260315
+-rw-------   1 root   root           0 Mar 15 03:07 maillog-20260322
+-rw-------   1 root   root           0 Mar 22 03:23 maillog-20260329
+-rw-------   1 root   root    71615683 Apr  2 16:53 messages
+-rw-------   1 root   root   110422057 Aug 24  2025 messages-20250824
+-rw-------   1 root   root   110405345 Aug 31  2025 messages-20250831
+-rw-------   1 root   root   110530113 Sep  7  2025 messages-20250907
+-rw-------   1 root   root   110395801 Sep 14  2025 messages-20250914
+-rw-------   1 root   root   109951419 Sep 21  2025 messages-20250921
+-rw-------   1 root   root   110368407 Sep 28  2025 messages-20250928
+-rw-------   1 root   root   110289638 Oct  5 03:14 messages-20251005
+-rw-------   1 root   root   110423575 Oct 12 03:22 messages-20251012
+-rw-------   1 root   root   110631734 Oct 19 03:49 messages-20251019
+-rw-------   1 root   root   110174745 Oct 26 03:34 messages-20251026
+-rw-------   1 root   root   110356161 Nov  2 03:35 messages-20251102
+-rw-------   1 root   root   110398363 Nov  9 03:41 messages-20251109
+-rw-------   1 root   root   110201559 Nov 16 03:28 messages-20251116
+-rw-------   1 root   root   110204447 Nov 23 03:16 messages-20251123
+-rw-------   1 root   root   110719867 Nov 30 03:47 messages-20251130
+-rw-------   1 root   root   110113519 Dec  7 03:39 messages-20251207
+-rw-------   1 root   root   110246856 Dec 14 03:43 messages-20251214
+-rw-------   1 root   root   110119431 Dec 21 03:17 messages-20251221
+-rw-------   1 root   root   110207056 Dec 28 03:18 messages-20251228
+-rw-------   1 root   root   110250214 Jan  4 03:23 messages-20260104
+-rw-------   1 root   root   110186786 Jan 11 03:22 messages-20260111
+-rw-------   1 root   root   110207941 Jan 18 03:23 messages-20260118
+-rw-------   1 root   root   110081634 Jan 25 03:12 messages-20260125
+-rw-------   1 root   root   110542333 Feb  1 03:44 messages-20260201
+-rw-------   1 root   root   109980310 Feb  8 03:24 messages-20260208
+-rw-------   1 root   root   110415563 Feb 15 03:43 messages-20260215
+-rw-------   1 root   root   110207560 Feb 22 03:44 messages-20260222
+-rw-------   1 root   root   110046125 Mar  1 03:30 messages-20260301
+-rw-------   1 root   root   110083803 Mar  8 03:20 messages-20260308
+-rw-------   1 root   root   110053234 Mar 15 03:07 messages-20260315
+-rw-------   1 root   root   110386384 Mar 22 03:23 messages-20260322
+-rw-------   1 root   root   110420182 Mar 29 03:43 messages-20260329
+drwxr-xr-x   2 ntp    ntp            6 Jun  1  2020 ntpstats
+drwxr-xr-x.  3 root   root          18 Dec 19  2021 pluto
+drwxr-xr-x  14 root   root        4096 Dec 16 11:30 pods
+drwx------.  2 root   root           6 Feb 25  2020 ppp
+drwxr-xr-x.  2 root   root           6 Dec 12  2018 qemu-ga
+drwxr-xr-x.  2 root   root        4096 Mar 29 03:43 rhsm
+drwxr-xr-x.  2 root   root        4096 Apr  2 00:00 sa
+drwx------.  3 root   root          17 Dec 19  2021 samba
+-rw-------   1 root   root        3243 Apr  2 16:51 secure
+-rw-------   1 root   root        1572 Aug 22  2025 secure-20250824
+-rw-------   1 root   root        4575 Aug 29  2025 secure-20250831
+-rw-------   1 root   root        1975 Sep  5  2025 secure-20250907
+-rw-------   1 root   root        2997 Sep 12  2025 secure-20250914
+-rw-------   1 root   root        1889 Sep 19  2025 secure-20250921
+-rw-------   1 root   root        3318 Sep 26  2025 secure-20250928
+-rw-------   1 root   root        1663 Oct  2 16:11 secure-20251005
+-rw-------   1 root   root         312 Oct 10 16:03 secure-20251012
+-rw-------   1 root   root        3172 Oct 17 16:07 secure-20251019
+-rw-------   1 root   root        3317 Oct 24 16:13 secure-20251026
+-rw-------   1 root   root        3691 Oct 31 15:59 secure-20251102
+-rw-------   1 root   root       92862 Nov  9 03:40 secure-20251109
+-rw-------   1 root   root       66124 Nov 14 16:06 secure-20251116
+-rw-------   1 root   root        2179 Nov 21 16:15 secure-20251123
+-rw-------   1 root   root        4090 Nov 28 16:03 secure-20251130
+-rw-------   1 root   root        3337 Dec  5 16:03 secure-20251207
+-rw-------   1 root   root        4145 Dec 12 17:38 secure-20251214
+-rw-------   1 root   root        4645 Dec 19 16:08 secure-20251221
+-rw-------   1 root   root        2226 Dec 26 16:23 secure-20251228
+-rw-------   1 root   root        1257 Jan  2 16:27 secure-20260104
+-rw-------   1 root   root        1569 Jan  9 16:24 secure-20260111
+-rw-------   1 root   root        1865 Jan 16 17:42 secure-20260118
+-rw-------   1 root   root        3832 Jan 23 16:17 secure-20260125
+-rw-------   1 root   root        2199 Jan 30 16:30 secure-20260201
+-rw-------   1 root   root       93194 Feb  8 03:20 secure-20260208
+-rw-------   1 root   root       32992 Feb 13 16:33 secure-20260215
+-rw-------   1 root   root         630 Feb 20 16:52 secure-20260222
+-rw-------   1 root   root        6886 Feb 27 16:06 secure-20260301
+-rw-------   1 root   root        1911 Mar  6 17:47 secure-20260308
+-rw-------   1 root   root        1566 Mar 13 17:16 secure-20260315
+-rw-------   1 root   root        4547 Mar 20 16:59 secure-20260322
+-rw-------   1 root   root        2512 Mar 27 16:53 secure-20260329
+drwx------.  2 root   root           6 Jan 27  2014 speech-dispatcher
+-rw-------   1 root   root           0 Mar 29 03:43 spooler
+-rw-------   1 root   root           0 Aug 17  2025 spooler-20250824
+-rw-------   1 root   root           0 Aug 24  2025 spooler-20250831
+-rw-------   1 root   root           0 Aug 31  2025 spooler-20250907
+-rw-------   1 root   root           0 Sep  7  2025 spooler-20250914
+-rw-------   1 root   root           0 Sep 14  2025 spooler-20250921
+-rw-------   1 root   root           0 Sep 21  2025 spooler-20250928
+-rw-------   1 root   root           0 Sep 28  2025 spooler-20251005
+-rw-------   1 root   root           0 Oct  5 03:14 spooler-20251012
+-rw-------   1 root   root           0 Oct 12 03:22 spooler-20251019
+-rw-------   1 root   root           0 Oct 19 03:49 spooler-20251026
+-rw-------   1 root   root           0 Oct 26 03:34 spooler-20251102
+-rw-------   1 root   root           0 Nov  2 03:35 spooler-20251109
+-rw-------   1 root   root           0 Nov  9 03:41 spooler-20251116
+-rw-------   1 root   root           0 Nov 16 03:28 spooler-20251123
+-rw-------   1 root   root           0 Nov 23 03:16 spooler-20251130
+-rw-------   1 root   root           0 Nov 30 03:47 spooler-20251207
+-rw-------   1 root   root           0 Dec  7 03:39 spooler-20251214
+-rw-------   1 root   root           0 Dec 14 03:43 spooler-20251221
+-rw-------   1 root   root           0 Dec 21 03:17 spooler-20251228
+-rw-------   1 root   root           0 Dec 28 03:18 spooler-20260104
+-rw-------   1 root   root           0 Jan  4 03:23 spooler-20260111
+-rw-------   1 root   root           0 Jan 11 03:22 spooler-20260118
+-rw-------   1 root   root           0 Jan 18 03:23 spooler-20260125
+-rw-------   1 root   root           0 Jan 25 03:12 spooler-20260201
+-rw-------   1 root   root           0 Feb  1 03:44 spooler-20260208
+-rw-------   1 root   root           0 Feb  8 03:24 spooler-20260215
+-rw-------   1 root   root           0 Feb 15 03:43 spooler-20260222
+-rw-------   1 root   root           0 Feb 22 03:44 spooler-20260301
+-rw-------   1 root   root           0 Mar  1 03:30 spooler-20260308
+-rw-------   1 root   root           0 Mar  8 03:20 spooler-20260315
+-rw-------   1 root   root           0 Mar 15 03:07 spooler-20260322
+-rw-------   1 root   root           0 Mar 22 03:23 spooler-20260329
+-rw-------   1 root   root      697173 Apr  2 16:51 sulog
+drwxr-xr-x.  3 root   root          21 Dec 19  2021 swtpm
+-rw-------.  1 root   root       64128 Apr  2 16:49 tallylog
+drwxr-xr-x.  2 root   root          23 Dec 19  2021 tuned
+-rw-------   1 root   root         696 Nov 25 13:42 vmware-vmtoolsd-root.log
+-rw-------   1 root   root        3856 Nov 25 13:42 vmware-vmusr-root.log
+-rw-r--r--.  1 root   root         600 Aug  3  2025 wpa_supplicant.log
+-rw-rw-r--.  1 root   utmp     1003008 Apr  2 16:49 wtmp
+-rw-------   1 root   root           0 Jan  1  2023 yum.log
+-rw-------.  1 root   root         850 Dec 28  2021 yum.log-20220101
+-rw-------   1 root   root          61 Jan 27  2022 yum.log-20230101
+ 
+1) 로그 파일의 접근권한
+-rw-------. 1 root root        0 Aug  3  2025 /var/log/boot.log
+-rw-------  1 root root   102733 Apr  2 16:50 /var/log/cron
+-rw-------  1 root root 71615683 Apr  2 16:53 /var/log/messages
+-rw-------  1 root root     3243 Apr  2 16:51 /var/log/secure
+#ls -alL /var/adm
+total 4
+drwxr-xr-x.  2 root root    6 Dec 15  2017 .
+drwxr-xr-x. 22 root root 4096 Aug 24  2023 ..
+ 
+<RESULT>양호
+로그 파일의 접근권한이 적절하게 설정되어 있으므로 양호함
+-rw-------. 1 root root        0 Aug  3  2025 /var/log/boot.log
+-rw-------  1 root root   102733 Apr  2 16:50 /var/log/cron
+-rw-------  1 root root 71615683 Apr  2 16:53 /var/log/messages
+-rw-------  1 root root     3243 Apr  2 16:51 /var/log/secure
+<END>
