@@ -500,12 +500,40 @@ public class SecurityScanServlet extends HttpServlet {
                 // "Ⅳ. 보안점검 결과" 시트: G4부터 서버명 가로 나열, 아래로 결과 채움
                 XSSFSheet resultSheet = wb.getSheet("Ⅳ. 보안점검 결과");
                 if (resultSheet != null) {
+                    // 헤더 스타일: F4(row=3, col=5) 서식 복제
+                    XSSFCellStyle headerStyle = wb.createCellStyle();
+                    Row f4Row = resultSheet.getRow(3);
+                    if (f4Row != null) {
+                        Cell f4Cell = f4Row.getCell(5);
+                        if (f4Cell != null) headerStyle.cloneStyleFrom(f4Cell.getCellStyle());
+                    }
+                    // 결과 셀 스타일: 4면 얇은 테두리
+                    XSSFCellStyle borderStyle = wb.createCellStyle();
+                    borderStyle.setBorderTop(BorderStyle.THIN);
+                    borderStyle.setBorderBottom(BorderStyle.THIN);
+                    borderStyle.setBorderLeft(BorderStyle.THIN);
+                    borderStyle.setBorderRight(BorderStyle.THIN);
+
                     for (int si = 0; si < scans.size(); si++) {
                         ScanVO scan = scans.get(si);
-                        setSheetCell(resultSheet, 3, 6 + si, nvlLabel(scan.serverLabel, scan.hostname));
+                        int colIdx = 6 + si;
+                        // 헤더 셀 값 + F4 스타일
+                        setSheetCell(resultSheet, 3, colIdx, nvlLabel(scan.serverLabel, scan.hostname));
+                        Row headerRow = resultSheet.getRow(3);
+                        if (headerRow != null) {
+                            Cell headerCell = headerRow.getCell(colIdx);
+                            if (headerCell != null) headerCell.setCellStyle(headerStyle);
+                        }
+                        // 결과 셀 값 + 테두리 스타일
                         List<ScanItemVO> items = loadItems(conn, scan.scanId);
                         for (int ii = 0; ii < items.size() && (4 + ii) <= 70; ii++) {
-                            setSheetCell(resultSheet, 4 + ii, 6 + si, items.get(ii).result);
+                            int rowIdx = 4 + ii;
+                            setSheetCell(resultSheet, rowIdx, colIdx, items.get(ii).result);
+                            Row resultRow = resultSheet.getRow(rowIdx);
+                            if (resultRow != null) {
+                                Cell resultCell = resultRow.getCell(colIdx);
+                                if (resultCell != null) resultCell.setCellStyle(borderStyle);
+                            }
                         }
                     }
                 }
