@@ -497,6 +497,19 @@ public class SecurityScanServlet extends HttpServlet {
                     }
                 }
 
+                // "Ⅳ. 보안점검 결과" 시트: G4부터 서버명 가로 나열, 아래로 결과 채움
+                XSSFSheet resultSheet = wb.getSheet("Ⅳ. 보안점검 결과");
+                if (resultSheet != null) {
+                    for (int si = 0; si < scans.size(); si++) {
+                        ScanVO scan = scans.get(si);
+                        setSheetCell(resultSheet, 3, 6 + si, nvlLabel(scan.serverLabel, scan.hostname));
+                        List<ScanItemVO> items = loadItems(conn, scan.scanId);
+                        for (int ii = 0; ii < items.size() && (4 + ii) <= 70; ii++) {
+                            setSheetCell(resultSheet, 4 + ii, 6 + si, items.get(ii).result);
+                        }
+                    }
+                }
+
                 String filename = (batchIdStr != null ? "batch_" + batchIdStr : "scan_" + scanIdStr) + "_result.xlsx";
                 resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 resp.setHeader("Content-Disposition",
