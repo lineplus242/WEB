@@ -473,6 +473,7 @@ public class SecurityScanServlet extends HttpServlet {
                             String sheetName = truncate(nvlLabel(scan.serverLabel, scan.hostname), 31);
                             sheet = wb.cloneSheet(tmplIdx, sheetName);
                         }
+                        sheet.setTabColor(new XSSFColor(new byte[]{(byte)0xA6, (byte)0xC9, (byte)0xEC}, null));
 
                         // 서버 정보 셀 채우기 (라벨 옆 값 셀)
                         setSheetCell(sheet, 3, 2, nvlLabel(scan.serverLabel, scan.hostname)); // C4
