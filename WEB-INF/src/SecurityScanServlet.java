@@ -507,12 +507,17 @@ public class SecurityScanServlet extends HttpServlet {
                         Cell f4Cell = f4Row.getCell(5);
                         if (f4Cell != null) headerStyle.cloneStyleFrom(f4Cell.getCellStyle());
                     }
-                    // 결과 셀 스타일: 4면 얇은 테두리
+                    // 결과 셀 스타일: 4면 얇은 테두리 + 글씨 8pt + 가로/세로 중앙 정렬
+                    XSSFFont resultFont = wb.createFont();
+                    resultFont.setFontHeightInPoints((short) 8);
                     XSSFCellStyle borderStyle = wb.createCellStyle();
                     borderStyle.setBorderTop(BorderStyle.THIN);
                     borderStyle.setBorderBottom(BorderStyle.THIN);
                     borderStyle.setBorderLeft(BorderStyle.THIN);
                     borderStyle.setBorderRight(BorderStyle.THIN);
+                    borderStyle.setFont(resultFont);
+                    borderStyle.setAlignment(HorizontalAlignment.CENTER);
+                    borderStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
                     for (int si = 0; si < scans.size(); si++) {
                         ScanVO scan = scans.get(si);
