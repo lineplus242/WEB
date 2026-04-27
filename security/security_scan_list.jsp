@@ -27,6 +27,7 @@
     <title>보안점검 결과 - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,10 +64,6 @@
         .topbar { height: 52px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: #0e0f11; position: sticky; top: 0; z-index: 50; }
         .topbar-title { font-size: 14px; font-weight: 500; color: #f2f3f5; }
         .content { padding: 28px; }
-
-        .theme-toggle { display:flex;gap:4px;background:#0b0c0f;border:1px solid #1e2025;border-radius:8px;padding:3px; }
-        .theme-toggle-btn { padding:4px 12px;font-size:11px;font-weight:500;border:none;background:none;color:#4b5161;cursor:pointer;border-radius:5px;font-family:'DM Sans',sans-serif;transition:background .12s,color .12s; }
-        .theme-toggle-btn.active { background:#1a1e2e;color:#6b9af5; }
 
         .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
         .page-title { font-size: 18px; font-weight: 500; color: #f2f3f5; }
@@ -164,9 +161,7 @@
         [data-theme="light"] .main { background: #f5f6f8; }
         [data-theme="light"] .topbar { background: #fff; border-color: #e5e7eb; }
         [data-theme="light"] .topbar-title { color: #111827; }
-        [data-theme="light"] .theme-toggle { background: #f3f4f6; border-color: #e5e7eb; }
-        [data-theme="light"] .theme-toggle-btn { color: #9ca3af; }
-        [data-theme="light"] .theme-toggle-btn.active { background: #fff; color: #3b6ef5; }
+
         [data-theme="light"] .table-wrap { background: #fff; border-color: #e5e7eb; }
         [data-theme="light"] th { color: #9ca3af; border-color: #e5e7eb; }
         [data-theme="light"] td { color: #374151; border-color: #f3f4f6; }

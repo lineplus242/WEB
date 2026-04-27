@@ -54,9 +54,10 @@ public class SecurityScanServlet extends HttpServlet {
 
         String action = nvlD(req.getParameter("action"), "list");
         switch (action) {
-            case "detail"        -> doDetail(req, resp);
-            case "downloadExcel" -> doDownloadExcel(req, resp);
-            default              -> doList(req, resp);
+            case "detail"           -> doDetail(req, resp);
+            case "downloadExcel"    -> doDownloadExcel(req, resp);
+            case "getEvidenceTypes" -> doGetEvidenceTypes(req, resp);
+            default                 -> doList(req, resp);
         }
     }
 
@@ -71,10 +72,13 @@ public class SecurityScanServlet extends HttpServlet {
 
         String action = nvlD(req.getParameter("action"), "");
         switch (action) {
-            case "upload"     -> doUpload(req, resp);
-            case "delete"     -> doDelete(req, resp);
-            case "updateItem" -> doUpdateItem(req, resp);
-            default           -> resp.sendError(404);
+            case "upload"                   -> doUpload(req, resp);
+            case "delete"                   -> doDelete(req, resp);
+            case "updateItem"               -> doUpdateItem(req, resp);
+            case "saveEvidenceTypes"        -> doSaveEvidenceTypes(req, resp);
+            case "getEvidenceTypes"         -> doGetEvidenceTypes(req, resp);
+            case "batchUpdateEvidenceTypes" -> doBatchUpdateEvidenceTypes(req, resp);
+            default                         -> resp.sendError(404);
         }
     }
 
@@ -120,6 +124,9 @@ public class SecurityScanServlet extends HttpServlet {
     // ─────────────────────────────────────────────────────
     private void doDetail(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        resp.setHeader("Pragma", "no-cache");
+        resp.setDateHeader("Expires", 0);
         String scanIdStr  = req.getParameter("scanId");
         String batchIdStr = req.getParameter("batchId");
 
@@ -489,7 +496,7 @@ public class SecurityScanServlet extends HttpServlet {
                             Row row = sheet.getRow(11 + ii);
                             if (row == null) row = sheet.createRow(11 + ii);
                             setCell(row, 8, item.result);  // I: 결과
-                            setCell(row, 10, buildEvidence(item.evidence, item.txtEvidence, item.refEvidence)); // K: 현황
+                            setCell(row, 10, buildEvidence(item.evidence, item.txtEvidence, item.refEvidence, item.evidenceTypes)); // K: 현황
                         }
                     }
                     // 배치: 원본 template 시트 삭제
@@ -548,6 +555,7 @@ public class SecurityScanServlet extends HttpServlet {
                 resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 resp.setHeader("Content-Disposition",
                     "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + java.net.URLEncoder.encode(filename, "UTF-8"));
+                wb.setForceFormulaRecalculation(true);
                 wb.write(resp.getOutputStream());
             }
         } catch (Exception e) {
@@ -557,7 +565,7 @@ public class SecurityScanServlet extends HttpServlet {
 
     private List<ScanItemVO> loadItems(Connection conn, int scanId) throws SQLException {
         List<ScanItemVO> list = new ArrayList<>();
-        String sql = "SELECT item_id, i_code, i_title, inspection_code, original_result, result, evidence, txt_evidence, ref_evidence, memo " +
+        String sql = "SELECT item_id, i_code, i_title, inspection_code, original_result, result, evidence, txt_evidence, ref_evidence, memo, evidence_types " +
                      "FROM security_scan_item WHERE scan_id=? ORDER BY item_id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, scanId);
@@ -574,6 +582,8 @@ public class SecurityScanServlet extends HttpServlet {
                     item.txtEvidence    = nvl(rs.getString("txt_evidence"));
                     item.refEvidence    = nvl(rs.getString("ref_evidence"));
                     item.memo           = nvl(rs.getString("memo"));
+                    String et = rs.getString("evidence_types");
+                    item.evidenceTypes  = (et != null && !et.isEmpty()) ? et : "xml,txt,ref";
                     list.add(item);
                 }
             }
@@ -581,11 +591,19 @@ public class SecurityScanServlet extends HttpServlet {
         return list;
     }
 
-    private String buildEvidence(String xml, String txt, String ref) {
+    private String buildEvidence(String xml, String txt, String ref, String evidenceTypes) {
+        String types = (evidenceTypes != null && !evidenceTypes.isEmpty()) ? evidenceTypes : "xml,txt,ref";
+        java.util.List<String[]> parts = new java.util.ArrayList<>();
+        if (types.contains("xml") && !xml.isEmpty()) parts.add(new String[]{"[XML]", xml});
+        if (types.contains("txt") && !txt.isEmpty()) parts.add(new String[]{"[TXT]", txt});
+        if (types.contains("ref") && !ref.isEmpty()) parts.add(new String[]{"[REF]", ref});
+        boolean showLabel = parts.size() >= 2;
         StringBuilder sb = new StringBuilder();
-        if (!xml.isEmpty()) sb.append("[XML]\n").append(xml);
-        if (!txt.isEmpty()) { if (sb.length() > 0) sb.append("\n\n"); sb.append("[TXT]\n").append(txt); }
-        if (!ref.isEmpty()) { if (sb.length() > 0) sb.append("\n\n"); sb.append("[REF]\n").append(ref); }
+        for (String[] part : parts) {
+            if (sb.length() > 0) sb.append("\n\n");
+            if (showLabel) sb.append(part[0]).append("\n");
+            sb.append(part[1]);
+        }
         return sb.toString();
     }
 
@@ -643,16 +661,19 @@ public class SecurityScanServlet extends HttpServlet {
     private void doUpdateItem(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        int    itemId = Integer.parseInt(nvlD(req.getParameter("itemId"), "0"));
-        String result = nvl(req.getParameter("result")).trim();
-        String memo   = nvl(req.getParameter("memo")).trim();
+        int    itemId       = Integer.parseInt(nvlD(req.getParameter("itemId"), "0"));
+        String result       = nvl(req.getParameter("result")).trim();
+        String memo         = nvl(req.getParameter("memo")).trim();
+        String evidenceTypes = nvl(req.getParameter("evidenceTypes")).trim();
+        if (evidenceTypes.isEmpty()) evidenceTypes = "xml,txt,ref";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE security_scan_item SET result=?, memo=? WHERE item_id=?")) {
+                    "UPDATE security_scan_item SET result=?, memo=?, evidence_types=? WHERE item_id=?")) {
                 ps.setString(1, result);
                 ps.setString(2, memo.isEmpty() ? null : memo);
-                ps.setInt(3, itemId);
+                ps.setString(3, evidenceTypes);
+                ps.setInt(4, itemId);
                 ps.executeUpdate();
             }
             try (PreparedStatement ps = conn.prepareStatement(
@@ -662,6 +683,76 @@ public class SecurityScanServlet extends HttpServlet {
                     if (rs.next()) updateScanCounts(conn, rs.getInt(1));
                 }
             }
+            resp.getWriter().write("{\"ok\":true}");
+        } catch (SQLException e) {
+            resp.getWriter().write("{\"ok\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 항목 현황 타입 조회 (카드 오픈 시 DB 직접 조회)
+    // ─────────────────────────────────────────────────────
+    private void doGetEvidenceTypes(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        resp.setHeader("Cache-Control", "no-store");
+        int itemId = Integer.parseInt(nvlD(req.getParameter("itemId"), "0"));
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT evidence_types FROM security_scan_item WHERE item_id=?")) {
+            ps.setInt(1, itemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String et = rs.getString("evidence_types");
+                    if (et == null || et.isEmpty()) et = "xml,txt,ref";
+                    resp.getWriter().write("{\"ok\":true,\"evidenceTypes\":\"" + et + "\"}");
+                } else {
+                    resp.getWriter().write("{\"ok\":false}");
+                }
+            }
+        } catch (SQLException e) {
+            resp.getWriter().write("{\"ok\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 항목별 현황 타입 즉시 저장 (체크박스 onChange, JSON 응답)
+    // ─────────────────────────────────────────────────────
+    private void doSaveEvidenceTypes(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        int    itemId        = Integer.parseInt(nvlD(req.getParameter("itemId"), "0"));
+        String evidenceTypes = nvl(req.getParameter("evidenceTypes")).trim();
+        if (evidenceTypes.isEmpty()) evidenceTypes = "xml,txt,ref";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE security_scan_item SET evidence_types=? WHERE item_id=?")) {
+            ps.setString(1, evidenceTypes);
+            ps.setInt(2, itemId);
+            ps.executeUpdate();
+            resp.getWriter().write("{\"ok\":true}");
+        } catch (SQLException e) {
+            resp.getWriter().write("{\"ok\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────
+    // 서버 전체 현황 타입 일괄 수정 (JSON 응답)
+    // ─────────────────────────────────────────────────────
+    private void doBatchUpdateEvidenceTypes(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        int    scanId        = Integer.parseInt(nvlD(req.getParameter("scanId"), "0"));
+        String evidenceTypes = nvl(req.getParameter("evidenceTypes")).trim();
+        if (evidenceTypes.isEmpty()) evidenceTypes = "xml,txt,ref";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE security_scan_item SET evidence_types=? WHERE scan_id=?")) {
+            ps.setString(1, evidenceTypes);
+            ps.setInt(2, scanId);
+            ps.executeUpdate();
             resp.getWriter().write("{\"ok\":true}");
         } catch (SQLException e) {
             resp.getWriter().write("{\"ok\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
@@ -796,5 +887,6 @@ public class SecurityScanServlet extends HttpServlet {
     public static class ScanItemVO {
         public int    itemId;
         public String iCode, iTitle, inspectionCode, originalResult, result, evidence, txtEvidence, refEvidence, memo;
+        public String evidenceTypes;
     }
 }

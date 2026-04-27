@@ -45,6 +45,7 @@
     <title><%= currentScan != null ? nvl(currentScan.serverLabel) + " - 보안점검" : "보안점검 상세" %> - 관리 시스템</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style/light.css">
     <script>(function(){if(localStorage.getItem('theme')==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -85,9 +86,6 @@
         .back-btn:hover { background: #161820; color: #c8cad0; }
         .content { padding: 28px; }
 
-        .theme-toggle { display:flex;gap:4px;background:#0b0c0f;border:1px solid #1e2025;border-radius:8px;padding:3px; }
-        .theme-toggle-btn { padding:4px 12px;font-size:11px;font-weight:500;border:none;background:none;color:#4b5161;cursor:pointer;border-radius:5px;font-family:'DM Sans',sans-serif;transition:background .12s,color .12s; }
-        .theme-toggle-btn.active { background:#1a1e2e;color:#6b9af5; }
 
         /* 서버 탭 */
         .server-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #1e2025; padding-bottom: 0; overflow-x: auto; }
@@ -182,6 +180,17 @@
         .btn-cancel { padding: 7px 14px; background: #1e2025; color: #6b7280; border: none; border-radius: 7px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.12s; }
         .btn-cancel:hover { background: #252830; }
 
+        /* 현황 타입 선택 */
+        .ev-type-checks { display: flex; gap: 12px; align-items: center; }
+        .ev-type-checks label { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #a0a7b4; cursor: pointer; }
+        .ev-type-checks input[type=checkbox] { accent-color: #3b6ef5; width: 14px; height: 14px; cursor: pointer; }
+        .batch-ev-bar { display: flex; align-items: center; gap: 14px; background: #131519; border: 1px solid #1e2025; border-radius: 10px; padding: 12px 18px; margin-bottom: 14px; flex-wrap: wrap; }
+        .batch-ev-label { font-size: 12px; color: #6b7280; white-space: nowrap; }
+        .btn-batch-apply { padding: 5px 14px; font-size: 12px; background: #1a1e2e; color: #6b9af5; border: 1px solid #2a3050; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .12s; }
+        .btn-batch-apply:hover { background: #222740; }
+        .edit-ev-types { display: flex; flex-direction: column; gap: 4px; }
+        .edit-ev-types .edit-label { font-size: 10px; font-weight: 500; color: #3d4251; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+
         .toast { position: fixed; bottom: 24px; right: 24px; background: #1a1e2e; border: 1px solid #252830; border-radius: 10px; padding: 12px 18px; font-size: 13px; color: #c8cad0; z-index: 9999; opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.ok   { border-color: #1a3a25; color: #22c97a; }
@@ -203,8 +212,6 @@
         [data-theme="light"] .user-info span { color: #9ca3af; }
         [data-theme="light"] .topbar { background: #fff; border-color: #e5e7eb; }
         [data-theme="light"] .topbar-title { color: #111827; }
-        [data-theme="light"] .theme-toggle { background: #f3f4f6; border-color: #e5e7eb; }
-        [data-theme="light"] .theme-toggle-btn.active { background: #fff; color: #3b6ef5; }
         [data-theme="light"] .scan-header { background: #fff; border-color: #e5e7eb; }
         [data-theme="light"] .scan-title { color: #111827; }
         [data-theme="light"] .stat-card { background: #fff; border-color: #e5e7eb; }
@@ -225,6 +232,11 @@
         [data-theme="light"] .server-tabs { border-color: #e5e7eb; }
         [data-theme="light"] .server-tab { color: #9ca3af; }
         [data-theme="light"] .server-tab.active { color: #3b6ef5; }
+        [data-theme="light"] .batch-ev-bar { background: #fff; border-color: #e5e7eb; }
+        [data-theme="light"] .batch-ev-label { color: #374151; }
+        [data-theme="light"] .ev-type-checks label { color: #374151; }
+        [data-theme="light"] .btn-batch-apply { background: #eff2ff; color: #3b6ef5; border-color: #c7d2fe; }
+        [data-theme="light"] .btn-batch-apply:hover { background: #e0e7ff; }
     </style>
 </head>
 <body>
@@ -318,8 +330,11 @@
         <% if (!tabScans.isEmpty() && batchId != null) { %>
         <div class="server-tabs">
             <% for (ScanVO tab : tabScans) {
-               boolean isActive = currentScan != null && tab.scanId == currentScan.scanId; %>
-            <a href="../SecurityScan?action=detail&batchId=<%= batchId %>&scanId=<%= tab.scanId %>"
+               boolean isActive = currentScan != null && tab.scanId == currentScan.scanId;
+               String tabUrl = "../SecurityScan?action=detail&batchId=" + batchId + "&scanId=" + tab.scanId;
+            %>
+            <a href="<%= tabUrl %>"
+               onclick="event.preventDefault(); location.replace('<%= tabUrl %>&_nc='+Date.now());"
                class="server-tab <%= isActive ? "active" : "" %>">
                 <%= nvl(tab.serverLabel).isEmpty() ? nvl(tab.hostname) : nvl(tab.serverLabel) %>
                 <% if (tab.vulnCount > 0) { %><span style="color:#e05656;font-size:10px;margin-left:4px;">● <%= tab.vulnCount %></span><% } %>
@@ -383,6 +398,37 @@
             <button class="filter-btn" onclick="filter('수동점검', this)">수동점검 (<%= currentScan.manualCount %>)</button>
         </div>
 
+        <!-- 서버별 현황 타입 일괄 설정 -->
+        <%
+            String batchEt = "xml,txt,ref";
+            boolean batchMixed = false;
+            if (!items.isEmpty()) {
+                String bFirst = (items.get(0).evidenceTypes != null && !items.get(0).evidenceTypes.isEmpty())
+                                ? items.get(0).evidenceTypes : "xml,txt,ref";
+                boolean allSame = true;
+                for (ScanItemVO bIt : items) {
+                    String bEt = (bIt.evidenceTypes != null && !bIt.evidenceTypes.isEmpty())
+                                 ? bIt.evidenceTypes : "xml,txt,ref";
+                    if (!bEt.equals(bFirst)) { allSame = false; break; }
+                }
+                if (allSame) { batchEt = bFirst; } else { batchMixed = true; batchEt = ""; }
+            }
+        %>
+        <div class="batch-ev-bar">
+            <span class="batch-ev-label">이 서버 전체 현황 타입</span>
+            <div class="ev-type-checks">
+                <label><input type="checkbox" id="bev_xml" value="xml" <%= batchEt.contains("xml") ? "checked" : "" %>>XML</label>
+                <label><input type="checkbox" id="bev_txt" value="txt" <%= batchEt.contains("txt") ? "checked" : "" %>>TXT</label>
+                <label><input type="checkbox" id="bev_ref" value="ref" <%= batchEt.contains("ref") ? "checked" : "" %>>REF</label>
+            </div>
+            <button class="btn-batch-apply" onclick="batchApplyEvidenceTypes(<%= currentScan.scanId %>)">전체 항목에 적용</button>
+            <% if (batchMixed) { %>
+            <span style="font-size:11px;color:#f5a623;">※ 항목마다 타입이 다릅니다 — 선택 후 전체 적용하거나 각 항목에서 개별 조정하세요</span>
+            <% } else { %>
+            <span style="font-size:11px;color:#3d4251;">※ 적용 후 각 항목에서 개별 조정 가능</span>
+            <% } %>
+        </div>
+
         <!-- 전체접기/펼치기 + 엑셀 다운로드 -->
         <div class="fold-bar">
             <button class="fold-btn" onclick="foldAll()">전체 접기</button>
@@ -397,7 +443,7 @@
                boolean isModified = !item.result.equals(item.originalResult);
                boolean hasMemo    = !item.memo.isEmpty();
             %>
-            <div class="item-card <%= borderClass(item.result) %>" data-result="<%= item.result %>" id="card_<%= item.itemId %>">
+            <div class="item-card <%= borderClass(item.result) %>" data-result="<%= item.result %>" data-et="<%= (item.evidenceTypes != null && !item.evidenceTypes.isEmpty()) ? item.evidenceTypes : "xml,txt,ref" %>" id="card_<%= item.itemId %>">
                 <div class="item-top" onclick="toggleCard(this.closest('.item-card'))">
                     <span class="item-code"><%= nvl(item.iCode) %></span>
                     <span class="item-title"><%= nvl(item.iTitle) %></span>
@@ -453,6 +499,14 @@
                                     <option value="N/A"    <%= "N/A".equals(item.result)     ? "selected" : "" %>>N/A</option>
                                 </select>
                             </div>
+                            <div class="edit-ev-types">
+                                <div class="edit-label">현황 포함 타입</div>
+                                <div class="ev-type-checks">
+                                    <label><input type="checkbox" id="et_xml_<%= item.itemId %>" value="xml" onchange="saveEvidenceTypes(<%= item.itemId %>)">XML</label>
+                                    <label><input type="checkbox" id="et_txt_<%= item.itemId %>" value="txt" onchange="saveEvidenceTypes(<%= item.itemId %>)">TXT</label>
+                                    <label><input type="checkbox" id="et_ref_<%= item.itemId %>" value="ref" onchange="saveEvidenceTypes(<%= item.itemId %>)">REF</label>
+                                </div>
+                            </div>
                             <div class="edit-memo">
                                 <div class="edit-label">메모</div>
                                 <textarea class="edit-textarea" id="memo_<%= item.itemId %>" placeholder="담당자 메모, 조치사항 등" oninput="autoResize(this)"><%= nvl(item.memo).replace("<","&lt;").replace(">","&gt;") %></textarea>
@@ -506,14 +560,43 @@ function updateStatCards() {
     document.getElementById('pct-manual').textContent = Math.round(counts.manual / t * 100) + '% / ' + counts.total + '건';
 }
 
+function saveEvidenceTypes(itemId) {
+    var evTypes = ['xml','txt','ref']
+        .filter(function(t) {
+            var cb = document.getElementById('et_' + t + '_' + itemId);
+            return cb && cb.checked;
+        }).join(',');
+    var et = evTypes.length > 0 ? evTypes : 'xml,txt,ref';
+
+    var card = document.getElementById('card_' + itemId);
+    fetch('../SecurityScan?action=saveEvidenceTypes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'itemId=' + itemId + '&evidenceTypes=' + encodeURIComponent(et)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.ok) {
+            if (card) card.dataset.et = et;
+        } else {
+            showToast('현황 타입 저장 실패', 'err');
+        }
+    })
+    .catch(function() { showToast('현황 타입 저장 오류', 'err'); });
+}
+
 function saveItem(itemId) {
     const result = document.getElementById('sel_'  + itemId).value;
     const memo   = document.getElementById('memo_' + itemId).value;
+    const evTypes = ['xml','txt','ref']
+        .filter(t => document.getElementById('et_' + t + '_' + itemId)?.checked)
+        .join(',');
+    const evidenceTypes = evTypes.length > 0 ? evTypes : 'xml,txt,ref';
 
     fetch('../SecurityScan?action=updateItem', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'itemId=' + itemId + '&result=' + encodeURIComponent(result) + '&memo=' + encodeURIComponent(memo)
+        body: 'itemId=' + itemId + '&result=' + encodeURIComponent(result) + '&memo=' + encodeURIComponent(memo) + '&evidenceTypes=' + encodeURIComponent(evidenceTypes)
     })
     .then(r => r.json())
     .then(data => {
@@ -532,12 +615,43 @@ function saveItem(itemId) {
             card.classList.remove('border-ok','border-vuln','border-manual','border-na');
             card.classList.add(borderClass(result));
             card.dataset.result = result;
+            card.dataset.et = evidenceTypes;
             showToast('저장되었습니다', 'ok');
         } else {
             showToast('저장 실패: ' + (data.error || ''), 'err');
         }
     })
     .catch(() => showToast('저장 중 오류가 발생했습니다', 'err'));
+}
+
+function batchApplyEvidenceTypes(scanId) {
+    const evTypes = ['xml','txt','ref']
+        .filter(t => document.getElementById('bev_' + t)?.checked)
+        .join(',');
+    const evidenceTypes = evTypes.length > 0 ? evTypes : 'xml,txt,ref';
+
+    fetch('../SecurityScan?action=batchUpdateEvidenceTypes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'scanId=' + scanId + '&evidenceTypes=' + encodeURIComponent(evidenceTypes)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            document.querySelectorAll('.item-card[data-et]').forEach(function(card) {
+                card.dataset.et = evidenceTypes;
+                var iid = card.id.replace('card_', '');
+                ['xml', 'txt', 'ref'].forEach(function(t) {
+                    var cb = document.getElementById('et_' + t + '_' + iid);
+                    if (cb) cb.checked = evidenceTypes.indexOf(t) !== -1;
+                });
+            });
+            showToast('전체 항목에 적용되었습니다', 'ok');
+        } else {
+            showToast('적용 실패: ' + (data.error || ''), 'err');
+        }
+    })
+    .catch(() => showToast('적용 중 오류가 발생했습니다', 'err'));
 }
 
 function resultClass(r) {
@@ -564,6 +678,21 @@ function switchTab(itemId, type, btn) {
 function toggleCard(card) {
     card.classList.toggle('open');
     sessionStorage.setItem('scan_open_' + card.id, card.classList.contains('open') ? '1' : '0');
+    if (card.classList.contains('open')) {
+        var itemId = card.id.replace('card_', '');
+        fetch('../SecurityScan?action=getEvidenceTypes&itemId=' + itemId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    var et = data.evidenceTypes || 'xml,txt,ref';
+                    card.dataset.et = et;
+                    ['xml', 'txt', 'ref'].forEach(function(t) {
+                        var cb = document.getElementById('et_' + t + '_' + itemId);
+                        if (cb) cb.checked = et.indexOf(t) !== -1;
+                    });
+                }
+            });
+    }
 }
 function foldAll() {
     document.querySelectorAll('.item-card').forEach(c => {
@@ -609,15 +738,34 @@ function setTheme(t) {
     document.querySelectorAll('.edit-textarea').forEach(el => {
         if (el.value.trim()) autoResize(el);
     });
-    // 카드 펼침 상태 복원
-    document.querySelectorAll('.item-card').forEach(c => {
+    // 카드 펼침 상태 복원 + 열린 카드는 DB에서 evidence_types 직접 조회
+    document.querySelectorAll('.item-card').forEach(function(c) {
         if (sessionStorage.getItem('scan_open_' + c.id) === '1') {
             c.classList.add('open');
-            const ta = c.querySelector('.edit-textarea');
+            var ta = c.querySelector('.edit-textarea');
             if (ta && ta.value.trim()) autoResize(ta);
+            // 자동으로 열린 카드도 DB에서 evidence_types 조회하여 체크박스 설정
+            var itemId = c.id.replace('card_', '');
+            fetch('../SecurityScan?action=getEvidenceTypes&itemId=' + itemId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.ok) {
+                        var et = data.evidenceTypes || 'xml,txt,ref';
+                        c.dataset.et = et;
+                        ['xml', 'txt', 'ref'].forEach(function(t) {
+                            var cb = document.getElementById('et_' + t + '_' + itemId);
+                            if (cb) cb.checked = et.indexOf(t) !== -1;
+                        });
+                    }
+                });
         }
     });
 })();
+
+// BFCache에서 복원될 때 강제 리로드 (체크박스 상태 초기화 방지)
+window.addEventListener('pageshow', function(e) {
+    if (e.persisted) location.reload();
+});
 </script>
 </body>
 </html>
