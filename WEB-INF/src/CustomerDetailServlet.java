@@ -27,16 +27,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/CustomerDetailServlet")
 public class CustomerDetailServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
-
-    @Override
-    public void init() throws ServletException {
-        try { Class.forName("org.mariadb.jdbc.Driver"); }
-        catch (ClassNotFoundException e) { throw new ServletException(e); }
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -76,7 +66,7 @@ public class CustomerDetailServlet extends HttpServlet {
     private void doDetail(HttpServletRequest req, HttpServletResponse resp, int custSeq)
             throws ServletException, IOException {
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
 
             // 고객사 기본정보
             CustomerVO customer = null;
@@ -252,7 +242,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String projSeqStr = req.getParameter("projSeq");
         int custSeq = Integer.parseInt(custSeqStr);
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (projSeqStr == null || projSeqStr.isEmpty()) {
                 // 신규
                 String sql = "INSERT INTO tb_project (cust_seq, proj_name, contract_amt, contract_start, contract_end, status, manager_name, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?)";
@@ -300,7 +290,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String custSeqStr = req.getParameter("custSeq");
         String projSeqStr = req.getParameter("projSeq");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                  "UPDATE tb_project SET del_yn='Y', upd_user=? WHERE proj_seq=?")) {
             ps.setString(1, loginUser);
@@ -323,7 +313,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String assetSeqStr = req.getParameter("assetSeq");
         int custSeq = Integer.parseInt(custSeqStr);
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (assetSeqStr == null || assetSeqStr.isEmpty()) {
                 // 신규
                 String sql = "INSERT INTO tb_asset (cust_seq, parent_seq, asset_type, asset_role, virt_type, asset_name, maker, model, size_u, hostname, ip_addr, disk, cpu, memory, os_info, location, status, purchase_dt, account_info, memo, reg_user) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -403,7 +393,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String custSeqStr  = req.getParameter("custSeq");
         String assetSeqStr = req.getParameter("assetSeq");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                  "UPDATE tb_asset SET del_yn='Y', upd_user=? WHERE asset_seq=?")) {
             ps.setString(1, loginUser);
@@ -425,7 +415,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String rackSeqStr = req.getParameter("rackSeq");
         int custSeq = Integer.parseInt(custSeqStr);
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (rackSeqStr == null || rackSeqStr.isEmpty()) {
                 // sort_order = 현재 고객사의 최대값 + 1
                 int nextOrder = 0;
@@ -469,7 +459,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String custSeqStr = req.getParameter("custSeq");
         String rackSeqStr = req.getParameter("rackSeq");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             // 랙 유닛 먼저 삭제
             try (PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_rack_unit WHERE rack_seq=?")) {
                 ps.setInt(1, Integer.parseInt(rackSeqStr));
@@ -493,7 +483,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String unitSeqStr = req.getParameter("unitSeq");
         String rackSeqStr = req.getParameter("rackSeq");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (unitSeqStr == null || unitSeqStr.isEmpty()) {
                 String sql = "INSERT INTO tb_rack_unit (rack_seq, side, start_u, size_u, device_name, device_type, ip_addr, memo) VALUES (?,?,?,?,?,?,?,?)";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -534,7 +524,7 @@ public class CustomerDetailServlet extends HttpServlet {
         String custSeqStr = req.getParameter("custSeq");
         String unitSeqStr = req.getParameter("unitSeq");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement("DELETE FROM tb_rack_unit WHERE unit_seq=?")) {
             ps.setInt(1, Integer.parseInt(unitSeqStr));
             ps.executeUpdate();
@@ -554,7 +544,7 @@ public class CustomerDetailServlet extends HttpServlet {
             resp.sendRedirect("CustomerDetailServlet?action=detail&custSeq=" + custSeqStr + "&tab=asset&sub=rack");
             return;
         }
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             String[] seqs = order.split(",");
             for (int i = 0; i < seqs.length; i++) {
                 String s = seqs[i].trim();

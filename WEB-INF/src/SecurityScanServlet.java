@@ -30,17 +30,11 @@ import java.util.regex.*;
 @MultipartConfig(maxFileSize = 52_428_800, maxRequestSize = 209_715_200)
 public class SecurityScanServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
     private static final String UPLOAD_DIR = "/var/lib/tomcat/webapps/app/upload/security/";
 
     @Override
     public void init() throws ServletException {
-        try {
-            Class.forName("org.mariadb.jdbc.Driver");
-            new File(UPLOAD_DIR).mkdirs();
-        } catch (ClassNotFoundException e) { throw new ServletException(e); }
+        new File(UPLOAD_DIR).mkdirs();
     }
 
     // ─────────────────────────────────────────────────────
@@ -89,7 +83,7 @@ public class SecurityScanServlet extends HttpServlet {
             throws ServletException, IOException {
         List<ScanVO> scans = new ArrayList<>();
         List<BatchVO> batches = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             String bsql = "SELECT b.batch_id, b.batch_name, b.created_at, COUNT(s.scan_id) AS server_count " +
                           "FROM security_scan_batch b LEFT JOIN security_scan s ON s.batch_id=b.batch_id " +
                           "GROUP BY b.batch_id ORDER BY b.created_at DESC";
@@ -134,7 +128,7 @@ public class SecurityScanServlet extends HttpServlet {
         ScanVO currentScan = null;
         List<ScanItemVO> items = new ArrayList<>();
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (batchIdStr != null) {
                 int batchId = Integer.parseInt(batchIdStr);
                 String bsql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
@@ -235,7 +229,7 @@ public class SecurityScanServlet extends HttpServlet {
         boolean isMulti = fileParts.size() > 1;
         Integer batchId = null;
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (isMulti) {
                 String bName = batchName.isEmpty() ? "배치 " + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date()) : batchName;
                 try (PreparedStatement ps = conn.prepareStatement(
@@ -415,7 +409,7 @@ public class SecurityScanServlet extends HttpServlet {
         String batchIdStr = req.getParameter("batchId");
 
         List<ScanVO> scans = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             String sql;
             if (batchIdStr != null) {
                 sql = "SELECT scan_id, server_label, hostname, ip_address, os_type, scan_date, uploaded_at, " +
@@ -637,7 +631,7 @@ public class SecurityScanServlet extends HttpServlet {
             throws IOException {
         String scanIdStr  = req.getParameter("scanId");
         String batchIdStr = req.getParameter("batchId");
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (batchIdStr != null) {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "DELETE FROM security_scan_batch WHERE batch_id=?")) {
@@ -667,7 +661,7 @@ public class SecurityScanServlet extends HttpServlet {
         String evidenceTypes = nvl(req.getParameter("evidenceTypes")).trim();
         if (evidenceTypes.isEmpty()) evidenceTypes = "xml,txt,ref";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(
                     "UPDATE security_scan_item SET result=?, memo=?, evidence_types=? WHERE item_id=?")) {
                 ps.setString(1, result);
@@ -697,7 +691,7 @@ public class SecurityScanServlet extends HttpServlet {
         resp.setContentType("application/json;charset=UTF-8");
         resp.setHeader("Cache-Control", "no-store");
         int itemId = Integer.parseInt(nvlD(req.getParameter("itemId"), "0"));
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "SELECT evidence_types FROM security_scan_item WHERE item_id=?")) {
             ps.setInt(1, itemId);
@@ -725,7 +719,7 @@ public class SecurityScanServlet extends HttpServlet {
         String evidenceTypes = nvl(req.getParameter("evidenceTypes")).trim();
         if (evidenceTypes.isEmpty()) evidenceTypes = "xml,txt,ref";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "UPDATE security_scan_item SET evidence_types=? WHERE item_id=?")) {
             ps.setString(1, evidenceTypes);
@@ -747,7 +741,7 @@ public class SecurityScanServlet extends HttpServlet {
         String evidenceTypes = nvl(req.getParameter("evidenceTypes")).trim();
         if (evidenceTypes.isEmpty()) evidenceTypes = "xml,txt,ref";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "UPDATE security_scan_item SET evidence_types=? WHERE scan_id=?")) {
             ps.setString(1, evidenceTypes);

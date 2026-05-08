@@ -21,16 +21,6 @@ import java.util.*;
 @MultipartConfig(maxFileSize = 10_000_000, maxRequestSize = 15_000_000)
 public class ImageLibraryServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
-
-    @Override
-    public void init() throws ServletException {
-        try { Class.forName("org.mariadb.jdbc.Driver"); }
-        catch (ClassNotFoundException e) { throw new ServletException(e); }
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -72,7 +62,7 @@ public class ImageLibraryServlet extends HttpServlet {
         String keyword  = req.getParameter("q");
 
         StringBuilder sb = new StringBuilder("[");
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             StringBuilder sql = new StringBuilder(
                 "SELECT img_seq, img_name, file_path, file_size, content_type, category, uploaded_by, created_at " +
                 "FROM tb_image_library WHERE is_deleted=0");
@@ -152,7 +142,7 @@ public class ImageLibraryServlet extends HttpServlet {
             int    fileSize    = (int) filePart.getSize();
             String contentType = filePart.getContentType();
 
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+            try (Connection conn = DBUtil.getConnection();
                  PreparedStatement ps = conn.prepareStatement(
                      "INSERT INTO tb_image_library (img_name, file_name, file_path, file_size, content_type, category, uploaded_by) VALUES (?,?,?,?,?,?,?)",
                      Statement.RETURN_GENERATED_KEYS)) {
@@ -189,7 +179,7 @@ public class ImageLibraryServlet extends HttpServlet {
             jsonError(resp, "imgSeq 필요");
             return;
         }
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                  "UPDATE tb_image_library SET is_deleted=1 WHERE img_seq=?")) {
             ps.setInt(1, Integer.parseInt(imgSeqStr));

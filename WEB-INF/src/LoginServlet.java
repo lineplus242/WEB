@@ -2,7 +2,6 @@ package com.admin.servlet;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -19,21 +18,6 @@ import jakarta.servlet.http.HttpSession;
  */
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
-
-    // ── DB 설정 (실제 환경에 맞게 수정) ──────────────────────
-    private static final String DB_URL      = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER     = "root";
-    private static final String DB_PASSWORD = "wkd11!#Eod";
-    // ────────────────────────────────────────────────────────
-
-    @Override
-    public void init() throws ServletException {
-        try {
-            Class.forName("org.mariadb.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new ServletException("MySQL JDBC 드라이버 로드 실패", e);
-        }
-    }
 
     /** GET 요청 → 로그인 페이지로 리다이렉트 */
     @Override
@@ -101,7 +85,7 @@ public class LoginServlet extends HttpServlet {
                    + "  AND password = HEX(SHA2(?, 256)) "
                    + "  AND del_yn = 'N'";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, userId);

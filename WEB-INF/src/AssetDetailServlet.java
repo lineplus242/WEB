@@ -22,16 +22,6 @@ import java.util.*;
 @MultipartConfig(maxFileSize = 10_000_000, maxRequestSize = 15_000_000)
 public class AssetDetailServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
-
-    @Override
-    public void init() throws ServletException {
-        try { Class.forName("org.mariadb.jdbc.Driver"); }
-        catch (ClassNotFoundException e) { throw new ServletException(e); }
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -64,7 +54,7 @@ public class AssetDetailServlet extends HttpServlet {
     private void doDetail(HttpServletRequest req, HttpServletResponse resp, int assetSeq)
             throws ServletException, IOException {
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
 
             // 자산 기본정보 + 고객사명
             AssetDetailVO asset = null;
@@ -249,7 +239,7 @@ public class AssetDetailServlet extends HttpServlet {
                 throw new IOException("업로드 디렉터리 생성 실패: " + uploadDir + " (권한 확인 필요)");
             }
 
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            try (Connection conn = DBUtil.getConnection()) {
                 // 기존 파일 삭제
                 try (PreparedStatement ps = conn.prepareStatement(
                         "SELECT file_path FROM tb_asset_photo WHERE asset_seq=? AND side=?")) {
@@ -300,7 +290,7 @@ public class AssetDetailServlet extends HttpServlet {
         }
         int imgSeq = Integer.parseInt(imgSeqStr);
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             // 라이브러리 이미지 경로 조회
             String libFilePath = null;
             try (PreparedStatement ps = conn.prepareStatement(
@@ -359,7 +349,7 @@ public class AssetDetailServlet extends HttpServlet {
         int assetSeq = Integer.parseInt(req.getParameter("assetSeq"));
         String side  = "B".equals(req.getParameter("side")) ? "B" : "F";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT file_path, source_type FROM tb_asset_photo WHERE asset_seq=? AND side=?")) {
                 ps.setInt(1, assetSeq); ps.setString(2, side);
@@ -410,7 +400,7 @@ public class AssetDetailServlet extends HttpServlet {
         String actualDstSeqStr  = swap ? retSeqSave                               : dstSeqStr;
         String actualDstDevName = swap ? null                                     : dstDeviceName;
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (portSeqStr == null || portSeqStr.isEmpty()) {
                 int sort = 0;
                 try (PreparedStatement ps = conn.prepareStatement(
@@ -460,7 +450,7 @@ public class AssetDetailServlet extends HttpServlet {
         String retSeq = req.getParameter("returnAssetSeq");
         int redirectSeq = (retSeq != null && !retSeq.isEmpty()) ? Integer.parseInt(retSeq) : assetSeq;
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "DELETE FROM tb_port_map WHERE port_seq=? AND asset_seq=?")) {
             ps.setInt(1, portSeq); ps.setInt(2, assetSeq);

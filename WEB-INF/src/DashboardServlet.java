@@ -3,7 +3,6 @@ package com.admin.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -20,16 +19,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/DashboardServlet")
 public class DashboardServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
-
-    @Override
-    public void init() throws ServletException {
-        try { Class.forName("org.mariadb.jdbc.Driver"); }
-        catch (ClassNotFoundException e) { throw new ServletException(e); }
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -37,7 +26,7 @@ public class DashboardServlet extends HttpServlet {
         resp.setContentType("application/json; charset=UTF-8");
         PrintWriter out = resp.getWriter();
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
 
             // ── 전체 사용자 수
             long totalUsers = queryLong(conn,

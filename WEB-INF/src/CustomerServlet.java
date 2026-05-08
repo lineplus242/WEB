@@ -25,16 +25,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/CustomerServlet")
 public class CustomerServlet extends HttpServlet {
 
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
-
-    @Override
-    public void init() throws ServletException {
-        try { Class.forName("org.mariadb.jdbc.Driver"); }
-        catch (ClassNotFoundException e) { throw new ServletException(e); }
-    }
-
     // ── GET ──────────────────────────────────────────────
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -88,7 +78,7 @@ public class CustomerServlet extends HttpServlet {
         if (!keyword.isEmpty()) where.append(" AND (c.cust_name LIKE ? OR c.manager_name LIKE ? OR c.cust_code LIKE ?)");
         if (!status.isEmpty())  where.append(" AND c.status = ?");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
 
             // 전체 건수
             String cntSql = "SELECT COUNT(*) FROM tb_customer c " + where;
@@ -168,7 +158,7 @@ public class CustomerServlet extends HttpServlet {
 
         if (seqStr != null && !seqStr.isEmpty()) {
             // 수정: DB에서 기존 데이터 로드
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            try (Connection conn = DBUtil.getConnection()) {
                 String sql = "SELECT * FROM tb_customer WHERE cust_seq=? AND del_yn='N'";
                 CustomerVO v = null;
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -225,7 +215,7 @@ public class CustomerServlet extends HttpServlet {
                    + " status, memo, reg_user) "
                    + "VALUES (?,?,?,?,?,?,?,?,?,?)";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             int newCustSeq;
             try {
@@ -279,7 +269,7 @@ public class CustomerServlet extends HttpServlet {
 
         int custSeq = Integer.parseInt(req.getParameter("custSeq"));
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -322,7 +312,7 @@ public class CustomerServlet extends HttpServlet {
         String loginUser = (String) req.getSession().getAttribute("loginUser");
         String seqStr    = req.getParameter("custSeq");
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                  "UPDATE tb_customer SET del_yn='Y', upd_user=? WHERE cust_seq=?")) {
 

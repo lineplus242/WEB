@@ -1,7 +1,10 @@
 package com.admin.servlet;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,16 +29,6 @@ import jakarta.servlet.http.HttpSession;
  */
 @WebServlet("/UserServlet")
 public class UserServlet extends HttpServlet {
-
-    private static final String DB_URL  = "jdbc:mariadb://localhost:3306/admin_db?characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "wkd11!#Eod";
-
-    @Override
-    public void init() throws ServletException {
-        try { Class.forName("org.mariadb.jdbc.Driver"); }
-        catch (ClassNotFoundException e) { throw new ServletException(e); }
-    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -89,7 +82,7 @@ public class UserServlet extends HttpServlet {
 
         String whereKw = keyword.isEmpty() ? "" : " AND (user_id LIKE ? OR user_name LIKE ?)";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
 
             String cntSql = "SELECT COUNT(*) FROM tb_user WHERE del_yn='N'" + whereKw;
             try (PreparedStatement ps = conn.prepareStatement(cntSql)) {
@@ -139,7 +132,7 @@ public class UserServlet extends HttpServlet {
 
         String seqStr = req.getParameter("userSeq");
         if (seqStr != null && !seqStr.isEmpty()) {
-            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+            try (Connection conn = DBUtil.getConnection()) {
                 String sql = "SELECT user_seq, user_id, user_name, email, role, use_yn FROM tb_user WHERE user_seq=? AND del_yn='N'";
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, Integer.parseInt(seqStr));
@@ -183,7 +176,7 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             // 중복 ID 체크
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COUNT(*) FROM tb_user WHERE user_id=? AND del_yn='N'")) {
@@ -231,7 +224,7 @@ public class UserServlet extends HttpServlet {
 
         // 대상 계정의 user_id 조회
         String targetUserId = "";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement("SELECT user_id FROM tb_user WHERE user_seq=?")) {
                 ps.setInt(1, Integer.parseInt(seqStr));
                 ResultSet rs = ps.executeQuery();
@@ -241,7 +234,7 @@ public class UserServlet extends HttpServlet {
 
         boolean isAdminAccount = "admin".equals(targetUserId);
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             if (isAdminAccount) {
                 // admin 계정: 비밀번호만 변경 가능
                 if (newPw != null && !newPw.trim().isEmpty()) {
@@ -295,7 +288,7 @@ public class UserServlet extends HttpServlet {
 
         // 본인 계정 삭제 방지
         String targetId = "";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement("SELECT user_id FROM tb_user WHERE user_seq=?")) {
                 ps.setInt(1, Integer.parseInt(seqStr));
                 ResultSet rs = ps.executeQuery();
@@ -343,7 +336,7 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+        try (Connection conn = DBUtil.getConnection()) {
             // 현재 비밀번호 확인
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COUNT(*) FROM tb_user WHERE user_id=? AND password=HEX(SHA2(?,256)) AND del_yn='N'")) {
