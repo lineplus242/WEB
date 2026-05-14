@@ -1,0 +1,28 @@
+/* ── 다크모드 기본 chip 스타일 ──────────────────────────────── */
+/* .chip.chip-* 이중 클래스 선택자 (명시도 0,0,2,0) >
+   JSP 인라인 .chip-* (명시도 0,0,1,0) → !important 없이 우선 적용  */
+
+.chip.chip-g      { background:#0d2a1a; color:#22c97a; }
+.chip.chip-r      { background:#2a0d0d; color:#e05656; }
+.chip.chip-y      { background:#2a1a05; color:#d4a017; }
+.chip.chip-na     { background:#1a1e25; color:#6b7280; }
+.chip.chip-admin  { background:#1a1030; color:#a78bfa; }
+.chip.chip-user   { background:#0d1530; color:#6b9af5; }
+.chip.chip-blue   { background:#0d1a30; color:#5a9af5; }
+.chip.chip-purple { background:#1a0d30; color:#9b6af5; }
+.chip.chip-teal   { background:#0d2825; color:#3dd6c8; }
+
+/* dot 숨김 — .chip.chip-dot::before (명시도 0,0,2,1) > JSP .chip-dot::before (0,0,1,1) */
+.chip.chip-dot::before { display:none; }
+
+/* ── 라이트모드 오버라이드 (파스텔 배경) ────────────────────── */
+[data-theme="light"] .chip.chip-g      { background:#dcfce7; color:#15803d; }
+[data-theme="light"] .chip.chip-r      { background:#fee2e2; color:#dc2626; }
+[data-theme="light"] .chip.chip-y      { background:#fef9c3; color:#b45309; }
+[data-theme="light"] .chip.chip-na     { background:#f1f5f9; color:#64748b; }
+[data-theme="light"] .chip.chip-admin  { background:#f5f3ff; color:#7c3aed; }
+[data-theme="light"] .chip.chip-user   { background:#dbeafe; color:#1d4ed8; }
+[data-theme="light"] .chip.chip-blue   { background:#dbeafe; color:#1d4ed8; }
+[data-theme="light"] .chip.chip-purple { background:#f5f3ff; color:#7c3aed; }
+[data-theme="light"] .chip.chip-teal   { background:#ccfbf1; color:#0f766e; }
+

@@ -1,0 +1,45 @@
+/* ── 버튼 통합 디자인 ────────────────────────────────────────── */
+/* body .btn (명시도 0,0,1,1) > JSP 인라인 .btn (0,0,1,0) → 우선 적용  */
+/* .btn.btn-* (명시도 0,0,2,0) > JSP 인라인 .btn-* (0,0,1,0) → 우선 적용 */
+
+/* ── 기본 형태: 모든 .btn을 pill 모양으로 ── */
+body .btn { border-radius: 99px; }
+
+/* ── 다크모드 기본 버튼 스타일 ── */
+.btn.btn-primary  { background:#3b6ef5; color:#fff; border:none; }
+.btn.btn-primary:hover  { background:#2f5ee0; }
+
+.btn.btn-secondary  { background:transparent; color:#c8cad0; border:1px solid #2e3142; }
+.btn.btn-secondary:hover { background:#1a1e2e; }
+
+.btn.btn-danger  { background:transparent; color:#e05656; border:1px solid #5a2222; }
+.btn.btn-danger:hover { background:rgba(224,86,86,0.08); }
+
+.btn.btn-ghost  { background:none; color:#6b7280; border:none; }
+.btn.btn-ghost:hover { background:#161820; color:#c8cad0; }
+
+/* ── 라이트모드 오버라이드 ── */
+[data-theme="light"] body .btn { border-radius: 99px; }
+
+[data-theme="light"] .btn.btn-primary { background:#3b6ef5; color:#fff; border:none; }
+[data-theme="light"] .btn.btn-primary:hover { background:#2f5ee0; }
+
+[data-theme="light"] .btn.btn-secondary { background:transparent; color:#1e293b; border:1px solid #cbd5e1; }
+[data-theme="light"] .btn.btn-secondary:hover { background:#f1f5f9; }
+
+[data-theme="light"] .btn.btn-danger { background:transparent; color:#dc2626; border:1px solid #fca5a5; }
+[data-theme="light"] .btn.btn-danger:hover { background:#fef2f2; }
+
+[data-theme="light"] .btn.btn-ghost { background:none; color:#64748b; border:none; }
+[data-theme="light"] .btn.btn-ghost:hover { background:#f1f5f9; color:#1e293b; }
+
+/* ── 담당자 추가/삭제 아이콘 버튼 (customer_form) ── */
+.btn-add-mgr  { background:#1a1e2e; color:#6b9af5; border:1px solid #252d44; }
+.btn-add-mgr:hover { background:#202540; }
+.btn-del-mgr  { background:#1a0d0d; color:#e05656; border:1px solid #2a0d0d; }
+.btn-del-mgr:hover { background:#2a1010; }
+
+[data-theme="light"] .btn-add-mgr  { background:#eff6ff; color:#3b6ef5; border:1px solid #bfdbfe; }
+[data-theme="light"] .btn-add-mgr:hover { background:#dbeafe; }
+[data-theme="light"] .btn-del-mgr  { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+[data-theme="light"] .btn-del-mgr:hover { background:#fee2e2; }

@@ -1,3 +1,6 @@
+@import url('chips.css');
+@import url('buttons.css');
+
 /* ── 테마 토글 ── */
 .theme-toggle {
     display: inline-flex;

@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List, com.admin.servlet.SecurityScanServlet.*" %>
+<%@ page import="java.util.List, java.util.Map, com.admin.servlet.SecurityScanServlet.*" %>
 <%
     if (session.getAttribute("loginUser") == null) { response.sendRedirect("../login.jsp"); return; }
     String loginName = (String) session.getAttribute("loginName");
@@ -13,6 +13,16 @@
 
     if (tabScans == null) tabScans = new java.util.ArrayList<>();
     if (items    == null) items    = new java.util.ArrayList<>();
+
+    @SuppressWarnings("unchecked")
+    Map<String, ScanItemVO> followupItemMap =
+        (Map<String, ScanItemVO>) request.getAttribute("followupItemMap");
+    if (followupItemMap == null) followupItemMap = new java.util.LinkedHashMap<>();
+
+    String followupFileName  = (String) request.getAttribute("followupFileName");
+    String followupScanDate  = (String) request.getAttribute("followupScanDate");
+    if (followupFileName == null) followupFileName = "";
+    if (followupScanDate == null) followupScanDate = "";
 %>
 <%!
     String nvl(String s) { return s != null ? s : ""; }
@@ -126,6 +136,17 @@
         .fold-btn { padding: 5px 12px; font-size: 11px; font-weight: 500; border: 1px solid #252830; background: none; color: #6b7280; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.12s, color 0.12s; }
         .fold-btn:hover { background: #161820; color: #c8cad0; }
 
+        /* 요약 카드 이행점검 분할 */
+        .stat-split { display: flex; gap: 0; margin-top: 6px; }
+        .stat-sub { flex: 1; min-width: 0; }
+        .stat-sub + .stat-sub { border-left: 1px solid #1e2025; padding-left: 14px; margin-left: 2px; }
+        .stat-sub-label { font-size: 9px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 3px; }
+        .stat-sub-label.lbl-sec { color: #6b9af5; }
+        .stat-sub-label.lbl-fu  { color: #f5a623; }
+        .stat-sub-num { font-size: 22px; font-weight: 500; font-family: 'DM Mono', monospace; line-height: 1.1; }
+        .stat-sub-pct { font-size: 10px; color: #4b5161; margin-top: 1px; }
+        [data-theme="light"] .stat-sub + .stat-sub { border-color: #e5e7eb; }
+
         /* 항목 카드 */
         .item-list { display: flex; flex-direction: column; gap: 8px; }
         .item-card { background: #131519; border: 1px solid #1e2025; border-radius: 10px; overflow: hidden; border-left: 3px solid transparent; transition: border-color 0.12s; }
@@ -136,7 +157,13 @@
 
         .item-top { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
         .item-top:hover { background: rgba(255,255,255,0.02); }
-        .item-code { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: #6b9af5; background: #1a1e2e; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; }
+        .item-code { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 5px; flex-shrink: 0; white-space: nowrap; }
+        .border-ok     .item-code { color:#22c97a; background:#0d2a1a; }
+        .border-vuln   .item-code { color:#e05656; background:#2a0d0d; }
+        .border-manual .item-code { color:#f5a623; background:#2a1a05; }
+        [data-theme="light"] .border-ok     .item-code { color:#15803d; background:#dcfce7; }
+        [data-theme="light"] .border-vuln   .item-code { color:#dc2626; background:#fee2e2; }
+        [data-theme="light"] .border-manual .item-code { color:#b45309; background:#fef9c3; }
         .item-title { flex: 1; font-size: 13px; color: #e8e9eb; font-weight: 500; line-height: 1.4; }
         .item-chevron { width: 14px; height: 14px; color: #3d4251; flex-shrink: 0; transition: transform 0.18s; }
         .item-card.open .item-chevron { transform: rotate(180deg); }
@@ -195,6 +222,41 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.ok   { border-color: #1a3a25; color: #22c97a; }
         .toast.err  { border-color: #3d0f0f; color: #e05656; }
+
+        /* chip 레이블 */
+        .chip-label { background: #1e2025; color: #6b7280; font-size: 9px; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.04em; }
+        .chip-label-fu { color: #f5a623; }
+        [data-theme="light"] .chip-label { background: #f3f4f6; }
+        /* 좌우 2단 레이아웃 */
+        .scan-cols { display: grid; gap: 0; }
+        .scan-cols.has-followup { grid-template-columns: 1fr 1fr; border-top: 1px solid #1e2025; }
+        .scan-cols.no-followup  { grid-template-columns: 1fr; }
+        .scan-col { min-width: 0; }
+        .scan-col + .scan-col { border-left: 1px solid #1e2025; }
+        .scan-col-header { padding: 7px 16px; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #1e2025; }
+        .scan-col-header.hdr-security { color: #6b9af5; }
+        .scan-col-header.hdr-followup  { color: #f5a623; }
+        [data-theme="light"] .scan-cols.has-followup { border-color: #e5e7eb; }
+        [data-theme="light"] .scan-col + .scan-col { border-color: #e5e7eb; }
+        [data-theme="light"] .scan-col-header { border-color: #e5e7eb; }
+
+        /* 이행점검 모달 */
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+        .modal-backdrop.open { display: flex; }
+        .modal { background: #131519; border: 1px solid #1e2025; border-radius: 14px; width: 480px; max-width: 95vw; }
+        .modal-header { padding: 18px 22px 14px; border-bottom: 1px solid #1e2025; display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 14px; font-weight: 500; color: #f2f3f5; }
+        .modal-close { background: none; border: none; color: #4b5161; cursor: pointer; padding: 4px; border-radius: 4px; }
+        .modal-close:hover { color: #c8cad0; background: #1e2025; }
+        .modal-body { padding: 18px 22px; }
+        .modal-footer { padding: 14px 22px; border-top: 1px solid #1e2025; display: flex; justify-content: flex-end; gap: 8px; }
+        .fu-file-zone { border: 1.5px dashed #252830; border-radius: 8px; padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 0; transition: border-color 0.12s, background 0.12s; }
+        .fu-file-zone:hover, .fu-file-zone.dragover { border-color: #3b6ef5; background: rgba(59,110,245,0.05); }
+        [data-theme="light"] .modal { background: #fff; border-color: #e5e7eb; }
+        [data-theme="light"] .modal-header { border-color: #e5e7eb; }
+        [data-theme="light"] .modal-title { color: #111827; }
+        [data-theme="light"] .modal-footer { border-color: #e5e7eb; }
+        [data-theme="light"] .fu-file-zone { border-color: #d1d5db; }
 
         .error-bar { background: #2a0d0d; border: 1px solid #3d0f0f; border-radius: 8px; padding: 10px 14px; color: #e05656; font-size: 13px; margin-bottom: 16px; }
 
@@ -357,34 +419,108 @@
             </div>
             <div class="scan-meta">
                 <div class="meta-item"><strong>OS</strong><%= nvl(currentScan.osType).isEmpty() ? "-" : nvl(currentScan.osType) %></div>
-                <div class="meta-item"><strong>점검일</strong><%= shortDate(currentScan.scanDate) %></div>
-                <div class="meta-item"><strong>파일</strong><span style="font-family:'DM Mono',monospace;font-size:11px;"><%= nvl(currentScan.fileName) %></span></div>
+                <div class="meta-item">
+                    <strong>보안점검일</strong><%= shortDate(currentScan.scanDate) %>
+                    <% if (!followupScanDate.isEmpty()) { %>
+                    <br><strong style="color:#f5a623;">이행점검일</strong><span style="color:#f5a623;"><%= shortDate(followupScanDate) %></span>
+                    <% } %>
+                </div>
+                <div class="meta-item">
+                    <strong>보안점검 파일</strong>
+                    <span style="font-family:'DM Mono',monospace;font-size:11px;"><%= nvl(currentScan.fileName) %></span>
+                    <% if (!followupFileName.isEmpty()) { %>
+                    <br><strong style="color:#f5a623;">이행점검 파일</strong>
+                    <span style="font-family:'DM Mono',monospace;font-size:11px;color:#f5a623;"><%= followupFileName %></span>
+                    <% } %>
+                </div>
             </div>
         </div>
 
         <!-- 요약 카드 -->
+        <%
+            int fuOkCnt = 0, fuVulnCnt = 0, fuManualCnt = 0;
+            boolean hasFuStats = currentScan.followupScanId > 0 && !followupItemMap.isEmpty();
+            if (hasFuStats) {
+                for (ScanItemVO fuSt : followupItemMap.values()) {
+                    if ("양호".equals(fuSt.result)) fuOkCnt++;
+                    else if ("취약".equals(fuSt.result)) fuVulnCnt++;
+                    else fuManualCnt++;
+                }
+            }
+            int fuTotalCnt = fuOkCnt + fuVulnCnt + fuManualCnt;
+            int sc = currentScan.totalCount > 0 ? currentScan.totalCount : 1;
+            int ft = fuTotalCnt > 0 ? fuTotalCnt : 1;
+        %>
         <div class="stat-cards">
+            <!-- 양호 -->
             <div class="stat-card stat-ok">
-                <div>
+                <div style="flex:1;min-width:0;">
                     <div class="stat-label">양호</div>
+                    <% if (hasFuStats) { %>
+                    <div class="stat-split">
+                        <div class="stat-sub">
+                            <div class="stat-sub-label lbl-sec">보안</div>
+                            <div class="stat-sub-num" id="cnt-ok"><%= currentScan.okCount %></div>
+                            <div class="stat-sub-pct" id="pct-ok"><%= String.format("%.0f", currentScan.okCount * 100.0 / sc) %>% / <%= currentScan.totalCount %>건</div>
+                        </div>
+                        <div class="stat-sub">
+                            <div class="stat-sub-label lbl-fu">이행</div>
+                            <div class="stat-sub-num"><%= fuOkCnt %></div>
+                            <div class="stat-sub-pct"><%= String.format("%.0f", fuOkCnt * 100.0 / ft) %>% / <%= fuTotalCnt %>건</div>
+                        </div>
+                    </div>
+                    <% } else { %>
                     <div class="stat-num" id="cnt-ok"><%= currentScan.okCount %></div>
-                    <div class="stat-pct" id="pct-ok"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.okCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
+                    <div class="stat-pct" id="pct-ok"><%= String.format("%.0f", currentScan.okCount * 100.0 / sc) %>% / <%= currentScan.totalCount %>건</div>
+                    <% } %>
                 </div>
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#22c97a" stroke-width="1.5" width="36" height="36"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
+            <!-- 취약 -->
             <div class="stat-card stat-vuln">
-                <div>
+                <div style="flex:1;min-width:0;">
                     <div class="stat-label">취약</div>
+                    <% if (hasFuStats) { %>
+                    <div class="stat-split">
+                        <div class="stat-sub">
+                            <div class="stat-sub-label lbl-sec">보안</div>
+                            <div class="stat-sub-num" id="cnt-vuln"><%= currentScan.vulnCount %></div>
+                            <div class="stat-sub-pct" id="pct-vuln"><%= String.format("%.0f", currentScan.vulnCount * 100.0 / sc) %>% / <%= currentScan.totalCount %>건</div>
+                        </div>
+                        <div class="stat-sub">
+                            <div class="stat-sub-label lbl-fu">이행</div>
+                            <div class="stat-sub-num"><%= fuVulnCnt %></div>
+                            <div class="stat-sub-pct"><%= String.format("%.0f", fuVulnCnt * 100.0 / ft) %>% / <%= fuTotalCnt %>건</div>
+                        </div>
+                    </div>
+                    <% } else { %>
                     <div class="stat-num" id="cnt-vuln"><%= currentScan.vulnCount %></div>
-                    <div class="stat-pct" id="pct-vuln"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.vulnCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
+                    <div class="stat-pct" id="pct-vuln"><%= String.format("%.0f", currentScan.vulnCount * 100.0 / sc) %>% / <%= currentScan.totalCount %>건</div>
+                    <% } %>
                 </div>
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#e05656" stroke-width="1.5" width="36" height="36"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
+            <!-- 수동점검 -->
             <div class="stat-card stat-manual">
-                <div>
+                <div style="flex:1;min-width:0;">
                     <div class="stat-label">수동점검</div>
+                    <% if (hasFuStats) { %>
+                    <div class="stat-split">
+                        <div class="stat-sub">
+                            <div class="stat-sub-label lbl-sec">보안</div>
+                            <div class="stat-sub-num" id="cnt-manual"><%= currentScan.manualCount %></div>
+                            <div class="stat-sub-pct" id="pct-manual"><%= String.format("%.0f", currentScan.manualCount * 100.0 / sc) %>% / <%= currentScan.totalCount %>건</div>
+                        </div>
+                        <div class="stat-sub">
+                            <div class="stat-sub-label lbl-fu">이행</div>
+                            <div class="stat-sub-num"><%= fuManualCnt %></div>
+                            <div class="stat-sub-pct"><%= String.format("%.0f", fuManualCnt * 100.0 / ft) %>% / <%= fuTotalCnt %>건</div>
+                        </div>
+                    </div>
+                    <% } else { %>
                     <div class="stat-num" id="cnt-manual"><%= currentScan.manualCount %></div>
-                    <div class="stat-pct" id="pct-manual"><%= currentScan.totalCount > 0 ? String.format("%.0f", currentScan.manualCount * 100.0 / currentScan.totalCount) : 0 %>% / <%= currentScan.totalCount %>건</div>
+                    <div class="stat-pct" id="pct-manual"><%= String.format("%.0f", currentScan.manualCount * 100.0 / sc) %>% / <%= currentScan.totalCount %>건</div>
+                    <% } %>
                 </div>
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.5" width="36" height="36"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
@@ -429,10 +565,27 @@
             <% } %>
         </div>
 
-        <!-- 전체접기/펼치기 + 엑셀 다운로드 -->
+        <!-- 전체접기/펼치기 + 이행점검 + 엑셀 다운로드 -->
         <div class="fold-bar">
             <button class="fold-btn" onclick="foldAll()">전체 접기</button>
             <button class="fold-btn" onclick="expandAll()">전체 펼치기</button>
+            <%
+               String fuLabel = nvl(currentScan.serverLabel).isEmpty() ? nvl(currentScan.hostname) : nvl(currentScan.serverLabel);
+               String fuHost  = nvl(currentScan.hostname);
+            %>
+            <% if (currentScan.followupScanId == 0) { %>
+            <button class="fold-btn"
+                    onclick="openFollowupModal(<%= currentScan.scanId %>, '<%= escJs(fuLabel) %>', '<%= escJs(fuHost) %>')"
+                    style="color:#f5a623;border-color:#3d2d0a;">이행점검 업로드</button>
+            <% } else {
+               String fuLabelEsc = escJs(fuLabel);
+               String fuHostEsc  = escJs(fuHost);
+            %>
+            <span style="font-size:11px;color:#22c97a;padding:5px 10px;">✓ 이행점검 완료</span>
+            <button class="fold-btn"
+                    onclick="openFollowupModal(<%= currentScan.scanId %>, '<%= fuLabelEsc %>', '<%= fuHostEsc %>')"
+                    style="color:#f5a623;border-color:#3d2d0a;">수정</button>
+            <% } %>
             <a href="../SecurityScan?action=downloadExcel&<%= batchId != null ? "batchId=" + batchId : "scanId=" + currentScan.scanId %>"
                class="fold-btn" style="text-decoration:none; margin-left:auto;">↓ 엑셀 내려받기</a>
         </div>
@@ -442,6 +595,7 @@
             <% for (ScanItemVO item : items) {
                boolean isModified = !item.result.equals(item.originalResult);
                boolean hasMemo    = !item.memo.isEmpty();
+               ScanItemVO fuItem  = followupItemMap.get(item.iCode);
             %>
             <div class="item-card <%= borderClass(item.result) %>" data-result="<%= item.result %>" data-et="<%= (item.evidenceTypes != null && !item.evidenceTypes.isEmpty()) ? item.evidenceTypes : "xml,txt,ref" %>" id="card_<%= item.itemId %>">
                 <div class="item-top" onclick="toggleCard(this.closest('.item-card'))">
@@ -454,68 +608,124 @@
                         <% if (isModified) { %>
                         <span class="modified-badge">수정됨</span>
                         <% } %>
+                        <span class="chip-label">보안</span>
                         <span class="chip <%= resultClass(item.result) %>" id="chip_<%= item.itemId %>"><%= nvl(item.result) %></span>
+                        <% if (fuItem != null) { %>
+                        <span class="chip-label chip-label-fu">이행</span>
+                        <span class="chip <%= resultClass(fuItem.result) %>" id="fu_chip_<%= fuItem.itemId %>"><%= nvl(fuItem.result) %></span>
+                        <% } %>
                     </div>
                     <svg class="item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
                 <div class="item-body">
-                    <div class="ev-tabs">
-                        <div class="ev-tab-bar">
-                            <button class="ev-tab-btn active" onclick="switchTab(<%= item.itemId %>, 'xml', this)">XML</button>
-                            <button class="ev-tab-btn"        onclick="switchTab(<%= item.itemId %>, 'txt', this)">TXT</button>
-                            <button class="ev-tab-btn"        onclick="switchTab(<%= item.itemId %>, 'ref', this)">REF</button>
-                        </div>
-                        <div class="ev-panel active" id="ev-xml-<%= item.itemId %>">
-                            <% if (!item.evidence.isEmpty()) { %>
-                            <pre class="evidence-pre"><%= escHtml(item.evidence) %></pre>
-                            <% } else { %>
-                            <div class="ev-empty">데이터가 없습니다</div>
-                            <% } %>
-                        </div>
-                        <div class="ev-panel" id="ev-txt-<%= item.itemId %>">
-                            <% if (!item.txtEvidence.isEmpty()) { %>
-                            <pre class="evidence-pre"><%= escHtml(item.txtEvidence) %></pre>
-                            <% } else { %>
-                            <div class="ev-empty">데이터가 없습니다</div>
-                            <% } %>
-                        </div>
-                        <div class="ev-panel" id="ev-ref-<%= item.itemId %>">
-                            <% if (!item.refEvidence.isEmpty()) { %>
-                            <pre class="evidence-pre"><%= escHtml(item.refEvidence) %></pre>
-                            <% } else { %>
-                            <div class="ev-empty">데이터가 없습니다</div>
-                            <% } %>
-                        </div>
-                    </div>
-                    <!-- 인라인 편집 -->
-                    <div class="item-edit">
-                        <div class="edit-row">
-                            <div class="edit-field-status">
-                                <div class="edit-label">결과 상태</div>
-                                <select class="edit-select" id="sel_<%= item.itemId %>">
-                                    <option value="양호"    <%= "양호".equals(item.result)    ? "selected" : "" %>>양호</option>
-                                    <option value="취약"    <%= "취약".equals(item.result)    ? "selected" : "" %>>취약</option>
-                                    <option value="수동점검" <%= "수동점검".equals(item.result) ? "selected" : "" %>>수동점검</option>
-                                    <option value="N/A"    <%= "N/A".equals(item.result)     ? "selected" : "" %>>N/A</option>
-                                </select>
+                <div class="scan-cols <%= fuItem != null ? "has-followup" : "no-followup" %>">
+
+                    <!-- ── 좌: 보안점검 ── -->
+                    <div class="scan-col">
+                        <div class="scan-col-header hdr-security">보안점검</div>
+                        <div class="ev-tabs">
+                            <div class="ev-tab-bar">
+                                <button class="ev-tab-btn active" onclick="switchTab(<%= item.itemId %>, 'xml', this)">XML</button>
+                                <button class="ev-tab-btn"        onclick="switchTab(<%= item.itemId %>, 'txt', this)">TXT</button>
+                                <button class="ev-tab-btn"        onclick="switchTab(<%= item.itemId %>, 'ref', this)">REF</button>
                             </div>
-                            <div class="edit-ev-types">
-                                <div class="edit-label">현황 포함 타입</div>
-                                <div class="ev-type-checks">
-                                    <label><input type="checkbox" id="et_xml_<%= item.itemId %>" value="xml" onchange="saveEvidenceTypes(<%= item.itemId %>)">XML</label>
-                                    <label><input type="checkbox" id="et_txt_<%= item.itemId %>" value="txt" onchange="saveEvidenceTypes(<%= item.itemId %>)">TXT</label>
-                                    <label><input type="checkbox" id="et_ref_<%= item.itemId %>" value="ref" onchange="saveEvidenceTypes(<%= item.itemId %>)">REF</label>
+                            <div class="ev-panel active" id="ev-xml-<%= item.itemId %>">
+                                <% if (!item.evidence.isEmpty()) { %><pre class="evidence-pre"><%= escHtml(item.evidence) %></pre>
+                                <% } else { %><div class="ev-empty">데이터가 없습니다</div><% } %>
+                            </div>
+                            <div class="ev-panel" id="ev-txt-<%= item.itemId %>">
+                                <% if (!item.txtEvidence.isEmpty()) { %><pre class="evidence-pre"><%= escHtml(item.txtEvidence) %></pre>
+                                <% } else { %><div class="ev-empty">데이터가 없습니다</div><% } %>
+                            </div>
+                            <div class="ev-panel" id="ev-ref-<%= item.itemId %>">
+                                <% if (!item.refEvidence.isEmpty()) { %><pre class="evidence-pre"><%= escHtml(item.refEvidence) %></pre>
+                                <% } else { %><div class="ev-empty">데이터가 없습니다</div><% } %>
+                            </div>
+                        </div>
+                        <div class="item-edit">
+                            <div class="edit-row">
+                                <div class="edit-field-status">
+                                    <div class="edit-label">결과 상태</div>
+                                    <select class="edit-select" id="sel_<%= item.itemId %>">
+                                        <option value="양호"    <%= "양호".equals(item.result)    ? "selected" : "" %>>양호</option>
+                                        <option value="취약"    <%= "취약".equals(item.result)    ? "selected" : "" %>>취약</option>
+                                        <option value="수동점검" <%= "수동점검".equals(item.result) ? "selected" : "" %>>수동점검</option>
+                                        <option value="N/A"    <%= "N/A".equals(item.result)     ? "selected" : "" %>>N/A</option>
+                                    </select>
+                                </div>
+                                <div class="edit-ev-types">
+                                    <div class="edit-label">현황 포함 타입</div>
+                                    <div class="ev-type-checks">
+                                        <label><input type="checkbox" id="et_xml_<%= item.itemId %>" value="xml" onchange="saveEvidenceTypes(<%= item.itemId %>)">XML</label>
+                                        <label><input type="checkbox" id="et_txt_<%= item.itemId %>" value="txt" onchange="saveEvidenceTypes(<%= item.itemId %>)">TXT</label>
+                                        <label><input type="checkbox" id="et_ref_<%= item.itemId %>" value="ref" onchange="saveEvidenceTypes(<%= item.itemId %>)">REF</label>
+                                    </div>
+                                </div>
+                                <div class="edit-memo">
+                                    <div class="edit-label">메모</div>
+                                    <textarea class="edit-textarea" id="memo_<%= item.itemId %>" placeholder="담당자 메모, 조치사항 등" oninput="autoResize(this)"><%= nvl(item.memo).replace("<","&lt;").replace(">","&gt;") %></textarea>
+                                </div>
+                                <div class="edit-actions">
+                                    <button class="btn-save" onclick="saveItem(<%= item.itemId %>)">저장</button>
                                 </div>
                             </div>
-                            <div class="edit-memo">
-                                <div class="edit-label">메모</div>
-                                <textarea class="edit-textarea" id="memo_<%= item.itemId %>" placeholder="담당자 메모, 조치사항 등" oninput="autoResize(this)"><%= nvl(item.memo).replace("<","&lt;").replace(">","&gt;") %></textarea>
+                        </div>
+                    </div>
+
+                    <% if (fuItem != null) {
+                       String fuEt = (fuItem.evidenceTypes != null && !fuItem.evidenceTypes.isEmpty())
+                                     ? fuItem.evidenceTypes : "xml,txt,ref";
+                    %>
+                    <!-- ── 우: 이행점검 ── -->
+                    <div class="scan-col">
+                        <div class="scan-col-header hdr-followup">이행점검</div>
+                        <div class="ev-tabs">
+                            <div class="ev-tab-bar">
+                                <button class="ev-tab-btn active" onclick="switchTab('fu_<%= fuItem.itemId %>', 'xml', this)">XML</button>
+                                <button class="ev-tab-btn"        onclick="switchTab('fu_<%= fuItem.itemId %>', 'txt', this)">TXT</button>
+                                <button class="ev-tab-btn"        onclick="switchTab('fu_<%= fuItem.itemId %>', 'ref', this)">REF</button>
                             </div>
-                            <div class="edit-actions">
-                                <button class="btn-save" onclick="saveItem(<%= item.itemId %>)">저장</button>
+                            <div class="ev-panel active" id="ev-xml-fu_<%= fuItem.itemId %>">
+                                <% if (!fuItem.evidence.isEmpty()) { %><pre class="evidence-pre"><%= escHtml(fuItem.evidence) %></pre>
+                                <% } else { %><div class="ev-empty">데이터가 없습니다</div><% } %>
+                            </div>
+                            <div class="ev-panel" id="ev-txt-fu_<%= fuItem.itemId %>">
+                                <% if (!fuItem.txtEvidence.isEmpty()) { %><pre class="evidence-pre"><%= escHtml(fuItem.txtEvidence) %></pre>
+                                <% } else { %><div class="ev-empty">데이터가 없습니다</div><% } %>
+                            </div>
+                            <div class="ev-panel" id="ev-ref-fu_<%= fuItem.itemId %>">
+                                <% if (!fuItem.refEvidence.isEmpty()) { %><pre class="evidence-pre"><%= escHtml(fuItem.refEvidence) %></pre>
+                                <% } else { %><div class="ev-empty">데이터가 없습니다</div><% } %>
+                            </div>
+                        </div>
+                        <div class="item-edit">
+                            <div class="edit-row">
+                                <div class="edit-field-status">
+                                    <div class="edit-label">결과 상태</div>
+                                    <select class="edit-select" id="fu_sel_<%= fuItem.itemId %>">
+                                        <option value="양호"    <%= "양호".equals(fuItem.result)    ? "selected" : "" %>>양호</option>
+                                        <option value="취약"    <%= "취약".equals(fuItem.result)    ? "selected" : "" %>>취약</option>
+                                        <option value="수동점검" <%= "수동점검".equals(fuItem.result) ? "selected" : "" %>>수동점검</option>
+                                        <option value="N/A"    <%= "N/A".equals(fuItem.result)     ? "selected" : "" %>>N/A</option>
+                                    </select>
+                                </div>
+                                <div class="edit-ev-types">
+                                    <div class="edit-label">현황 포함 타입</div>
+                                    <div class="ev-type-checks">
+                                        <label><input type="checkbox" id="fu_et_xml_<%= fuItem.itemId %>" value="xml" onchange="saveFuEvidenceTypes(<%= fuItem.itemId %>)" <%= fuEt.contains("xml") ? "checked" : "" %>>XML</label>
+                                        <label><input type="checkbox" id="fu_et_txt_<%= fuItem.itemId %>" value="txt" onchange="saveFuEvidenceTypes(<%= fuItem.itemId %>)" <%= fuEt.contains("txt") ? "checked" : "" %>>TXT</label>
+                                        <label><input type="checkbox" id="fu_et_ref_<%= fuItem.itemId %>" value="ref" onchange="saveFuEvidenceTypes(<%= fuItem.itemId %>)" <%= fuEt.contains("ref") ? "checked" : "" %>>REF</label>
+                                    </div>
+                                </div>
+                                <div class="edit-actions">
+                                    <button class="btn-save" onclick="saveFuItem(<%= fuItem.itemId %>)">저장</button>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <% } %>
+
+                </div>
                 </div>
             </div>
             <% } %>
@@ -525,6 +735,51 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 이행점검 업로드 모달 -->
+<div class="modal-backdrop" id="followupModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">이행점검 업로드</span>
+            <button class="modal-close" onclick="closeFollowupModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form method="post" action="../SecurityScan?action=uploadFollowup" enctype="multipart/form-data">
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div>
+                        <div class="edit-label">서버명</div>
+                        <div id="fu-label" style="font-size:13px;color:#e8e9eb;padding:6px 0;"></div>
+                    </div>
+                    <div>
+                        <div class="edit-label">호스트명</div>
+                        <div id="fu-hostname" style="font-size:12px;color:#6b9af5;font-family:'DM Mono',monospace;padding:6px 0;"></div>
+                    </div>
+                </div>
+                <input type="hidden" name="scanId" id="fu-scanId">
+                <input type="hidden" name="batchId" value="<%= batchId != null ? batchId : "" %>">
+                <div>
+                    <div class="edit-label" style="margin-bottom:6px;">이행점검 tar 파일</div>
+                    <div class="fu-file-zone" onclick="document.getElementById('fu-file').click()"
+                         ondragover="event.preventDefault();this.classList.add('dragover')"
+                         ondragleave="this.classList.remove('dragover')"
+                         ondrop="handleFuDrop(event,this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20" style="opacity:0.4;flex-shrink:0"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span id="fu-hint" style="font-size:12px;color:#4b5161;">클릭하거나 파일을 드래그</span>
+                        <span id="fu-fname" style="display:none;font-size:12px;color:#6b9af5;font-family:'DM Mono',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;"></span>
+                    </div>
+                    <input type="file" id="fu-file" name="tarFile" accept=".tar" style="display:none"
+                           onchange="showFuFile(this)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" style="padding:7px 14px;background:#1e2025;color:#6b7280;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;" onclick="closeFollowupModal()">취소</button>
+                <button type="submit" class="btn-save">업로드</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 function filter(val, btn) {
@@ -717,6 +972,79 @@ function showToast(msg, type) {
     t.className = 'toast show ' + (type || '');
     clearTimeout(t._tid);
     t._tid = setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+function saveFuItem(fuItemId) {
+    var result = document.getElementById('fu_sel_' + fuItemId).value;
+    var evTypes = ['xml','txt','ref']
+        .filter(function(t) { return document.getElementById('fu_et_' + t + '_' + fuItemId)?.checked; })
+        .join(',');
+    var evidenceTypes = evTypes.length > 0 ? evTypes : 'xml,txt,ref';
+    fetch('../SecurityScan?action=updateItem', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'itemId=' + fuItemId + '&result=' + encodeURIComponent(result) +
+              '&memo=&evidenceTypes=' + encodeURIComponent(evidenceTypes)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.ok) {
+            var fuChip = document.getElementById('fu_chip_' + fuItemId);
+            if (fuChip) { fuChip.textContent = result; fuChip.className = 'chip ' + resultClass(result); }
+            showToast('이행점검 저장되었습니다', 'ok');
+        } else {
+            showToast('저장 실패: ' + (data.error || ''), 'err');
+        }
+    })
+    .catch(function() { showToast('저장 중 오류가 발생했습니다', 'err'); });
+}
+
+function saveFuEvidenceTypes(fuItemId) {
+    var evTypes = ['xml','txt','ref']
+        .filter(function(t) {
+            var cb = document.getElementById('fu_et_' + t + '_' + fuItemId);
+            return cb && cb.checked;
+        }).join(',');
+    var et = evTypes.length > 0 ? evTypes : 'xml,txt,ref';
+    fetch('../SecurityScan?action=saveEvidenceTypes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'itemId=' + fuItemId + '&evidenceTypes=' + encodeURIComponent(et)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (!data.ok) showToast('현황 타입 저장 실패', 'err'); })
+    .catch(function() { showToast('현황 타입 저장 오류', 'err'); });
+}
+
+function openFollowupModal(scanId, label, hostname) {
+    document.getElementById('fu-scanId').value = scanId;
+    document.getElementById('fu-label').textContent = label;
+    document.getElementById('fu-hostname').textContent = hostname;
+    document.getElementById('fu-hint').style.display = '';
+    document.getElementById('fu-fname').style.display = 'none';
+    document.getElementById('fu-fname').textContent = '';
+    document.getElementById('fu-file').value = '';
+    document.getElementById('followupModal').classList.add('open');
+}
+function closeFollowupModal() {
+    document.getElementById('followupModal').classList.remove('open');
+}
+function showFuFile(input) {
+    const name = input.files[0] ? input.files[0].name : '';
+    document.getElementById('fu-fname').textContent = name;
+    document.getElementById('fu-fname').style.display = name ? '' : 'none';
+    document.getElementById('fu-hint').style.display = name ? 'none' : '';
+}
+function handleFuDrop(event, zone) {
+    event.preventDefault();
+    zone.classList.remove('dragover');
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+    const input = document.getElementById('fu-file');
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    showFuFile(input);
 }
 
 function toggleUserMenu(el) {

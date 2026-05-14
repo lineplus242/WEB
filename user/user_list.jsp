@@ -92,8 +92,6 @@
         .chip { font-size: 11px; padding: 4px 11px; border-radius: 99px; font-family: 'Pretendard', system-ui, sans-serif; font-weight: 500; display: inline-flex; align-items: center; border: none; }
         .chip-admin { background: rgba(167,139,250,0.1); color: #a78bfa; }
         .chip-user  { background: rgba(90,128,208,0.1);  color: #5a80d0; }
-        .chip-on  { background: #0d2a1a; color: #22c97a; border: 1px solid #0f3d25; }
-        .chip-off { background: #2a0d0d; color: #e05656; border: 1px solid #3d0f0f; }
 
         .pagination { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 20px; }
         .pg-btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; background: #131519; border: 1px solid #1e2025; color: #6b7280; text-decoration: none; transition: background 0.12s; }
@@ -216,7 +214,7 @@
                             <td><strong style="color:#e8e9eb"><%= u.userName %></strong></td>
                             <td style="font-size:12px;color:#6b7280"><%= u.email != null ? u.email : "-" %></td>
                             <td><span class="chip <%= "ADMIN".equals(u.role) ? "chip-admin" : "chip-user" %>"><%= u.role %></span></td>
-                            <td><span class="chip <%= "Y".equals(u.useYn) ? "chip-on" : "chip-off" %>"><%= "Y".equals(u.useYn) ? "활성" : "비활성" %></span></td>
+                            <td><span class="chip chip-dot <%= "Y".equals(u.useYn) ? "chip-g" : "chip-r" %>"><%= "Y".equals(u.useYn) ? "활성" : "비활성" %></span></td>
                             <td style="font-size:12px;color:#4b5161"><%= u.regDt != null ? u.regDt.substring(0,10) : "-" %></td>
                             <td>
                                 <div class="td-actions">
